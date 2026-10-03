@@ -3,12 +3,14 @@ using AB.SmokPrzewodnik.Application.Spatials;
 using AB.SmokPrzewodnik.Application.Spatials.Dtos;
 using AB.SmokPrzewodnik.Application.Spatials.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Globalization;
 
 namespace AB.SmokPrzewodnik.Api.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("spatials")]
 public sealed class SpatialsController : ControllerBase
 {
@@ -78,9 +80,9 @@ public sealed class SpatialsController : ControllerBase
     }
 
     [HttpGet("events")]
-    [ProducesResponseType<CursorPageResponse<EventListItemDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<CursorPageResponse<EventDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<CursorPageResponse<EventListItemDto>>> FindEventsAsync(
+    public async Task<ActionResult<CursorPageResponse<EventDto>>> FindEventsAsync(
         CancellationToken cancellationToken,
         [FromQuery] string? bbox = null,
         [FromQuery] DateTimeOffset? from = null,
@@ -128,6 +130,34 @@ public sealed class SpatialsController : ControllerBase
                 categoryValues,
                 page,
                 from is null),
+            cancellationToken);
+
+        return Ok(response);
+    }
+
+    [HttpGet("infrastructure")]
+    [ProducesResponseType<CursorPageResponse<InfrastructureDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<CursorPageResponse<InfrastructureDto>>> FindInfrastructureAsync(
+        CancellationToken cancellationToken,
+        [FromQuery] string? cursor = null,
+        [FromQuery] int limit = CursorPageRequest.DefaultLimit)
+    {
+        CursorPageRequest page;
+        try
+        {
+            page = new CursorPageRequest(cursor, limit);
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid pagination limit.",
+                detail: exception.Message);
+        }
+
+        var response = await _mediator.Send(
+            new GetInfrastructureListQuery(page),
             cancellationToken);
 
         return Ok(response);
