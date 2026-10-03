@@ -3,6 +3,7 @@ using AB.SmokPrzewodnik.Application.Spatials;
 using AB.SmokPrzewodnik.Domain.Enums;
 using AB.SmokPrzewodnik.Domain.Spatial;
 using AB.SmokPrzewodnik.Domain.Spatial.Details;
+using AB.SmokPrzewodnik.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Security.Cryptography;
@@ -97,64 +98,37 @@ internal sealed class SpatialEntityRepository : ISpatialEntityRepository
     {
         ArgumentNullException.ThrowIfNull(criteria);
 
-        IQueryable<SpatialEntity> query;
+        IQueryable<SpatialEntity> query = _dbContext.SpatialEntities;
+
         if (criteria.Kind == EntityKind.Event)
         {
-            var from = criteria.From;
-            var to = criteria.To;
-            var categories = criteria.Categories.Order(StringComparer.Ordinal).ToArray();
-            var minLongitude = criteria.BoundingBox?.MinLongitude ?? -180m;
-            var minLatitude = criteria.BoundingBox?.MinLatitude ?? -90m;
-            var maxLongitude = criteria.BoundingBox?.MaxLongitude ?? 180m;
-            var maxLatitude = criteria.BoundingBox?.MaxLatitude ?? 90m;
+            IQueryable<EventDetails> events = _dbContext.Set<EventDetails>();
 
-            query = _dbContext.SpatialEntities.FromSqlInterpolated($$"""
-                SELECT entity.*
-                FROM spatial_entities AS entity
-                INNER JOIN spatial_entity_details AS details
-                    ON details.spatial_entity_id = entity.id
-                    AND details.detail_type = 'event'
-                WHERE (
-                    CAST({{from}} AS timestamp with time zone) IS NULL
-                    OR details.event_ends_at >= CAST({{from}} AS timestamp with time zone))
-                  AND (
-                    CAST({{to}} AS timestamp with time zone) IS NULL
-                    OR details.event_starts_at <= CAST({{to}} AS timestamp with time zone))
-                  AND (
-                    cardinality(CAST({{categories}} AS text[])) = 0
-                    OR EXISTS (
-                        SELECT 1
-                        FROM event_categories AS category
-                        WHERE category.spatial_entity_id = entity.id
-                          AND category.category_code = ANY(CAST({{categories}} AS text[]))))
-                  AND ST_Intersects(
-                    entity.geometry,
-                    ST_MakeEnvelope(
-                        CAST({{minLongitude}} AS double precision),
-                        CAST({{minLatitude}} AS double precision),
-                        CAST({{maxLongitude}} AS double precision),
-                        CAST({{maxLatitude}} AS double precision),
-                        4326))
-                """);
+            if (criteria.From is { } from)
+            {
+                events = events.Where(details => details.EndsAt >= from);
+            }
+
+            if (criteria.To is { } to)
+            {
+                events = events.Where(details => details.StartsAt <= to);
+            }
+
+            if (criteria.Categories.Count > 0)
+            {
+                var categories = criteria.Categories.Select(category => new Code(category)).ToArray();
+                events = events.Where(details =>
+                    details.Categories.Any(category => categories.Contains(category.Code)));
+            }
+
+            query = query.Where(entity =>
+                events.Select(details => details.SpatialEntityId).Contains(entity.Id));
         }
-        else if (criteria.BoundingBox is { } bounds)
+
+        if (criteria.BoundingBox is { } bounds)
         {
-            query = _dbContext.SpatialEntities.FromSqlInterpolated($$"""
-                SELECT entity.*
-                FROM spatial_entities AS entity
-                WHERE ST_Intersects(
-                    entity.geometry,
-                    ST_MakeEnvelope(
-                        CAST({{bounds.MinLongitude}} AS double precision),
-                        CAST({{bounds.MinLatitude}} AS double precision),
-                        CAST({{bounds.MaxLongitude}} AS double precision),
-                        CAST({{bounds.MaxLatitude}} AS double precision),
-                        4326))
-                """);
-        }
-        else
-        {
-            query = _dbContext.SpatialEntities;
+            var spatialIds = FindIdsWithin(bounds);
+            query = query.Where(entity => spatialIds.Contains(entity.Id));
         }
 
         if (criteria.Kind.HasValue && criteria.Kind != EntityKind.Event)
@@ -167,6 +141,20 @@ internal sealed class SpatialEntityRepository : ISpatialEntityRepository
             .Include(entity => entity.Details)
             .Include(entity => entity.Translations);
     }
+
+    private IQueryable<Guid> FindIdsWithin(BoundingBox bounds) =>
+        _dbContext.Database.SqlQuery<Guid>($$"""
+            SELECT entity.id AS "Value"
+            FROM spatial_entities AS entity
+            WHERE ST_Intersects(
+                entity.geometry,
+                ST_MakeEnvelope(
+                    CAST({{bounds.MinLongitude}} AS double precision),
+                    CAST({{bounds.MinLatitude}} AS double precision),
+                    CAST({{bounds.MaxLongitude}} AS double precision),
+                    CAST({{bounds.MaxLatitude}} AS double precision),
+                    4326))
+            """);
 
     private static string CreateFilterHash(SpatialEntityCriteria criteria)
     {
