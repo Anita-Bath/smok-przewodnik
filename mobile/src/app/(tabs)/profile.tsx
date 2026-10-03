@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Switch } from 'react-nat
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AccessibilityToggle } from '@/components/AccessibilityToggle';
 import { AccessibleButton } from '@/components/AccessibleButton';
 import { BrandColors, Spacing, MaxContentWidth } from '@/constants/theme';
 import {
@@ -111,8 +110,6 @@ export default function ProfileScreen() {
             ]}>
             Profil i dostępność
           </Text>
-
-          <AccessibilityToggle />
 
           {/* User Account Card */}
           <View
