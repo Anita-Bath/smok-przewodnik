@@ -1,4 +1,7 @@
-namespace AB.SmokPrzewodnik.Domain.Entities;
+using AB.SmokPrzewodnik.Domain.Common;
+using AB.SmokPrzewodnik.Domain.ValueObjects;
+
+namespace AB.SmokPrzewodnik.Domain.Spatial;
 
 public sealed class City : AggregateRoot<Guid>
 {
@@ -14,5 +17,12 @@ public sealed class City : AggregateRoot<Guid>
         LocalizedContent name,
         string defaultLocale,
         string timeZone,
-        bool isActive);
+        bool isActive) : base(id)
+    {
+        Code = code;
+        Name = name;
+        DefaultLocale = defaultLocale;
+        TimeZone = timeZone;
+        IsActive = isActive;
+    }
 }
