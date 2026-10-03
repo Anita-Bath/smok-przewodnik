@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BrandColors } from '@/constants/theme';
@@ -8,40 +8,67 @@ import { generateLeafletHtml } from './leafletMapHtml';
 import * as Location from 'expo-location';
 
 interface MapViewerProps {
-  selectedPlace: KrakowPlace | null;
-  onSelectPlace: (place: KrakowPlace) => void;
+  selectedPlace?: KrakowPlace | null;
+  onSelectPlace?: (place: KrakowPlace) => void;
   onLocateMe?: (coords: { latitude: number; longitude: number }) => void;
+  onMapClick?: () => void;
   places?: KrakowPlace[];
+  searchPin?: { coords: { latitude: number; longitude: number }; label: string } | null;
+  activeRoute?: { coordinates: [number, number][]; profileType?: string } | null;
+  focusedManeuver?: [number, number] | null;
 }
 
 export function MapViewer({
-  selectedPlace,
+  selectedPlace = null,
   onSelectPlace,
   onLocateMe,
+  onMapClick,
   places = KRAKOW_PLACES,
+  searchPin,
+  activeRoute,
+  focusedManeuver,
 }: MapViewerProps) {
-  const { isHighContrast } = useAccessibility();
+  const { isHighContrast, userLocation, setUserLocation } = useAccessibility();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const isMapReadyRef = useRef(false);
 
-  // Generate initial HTML
-  const htmlContent = generateLeafletHtml(
-    places,
-    selectedPlace?.id,
-    userLocation,
-    isHighContrast
+  // Generate initial HTML ONCE so iframe is not destroyed & recreated on re-renders!
+  const initialHtml = useMemo(
+    () => generateLeafletHtml(places, selectedPlace?.id, userLocation, isHighContrast),
+    []
   );
+
+  const sendMessageToIframe = (data: any) => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(JSON.stringify(data), '*');
+    }
+  };
 
   // Listen to messages from the Leaflet iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       try {
         const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-        if (data && data.type === 'SELECT_PLACE') {
+        if (!data) return;
+
+        if (data.type === 'SELECT_PLACE') {
           const found = places.find((p) => p.id === data.placeId);
-          if (found) {
+          if (found && onSelectPlace) {
             onSelectPlace(found);
+          }
+        } else if (data.type === 'MAP_CLICKED') {
+          if (onMapClick) {
+            onMapClick();
+          }
+        } else if (data.type === 'MAP_READY') {
+          isMapReadyRef.current = true;
+          // Sync current states
+          if (selectedPlace) {
+            sendMessageToIframe({ type: 'SET_SELECTED_PLACE', placeId: selectedPlace.id });
+          }
+          if (searchPin) {
+            sendMessageToIframe({ type: 'SET_SEARCH_PIN', coords: searchPin.coords, label: searchPin.label });
           }
         }
       } catch (err) {}
@@ -49,46 +76,69 @@ export function MapViewer({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [places, onSelectPlace]);
+  }, [places, onSelectPlace, onMapClick, selectedPlace, searchPin]);
 
   // Sync selectedPlace updates to iframe
   useEffect(() => {
-    if (iframeRef.current && iframeRef.current.contentWindow && selectedPlace) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({
-          type: 'SET_SELECTED_PLACE',
-          placeId: selectedPlace.id,
-        }),
-        '*'
-      );
+    if (selectedPlace) {
+      sendMessageToIframe({
+        type: 'SET_SELECTED_PLACE',
+        placeId: selectedPlace.id,
+      });
     }
   }, [selectedPlace?.id]);
 
+  // Sync searchPin updates
+  useEffect(() => {
+    if (searchPin) {
+      sendMessageToIframe({
+        type: 'SET_SEARCH_PIN',
+        coords: searchPin.coords,
+        label: searchPin.label,
+      });
+    }
+  }, [searchPin]);
+
   // Sync highContrast updates
   useEffect(() => {
-    if (iframeRef.current && iframeRef.current.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({
-          type: 'SET_HIGH_CONTRAST',
-          enabled: isHighContrast,
-        }),
-        '*'
-      );
-    }
+    sendMessageToIframe({
+      type: 'SET_HIGH_CONTRAST',
+      enabled: isHighContrast,
+    });
   }, [isHighContrast]);
 
   // Sync places updates (e.g., when filtered)
   useEffect(() => {
-    if (iframeRef.current && iframeRef.current.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({
-          type: 'UPDATE_PLACES',
-          places,
-        }),
-        '*'
-      );
-    }
+    sendMessageToIframe({
+      type: 'UPDATE_PLACES',
+      places,
+    });
   }, [places]);
+
+  // Sync activeRoute updates
+  useEffect(() => {
+    if (activeRoute && activeRoute.coordinates && activeRoute.coordinates.length > 0) {
+      sendMessageToIframe({
+        type: 'DRAW_ROUTE',
+        coordinates: activeRoute.coordinates,
+        profileType: activeRoute.profileType,
+      });
+    } else {
+      sendMessageToIframe({
+        type: 'CLEAR_ROUTE',
+      });
+    }
+  }, [activeRoute]);
+
+  // Sync focusedManeuver updates
+  useEffect(() => {
+    if (focusedManeuver) {
+      sendMessageToIframe({
+        type: 'FOCUS_MANEUVER',
+        location: focusedManeuver,
+      });
+    }
+  }, [focusedManeuver]);
 
   // Handle "Lokalizuj mnie" with actual geolocation
   const handleLocateMe = async () => {
@@ -118,18 +168,12 @@ export function MapViewer({
       }
 
       // Notify iframe to move to user location
-      if (iframeRef.current && iframeRef.current.contentWindow) {
-        iframeRef.current.contentWindow.postMessage(
-          JSON.stringify({
-            type: 'SET_USER_LOCATION',
-            coords,
-            panToUser: true,
-          }),
-          '*'
-        );
-      }
+      sendMessageToIframe({
+        type: 'SET_USER_LOCATION',
+        coords,
+        panToUser: true,
+      });
     } catch (err) {
-      // Default to Kraków Rynek
       const coords = { latitude: 50.0617, longitude: 19.9373 };
       setUserLocation(coords);
       if (onLocateMe) onLocateMe(coords);
@@ -143,7 +187,7 @@ export function MapViewer({
       {/* Real OpenStreetMap + Leaflet Map */}
       <iframe
         ref={iframeRef}
-        srcDoc={htmlContent}
+        srcDoc={initialHtml}
         style={{
           width: '100%',
           height: '100%',
@@ -154,7 +198,7 @@ export function MapViewer({
         title="OpenStreetMap Kraków"
       />
 
-      {/* Floating "Lokalizuj mnie" button with real location execution */}
+      {/* Floating "Lokalizuj mnie" button */}
       <Pressable
         onPress={handleLocateMe}
         disabled={isLocating}
