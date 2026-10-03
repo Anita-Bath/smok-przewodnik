@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AccessibilityToggle } from '@/components/AccessibilityToggle';
 import { AccessibleButton } from '@/components/AccessibleButton';
 import { BrandColors, Spacing, MaxContentWidth } from '@/constants/theme';
 import { KRAKOW_PLACES } from '@/services/krakowData';
@@ -41,8 +40,6 @@ export default function SavedScreen() {
             ]}>
             Zapisane
           </Text>
-
-          <AccessibilityToggle />
 
           {/* Offline Area Pack Banner (Milestone 5 / Section 2.8) */}
           <View
