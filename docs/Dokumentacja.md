@@ -40,7 +40,7 @@ Problemem jest więc coraz częściej znalezienie właściwej informacji i poł�
 
 Google Maps może powiedzieć: *Idź 7 minut do przystanku*.
 
-Ale osoba na wózku potrzebuje wiedzieć:
+Ale przykladowo osoba na wózku potrzebuje wiedzieć:
 
 *Czy po drodze jest krawężnik?*
 *Czy przejście ma podjazd?*
@@ -48,4 +48,35 @@ Ale osoba na wózku potrzebuje wiedzieć:
 *Czy przystanek obsługuje pojazdy niskopodłogowe?*
 *Czy na końcu trasy budynek ma wejście bez schodów?*
 
-To jest zasadnicza różnica między nawigacją, a naszą nawigacją dostępnościową.
+To jest zasadnicza różnica między nawigacją, a **Smokiem Przewodnikiem.** 
+
+---
+
+### Rozwiązanie
+
+**Smok Przewodnik** to dostępnościowa nawigacja i mapa dla Krakowa, która jest w pełni dostosowana do potrzeb osób ze wszystkimi typami niepełnosprawności i ich rodzin.
+
+Użytkownik wybiera zestaw udogonień np.:
+
+- Wózek / ograniczona mobilność,
+- Niewidomy / słabowidzący,
+- Niesłyszący / niedosłyszący,
+- Ograniczona sprawność.
+
+Aplikacja zaś sama ustala funkcjonalność dla danego *profilu użytkownika.*
+
+## Zasada działania: 
+
+Aplikacja posiada dwa tryby:
+- **Użytkownik niezarejestrowany (gość)** - dostęp do podstawowych funkcji aplikacji
+- **Użytkownik zarejestrowany (konto)** - pełny dostęp do funkcji aplikacji 
+> Omówienie poszczególnych funkcji poniżej
+
+**Użytkownik niezarejestrowany:** 
+- Wybór ww. zestawu udogodnień (na daną sesję)
+- Sugerowanie tras w oparciu o wybrany zestaw.
+
+**Użytkownik zarejestrowany:**
+- Wszystkie funkcje jak powyżej (z zapisem wybranego zestawu i możliwością jego zmiany/dodania kolejnych udogodnień)
+- Dodawanie zgłoszeń na mapie w czasie rzeczywistym (np. zamknięte przejście, niedziałająca winda etc.)
+- Dodawanie stałych informacji o danym punkcie (np. posiada/nie posiada dedykowaną obsługę osób niepełnosprawnych, posiada/nie posiada windę dla osób na wózku etc.)
