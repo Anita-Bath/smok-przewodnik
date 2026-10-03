@@ -17,16 +17,17 @@ builder.Services.AddSingleton(TimeProvider.System);
 
 var app = builder.Build();
 
+app.UsePathBase("/api/v1");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UsePathBase("/v1");
-
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
+
 app.MapHealthEndpoints();
 app.MapControllers();
 
