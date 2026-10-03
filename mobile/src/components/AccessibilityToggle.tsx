@@ -4,214 +4,104 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BrandColors, Spacing } from '@/constants/theme';
 import { useAccessibility } from '@/context/AccessibilityContext';
 
+/**
+ * Single-row accessibility toggle: "Tryb dla niedowidzących"
+ * Toggles high-contrast mode. No dark-mode control, no reset link.
+ */
 export function AccessibilityToggle() {
-  const { isHighContrast, toggleHighContrast, isDark, toggleDarkTheme } = useAccessibility();
-
-  if (isHighContrast) {
-    return (
-      <View
-        style={[
-          styles.highContrastContainer,
-          {
-            backgroundColor: isDark ? '#000000' : '#003366',
-            borderColor: isDark ? '#FFFFFF' : '#001A33',
-            borderWidth: 2.5,
-          },
-        ]}
-        accessible
-        accessibilityRole="summary"
-        accessibilityLabel="Pasek ułatwień dostępu">
-        <View style={styles.togglesRow}>
-          {/* High Contrast Switch */}
-          <View style={styles.toggleItem}>
-            <View style={styles.toggleLabelRow}>
-              <MaterialCommunityIcons name="eye-outline" size={22} color="#FFFFFF" />
-              <Text style={styles.highContrastTitle}>Kontrast</Text>
-            </View>
-            <Switch
-              value={isHighContrast}
-              onValueChange={toggleHighContrast}
-              trackColor={{ false: '#4B5563', true: '#2563EB' }}
-              thumbColor="#FFFFFF"
-              accessibilityLabel="Wysoki kontrast"
-            />
-          </View>
-
-          <View style={[styles.separator, { backgroundColor: isDark ? '#333333' : '#1E40AF' }]} />
-
-          {/* Dark Mode Switch */}
-          <View style={styles.toggleItem}>
-            <View style={styles.toggleLabelRow}>
-              <MaterialCommunityIcons
-                name={isDark ? 'weather-night' : 'white-balance-sunny'}
-                size={22}
-                color="#FFFFFF"
-              />
-              <Text style={styles.highContrastTitle}>Ciemny</Text>
-            </View>
-            <Switch
-              value={isDark}
-              onValueChange={toggleDarkTheme}
-              trackColor={{ false: '#4B5563', true: '#60A5FA' }}
-              thumbColor="#FFFFFF"
-              accessibilityLabel="Ciemny motyw"
-            />
-          </View>
-        </View>
-
-        <Pressable
-          onPress={toggleHighContrast}
-          style={[styles.resetLink, { borderTopColor: isDark ? '#333333' : '#1E40AF' }]}
-          accessible
-          accessibilityRole="button"
-          accessibilityLabel="Wróć do standardowego trybu">
-          <Text style={styles.resetLinkText}>Wróć do standardowego kontrastu</Text>
-        </Pressable>
-      </View>
-    );
-  }
+  const { isHighContrast, toggleHighContrast } = useAccessibility();
 
   return (
-    <View
-      style={[
-        styles.normalContainer,
-        {
-          backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
-          borderColor: isDark ? '#334155' : '#008779',
-        },
-      ]}
+    <Pressable
+      onPress={toggleHighContrast}
       accessible
-      accessibilityRole="none">
-      <View style={styles.togglesRow}>
-        {/* High Contrast Switch */}
-        <View style={styles.toggleItem}>
-          <View style={styles.toggleLabelRow}>
-            <View
-              style={[
-                styles.iconCircle,
-                { backgroundColor: isDark ? '#334155' : '#E6F5F3' },
-              ]}>
-              <MaterialCommunityIcons
-                name="eye-outline"
-                size={18}
-                color={isDark ? '#2DD4BF' : '#008779'}
-              />
-            </View>
-            <Text
-              style={[
-                styles.normalTitle,
-                { color: isDark ? '#F8FAFC' : '#008779' },
-              ]}>
-              Kontrast
-            </Text>
-          </View>
-          <Switch
-            value={isHighContrast}
-            onValueChange={toggleHighContrast}
-            trackColor={{ false: isDark ? '#475569' : '#D1D5DB', true: '#008779' }}
-            thumbColor="#FFFFFF"
-            accessibilityLabel="Włącz wysoki kontrast i duży tekst"
-          />
-        </View>
+      accessibilityRole="switch"
+      accessibilityLabel="Tryb dla niedowidzących – wysoki kontrast"
+      accessibilityState={{ checked: isHighContrast }}
+      style={[
+        styles.container,
+        {
+          backgroundColor: isHighContrast ? '#162C41' : '#FFFFFF',
+          borderColor: isHighContrast ? BrandColors.primary : BrandColors.accentTeal,
+          borderWidth: 1.5,
+        },
+      ]}>
 
-        <View style={[styles.separator, { backgroundColor: isDark ? '#334155' : '#E2E8F0' }]} />
-
-        {/* Dark Mode Switch */}
-        <View style={styles.toggleItem}>
-          <View style={styles.toggleLabelRow}>
-            <View
-              style={[
-                styles.iconCircle,
-                { backgroundColor: isDark ? '#334155' : '#FEF3C7' },
-              ]}>
-              <MaterialCommunityIcons
-                name={isDark ? 'weather-night' : 'white-balance-sunny'}
-                size={18}
-                color={isDark ? '#38BDF8' : '#D97706'}
-              />
-            </View>
-            <Text
-              style={[
-                styles.normalTitle,
-                { color: isDark ? '#F8FAFC' : '#1E293B' },
-              ]}>
-              Ciemny
-            </Text>
-          </View>
-          <Switch
-            value={isDark}
-            onValueChange={toggleDarkTheme}
-            trackColor={{ false: isDark ? '#475569' : '#D1D5DB', true: '#38BDF8' }}
-            thumbColor="#FFFFFF"
-            accessibilityLabel="Włącz ciemny motyw"
-          />
-        </View>
+      {/* Icon */}
+      <View
+        style={[
+          styles.iconCircle,
+          {
+            backgroundColor: isHighContrast
+              ? 'rgba(0,150,146,0.2)'
+              : BrandColors.accentTealLight,
+          },
+        ]}>
+        <MaterialCommunityIcons
+          name="eye-outline"
+          size={20}
+          color={isHighContrast ? '#009692' : BrandColors.accentTeal}
+        />
       </View>
-    </View>
+
+      {/* Labels */}
+      <View style={styles.labelGroup}>
+        <Text
+          style={[
+            styles.label,
+            { color: isHighContrast ? '#FFFFFF' : '#0F172A' },
+          ]}>
+          Tryb dla niedowidzących
+        </Text>
+        <Text
+          style={[
+            styles.sublabel,
+            { color: isHighContrast ? '#A8C4E0' : '#64748B' },
+          ]}>
+          {isHighContrast ? 'Wysoki kontrast · Włączony' : 'Wysoki kontrast · Wyłączony'}
+        </Text>
+      </View>
+
+      {/* Switch – pointerEvents none so the Pressable handles the tap */}
+      <Switch
+        value={isHighContrast}
+        onValueChange={toggleHighContrast}
+        trackColor={{ false: '#D1D5DB', true: BrandColors.accentTeal }}
+        thumbColor="#FFFFFF"
+        accessibilityLabel="Przełącznik trybu dla niedowidzących"
+        pointerEvents="none"
+      />
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  normalContainer: {
-    borderWidth: 1.5,
-    borderRadius: 24,
-    paddingVertical: 8,
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 18,
+    paddingVertical: 10,
     paddingHorizontal: 14,
     marginVertical: Spacing.two,
-  },
-  highContrastContainer: {
-    borderRadius: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginVertical: Spacing.two,
-  },
-  togglesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  toggleItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flex: 1,
-    paddingHorizontal: 4,
-  },
-  toggleLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  separator: {
-    width: 1,
-    height: 28,
-    marginHorizontal: 8,
+    gap: 10,
   },
   iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
+    flexShrink: 0,
   },
-  normalTitle: {
+  labelGroup: {
+    flex: 1,
+  },
+  label: {
     fontSize: 14,
     fontWeight: '700',
   },
-  highContrastTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  resetLink: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-  },
-  resetLinkText: {
-    color: '#93C5FD',
-    fontSize: 13,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
+  sublabel: {
+    fontSize: 11,
+    marginTop: 1,
   },
 });

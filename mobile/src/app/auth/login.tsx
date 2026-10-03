@@ -47,60 +47,6 @@ export default function LoginScreen() {
           {/* Accessibility Toggle */}
           <AccessibilityToggle />
 
-          {/* Graphic / Route Preview Placeholder */}
-          <View
-            style={[
-              styles.illustrationBox,
-              {
-                backgroundColor: isHighContrast
-                  ? (isDark ? '#082F49' : '#E5EBF2')
-                  : (isDark ? '#1E293B' : '#E8F4F1'),
-                borderColor: isHighContrast
-                  ? (isDark ? '#38BDF8' : '#000000')
-                  : (isDark ? '#334155' : '#D1E6E1'),
-                borderWidth: isHighContrast ? 2 : 1,
-              },
-            ]}>
-            <View style={styles.routePinStart} />
-            <View
-              style={[
-                styles.routeLine,
-                {
-                  backgroundColor: isHighContrast
-                    ? (isDark ? '#38BDF8' : '#000000')
-                    : BrandColors.primary,
-                },
-              ]}
-            />
-            <View style={styles.routePinEnd}>
-              <View style={styles.routePinDot} />
-            </View>
-            <View
-              style={[
-                styles.badgeStepFree,
-                {
-                  backgroundColor: isHighContrast
-                    ? (isDark ? '#000000' : '#FFFFFF')
-                    : (isDark ? '#0F172A' : '#FFFFFF'),
-                  borderColor: isHighContrast
-                    ? (isDark ? '#34D399' : '#000000')
-                    : (isDark ? '#115E59' : '#B2DFDB'),
-                  borderWidth: isHighContrast ? 2 : 1,
-                },
-              ]}>
-              <Text
-                style={[
-                  styles.badgeStepFreeText,
-                  {
-                    color: isHighContrast
-                      ? (isDark ? '#34D399' : '#000000')
-                      : (isDark ? '#2DD4BF' : BrandColors.accentTeal),
-                  },
-                ]}>
-                ✓ Wejście bez schodów
-              </Text>
-            </View>
-          </View>
 
           {/* Main Title & Subtitle */}
           <Text
