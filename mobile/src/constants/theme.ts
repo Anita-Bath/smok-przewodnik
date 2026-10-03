@@ -2,15 +2,15 @@ import '@/global.css';
 import { Platform } from 'react-native';
 
 export const BrandColors = {
-  primary: '#004F9E',        // Deep Krakow Blue (main buttons, headers)
-  primaryDark: '#003366',    // High contrast blue
-  primaryLight: '#E8F1FC',   // Light blue fill
-  accentTeal: '#008779',     // Accessibility Teal (toggle, checkmarks, guest badge)
-  accentTealLight: '#E6F5F3',// Teal background chip
-  danger: '#D32F2F',         // Obstacles, must_avoid warnings
-  warning: '#F57C00',        // prefer_avoid alerts
-  success: '#2E7D32',        // confirmed accessible
-  unverified: '#757575',     // unverified/demo data
+  primary: '#004C97',        // Dominant Krakow Blue
+  primaryDark: '#162C41',    // Dark navy for high contrast
+  primaryLight: '#E8F1FC',   
+  accentTeal: '#009692',     // Accessibility Teal
+  accentTealLight: '#E6F5F3',
+  danger: '#D32F2F',         
+  warning: '#965E00',        // Warning orange
+  success: '#967D00',        // Yellow/Gold 
+  unverified: '#757575',
 } as const;
 
 export const Colors = {

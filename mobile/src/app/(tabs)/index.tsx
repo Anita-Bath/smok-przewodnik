@@ -73,17 +73,57 @@ export default function ExploreScreen() {
 
   const [filteredPlaces, setFilteredPlaces] = useState<KrakowPlace[]>(KRAKOW_PLACES);
   const [allPlaces, setAllPlaces] = useState<KrakowPlace[]>(KRAKOW_PLACES);
+  const [mapScanCenter, setMapScanCenter] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [showScanButton, setShowScanButton] = useState(false);
+  const [currentMapCenter, setCurrentMapCenter] = useState<{ latitude: number; longitude: number } | null>(null);
 
   useEffect(() => {
     import('@/services/krakowData').then(({ fetchKrakowPlacesFromDB }) => {
       fetchKrakowPlacesFromDB().then((places) => {
         if (places && places.length > 0) {
           setAllPlaces(places);
-          setFilteredPlaces(places);
         }
       });
     });
   }, []);
+
+  useEffect(() => {
+    if (!mapScanCenter) {
+      if (userLocation) {
+        setMapScanCenter(userLocation);
+      } else {
+        setMapScanCenter({ latitude: 50.0614, longitude: 19.9383 });
+      }
+    }
+  }, [userLocation, mapScanCenter]);
+
+  useEffect(() => {
+    let filtered = allPlaces;
+
+    if (activeFilter === 'no_stairs') {
+      filtered = filtered.filter((p) => p.hasStepFreeAccess);
+    } else if (activeFilter === 'toilets') {
+      filtered = filtered.filter((p) => p.hasAccessibleToilet);
+    } else if (activeFilter === 'loop') {
+      filtered = filtered.filter((p) => p.hasInductionLoop);
+    } else if (activeFilter === 'elevators') {
+      filtered = filtered.filter((p) => p.hasElevator);
+    }
+
+    if (mapScanCenter) {
+      filtered = filtered.filter((p) => {
+        const dist = calculateDistanceMeters(
+          mapScanCenter.latitude,
+          mapScanCenter.longitude,
+          p.coordinates.latitude,
+          p.coordinates.longitude
+        );
+        return dist <= 2000; // 2km radius
+      });
+    }
+
+    setFilteredPlaces(filtered);
+  }, [allPlaces, activeFilter, mapScanCenter]);
   const [locatedNotice, setLocatedNotice] = useState<string | null>(null);
   const [searchPin, setSearchPin] = useState<{ coords: { latitude: number; longitude: number }; label: string } | null>(null);
 
@@ -198,17 +238,20 @@ export default function ExploreScreen() {
   const handleFilterToggle = (filterKey: string) => {
     const next = activeFilter === filterKey ? '' : filterKey;
     setActiveFilter(next);
+  };
 
-    if (next === 'no_stairs') {
-      setFilteredPlaces(allPlaces.filter((p) => p.hasStepFreeAccess));
-    } else if (next === 'toilets') {
-      setFilteredPlaces(allPlaces.filter((p) => p.hasAccessibleToilet));
-    } else if (next === 'loop') {
-      setFilteredPlaces(allPlaces.filter((p) => p.hasInductionLoop));
-    } else if (next === 'elevators') {
-      setFilteredPlaces(allPlaces.filter((p) => p.hasElevator));
-    } else {
-      setFilteredPlaces(allPlaces);
+  const handleMapMove = (center: { latitude: number; longitude: number }) => {
+    setCurrentMapCenter(center);
+    if (mapScanCenter) {
+      const dist = calculateDistanceMeters(
+        mapScanCenter.latitude, mapScanCenter.longitude,
+        center.latitude, center.longitude
+      );
+      if (dist > 1000) {
+        setShowScanButton(true);
+      } else {
+        setShowScanButton(false);
+      }
     }
   };
 
@@ -237,15 +280,16 @@ export default function ExploreScreen() {
   };
 
   const handleNavigateToRoute = (place: KrakowPlace) => {
-    // Calculate route immediately and show polyline on the map
-    const plan = calculateKrakowRoutes(place, constraints, transportCapabilities, userLocation);
-    setRoutePlan(plan);
-    setSelectedRouteAltId(plan.alternatives[0].id);
     setIsSheetVisible(false);
-
-    // Refine geometry asynchronously with OSRM in background
-    fetchLiveKrakowRoutes(place, constraints, transportCapabilities, userLocation).then((livePlan) => {
-      setRoutePlan(livePlan);
+    router.push({
+      pathname: '/route-planner',
+      params: {
+        placeId: place.id,
+        name: place.name,
+        address: place.address,
+        lat: String(place.coordinates.latitude),
+        lon: String(place.coordinates.longitude),
+      },
     });
   };
 
@@ -509,6 +553,42 @@ export default function ExploreScreen() {
 
       {/* Main Map Viewer with Leaflet & OpenStreetMap */}
       <View style={styles.mapFlex}>
+        {showScanButton && (
+          <View style={styles.scanButtonContainer}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.scanButton,
+                {
+                  backgroundColor: isHighContrast ? (isDark ? '#000000' : '#FFFFFF') : (isDark ? '#1E293B' : '#FFFFFF'),
+                  borderColor: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.primary),
+                  borderWidth: isHighContrast ? 3 : 2,
+                  opacity: pressed ? 0.8 : 1,
+                  cursor: 'pointer' as any,
+                },
+              ]}
+              onPress={() => {
+                if (currentMapCenter) {
+                  setMapScanCenter(currentMapCenter);
+                  setShowScanButton(false);
+                }
+              }}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel="Skanuj ten obszar">
+              <MaterialCommunityIcons 
+                name="refresh" 
+                size={20} 
+                color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.primary)} 
+              />
+              <Text style={[
+                styles.scanButtonText,
+                { color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.primary) }
+              ]}>
+                Szukaj w tym obszarze
+              </Text>
+            </Pressable>
+          </View>
+        )}
         <MapViewer
           places={filteredPlaces}
           selectedPlace={selectedPlace}
@@ -516,165 +596,14 @@ export default function ExploreScreen() {
           activeRoute={activeRoute}
           onSelectPlace={handleSelectPlaceFromMap}
           onMapClick={handleMapBackgroundClick}
+          onMapMove={handleMapMove}
           onLocateMe={() => {
             setLocatedNotice('Zlokalizowano pozycję GPS w Krakowie');
             setTimeout(() => setLocatedNotice(null), 3500);
           }}
         />
 
-        {/* Floating Route Preview Card on Map */}
-        {routePlan && activeRouteAlternative && (
-          <View
-            style={[
-              styles.routePreviewCard,
-              {
-                backgroundColor: isHighContrast
-                  ? (isDark ? '#000000' : '#FFFFFF')
-                  : (isDark ? '#1E293B' : '#FFFFFF'),
-                borderColor: isHighContrast
-                  ? (isDark ? '#FFFFFF' : '#000000')
-                  : (isDark ? '#38BDF8' : BrandColors.primary),
-                borderWidth: isHighContrast ? 3 : 2,
-              },
-            ]}>
-            {/* Header: Destination name, distance & estimated time */}
-            <View style={styles.routePreviewHeader}>
-              <View style={styles.routePreviewTitleCol}>
-                <View style={styles.routeHeaderBadge}>
-                  <MaterialCommunityIcons
-                    name="navigation-variant"
-                    size={18}
-                    color={isDark ? '#38BDF8' : BrandColors.primary}
-                  />
-                  <Text
-                    numberOfLines={1}
-                    style={[
-                      styles.routeHeaderBadgeText,
-                      {
-                        color: isHighContrast
-                          ? (isDark ? '#FFFFFF' : '#000000')
-                          : (isDark ? '#38BDF8' : BrandColors.primary),
-                        fontWeight: '800',
-                      },
-                    ]}>
-                    Trasa: {routePlan.destination.name}
-                  </Text>
-                </View>
-                <Text
-                  style={[
-                    styles.routePreviewMetrics,
-                    {
-                      color: isHighContrast
-                        ? (isDark ? '#FFFFFF' : '#000000')
-                        : (isDark ? '#F8FAFC' : '#0F172A'),
-                      fontWeight: isHighContrast ? '800' : '700',
-                    },
-                  ]}>
-                  {formatDistance(activeRouteAlternative.distanceMeters)} · ok. {activeRouteAlternative.durationMinutes} min
-                  {activeRouteAlternative.stairsCount === 0 ? ' · 0 schodów' : ` · ${activeRouteAlternative.stairsCount} sch.`}
-                </Text>
-              </View>
 
-              <Pressable
-                onPress={() => setRoutePlan(null)}
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel="Zamknij podgląd trasy"
-                style={({ pressed }) => [
-                  styles.closeRouteBtn,
-                  { opacity: pressed ? 0.7 : 1, cursor: 'pointer' as any },
-                ]}>
-                <MaterialCommunityIcons
-                  name="close"
-                  size={20}
-                  color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#94A3B8' : '#475569')}
-                />
-              </Pressable>
-            </View>
-
-            {/* Alternatives selector */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.routeChipsScroll}>
-              {routePlan.alternatives.map((alt) => {
-                const isSelected = selectedRouteAltId === alt.id;
-                return (
-                  <Pressable
-                    key={alt.id}
-                    onPress={() => setSelectedRouteAltId(alt.id)}
-                    style={({ pressed }) => [
-                      styles.routeAltChip,
-                      {
-                        backgroundColor: isSelected
-                          ? (isHighContrast
-                              ? (isDark ? '#FFFFFF' : '#000000')
-                              : (isDark ? '#0284C7' : BrandColors.primary))
-                          : (isDark ? '#334155' : '#F1F5F9'),
-                        borderColor: isHighContrast
-                          ? (isDark ? '#FFFFFF' : '#000000')
-                          : isSelected
-                          ? (isDark ? '#38BDF8' : BrandColors.primary)
-                          : (isDark ? '#475569' : '#CBD5E1'),
-                        borderWidth: isHighContrast ? 2 : 1,
-                        cursor: 'pointer' as any,
-                        opacity: pressed ? 0.7 : 1,
-                      },
-                    ]}>
-                    <Text
-                      style={[
-                        styles.routeAltChipText,
-                        {
-                          color: isSelected
-                            ? (isHighContrast && isDark ? '#000000' : '#FFFFFF')
-                            : (isDark ? '#F8FAFC' : (isHighContrast ? '#000000' : '#1E293B')),
-                          fontWeight: isSelected ? '800' : '600',
-                        },
-                      ]}>
-                      {alt.title} ({formatDistance(alt.distanceMeters)})
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-
-            {/* Start Turn-by-Turn Navigation Button */}
-            <Pressable
-              onPress={() => {
-                router.push({
-                  pathname: '/route-planner',
-                  params: {
-                    placeId: routePlan.destination.id,
-                    name: routePlan.destination.name,
-                    address: routePlan.destination.address,
-                    lat: String(routePlan.destination.coordinates.latitude),
-                    lon: String(routePlan.destination.coordinates.longitude),
-                  },
-                });
-              }}
-              style={({ pressed }) => [
-                styles.navStartBtn,
-                {
-                  backgroundColor: isHighContrast
-                    ? (isDark ? '#FFFFFF' : '#000000')
-                    : (isDark ? '#0284C7' : BrandColors.primary),
-                  borderColor: isHighContrast ? (isDark ? '#000000' : '#FFFFFF') : 'transparent',
-                  cursor: 'pointer' as any,
-                  opacity: pressed ? 0.8 : 1,
-                },
-              ]}>
-              <MaterialCommunityIcons
-                name="navigation"
-                size={18}
-                color={isHighContrast && isDark ? '#000000' : '#FFFFFF'}
-              />
-              <Text
-                style={[
-                  styles.navStartBtnText,
-                  { color: isHighContrast && isDark ? '#000000' : '#FFFFFF' },
-                ]}>
-                Nawiguj krok po kroku
-              </Text>
-            </Pressable>
-          </View>
-        )}
 
         {/* Floating pill to restore sheet if user dismissed it */}
         {selectedPlace && !isSheetVisible && (
@@ -851,6 +780,32 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 220,
     position: 'relative',
+  },
+  scanButtonContainer: {
+    position: 'absolute',
+    top: 16,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 100,
+    pointerEvents: 'box-none',
+  },
+  scanButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 24,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  scanButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   bottomSheetOverlay: {
     position: 'absolute',

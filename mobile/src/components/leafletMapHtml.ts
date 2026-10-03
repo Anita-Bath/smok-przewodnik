@@ -5,11 +5,13 @@ export function generateLeafletHtml(
   selectedPlaceId?: string,
   userLocation?: { latitude: number; longitude: number } | null,
   isHighContrast?: boolean,
-  isDark?: boolean
+  isDark?: boolean,
+  activePresetId?: string | null
 ): string {
   const placesJson = JSON.stringify(places);
   const selectedIdJson = JSON.stringify(selectedPlaceId || null);
   const userLocJson = JSON.stringify(userLocation || null);
+  const activePresetIdJson = JSON.stringify(activePresetId || null);
 
   return `<!DOCTYPE html>
 <html lang="pl">
@@ -185,6 +187,7 @@ export function generateLeafletHtml(
     var userLocation = ${userLocJson};
     var isHc = ${isHighContrast ? 'true' : 'false'};
     var isDarkMode = ${isDark ? 'true' : 'false'};
+    var activePreset = ${activePresetIdJson};
 
     var tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
@@ -310,6 +313,11 @@ export function generateLeafletHtml(
       }
     }
 
+    map.on('moveend', function() {
+      var c = map.getCenter();
+      sendToParent(JSON.stringify({ type: 'MAP_MOVED', lat: c.lat, lng: c.lng }));
+    });
+
     function getIconGlyph(cat) {
       if (cat === 'monument') return '🏰';
       if (cat === 'transit') return '🚆';
@@ -327,6 +335,14 @@ export function generateLeafletHtml(
       var ax = isSelected ? 19 : 16;
       var ay = h; // Exact bottom tip of the pin
       var pinColor = isSelected ? (highContrast ? '#000000' : '#004F9E') : (highContrast ? '#005A4E' : '#008779');
+      
+      if (activePreset === 'wheelchair') {
+        if (place.wheelchairAccess === 'full') pinColor = '#16A34A';
+        else if (place.wheelchairAccess === 'limited') pinColor = '#EAB308';
+        else if (place.wheelchairAccess === 'none') pinColor = '#DC2626';
+        else pinColor = '#757575'; // Gray if unknown/no data
+      }
+      
       var strokeColor = '#FFFFFF';
       var strokeW = isSelected ? 2.5 : 2;
       var cr = isSelected ? 13 : 11;
@@ -372,7 +388,7 @@ export function generateLeafletHtml(
         marker.bindTooltip(place.name, {
           permanent: true,
           direction: 'top',
-          offset: [0, isSelected ? -48 : -42],
+          offset: [0, -4],
           className: 'poi-map-tooltip' + (isSelected ? ' selected' : '')
         });
 
@@ -447,7 +463,7 @@ export function generateLeafletHtml(
       searchMarker.bindTooltip(label || 'Wyszukany adres', {
         permanent: true,
         direction: 'top',
-        offset: [0, -46],
+        offset: [0, -4],
         className: 'poi-map-tooltip selected'
       });
 

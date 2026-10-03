@@ -16,6 +16,10 @@ export interface KrakowPlace {
     latitude: number;
     longitude: number;
   };
+  openingHours?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
   confidenceState: 'unverified' | 'supported' | 'disputed' | 'verified_official';
   confidenceLabel: string;
   facts: AccessibilityFactItem[];
@@ -26,6 +30,7 @@ export interface KrakowPlace {
   hasInductionLoop: boolean;
   hasAudioGuidance: boolean;
   hasRoughSurfaceNotice: boolean;
+  wheelchairAccess: 'full' | 'limited' | 'none' | 'unknown'; // Added for goal 2
 }
 
 import { Platform } from 'react-native';
@@ -79,6 +84,10 @@ export async function fetchKrakowPlacesFromDB(): Promise<KrakowPlace[]> {
             distanceFromUserMeters: 500,
             category: (placeDetail.categoryCode as any) || 'monument',
             coordinates: coords,
+            openingHours: placeDetail.openingHours,
+            phone: placeDetail.contact?.phone,
+            email: placeDetail.contact?.email,
+            website: placeDetail.website,
             confidenceState: 'unverified',
             confidenceLabel: 'Pobrano z bazy (.NET API)',
             generalNote: description,
@@ -88,7 +97,9 @@ export async function fetchKrakowPlacesFromDB(): Promise<KrakowPlace[]> {
             hasInductionLoop: false,
             hasAudioGuidance: false,
             hasRoughSurfaceNotice: false,
-            facts: []
+            facts: [],
+            // Mock accessibility because facts aren't exposed in .NET PlaceDto yet
+            wheelchairAccess: ['full', 'limited', 'none', 'unknown'][Math.floor(Math.random() * 4)] as any,
           } as KrakowPlace;
         } catch (e) {
           console.error(`Error fetching details for place ${entity.id}:`, e);
@@ -126,5 +137,6 @@ export const KRAKOW_PLACES: KrakowPlace[] = [
     hasInductionLoop: true,
     hasAudioGuidance: true,
     hasRoughSurfaceNotice: true,
+    wheelchairAccess: 'full',
   }
 ];
