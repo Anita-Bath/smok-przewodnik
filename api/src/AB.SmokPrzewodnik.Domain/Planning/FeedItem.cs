@@ -1,5 +1,4 @@
 using System.Collections.Frozen;
-using System.Collections.ObjectModel;
 using AB.SmokPrzewodnik.Domain.Spatial;
 using AB.SmokPrzewodnik.Domain.ValueObjects;
 
@@ -7,8 +6,15 @@ namespace AB.SmokPrzewodnik.Domain.Planning;
 
 public sealed record FeedItem
 {
-    private readonly List<SpatialEntity> _linkedEntities = [];
-    private readonly ReadOnlyCollection<SpatialEntity> _linkedEntityView;
+    private readonly List<FeedItemEntityLink> _entityLinks = [];
+
+    private FeedItem()
+    {
+        ContentType = default;
+        LocalizedContent = null!;
+        Provenance = default;
+        AudienceTags = FrozenSet<Code>.Empty;
+    }
 
     public FeedItem(
         Guid id,
@@ -36,7 +42,7 @@ public sealed record FeedItem
             throw new ArgumentException("At least one linked entity is required.", nameof(linkedEntityIds));
         }
 
-        LinkedEntityIds = new ReadOnlyCollection<Guid>(entities);
+        _entityLinks.AddRange(entities.Select(entityId => new FeedItemEntityLink(Id, entityId)));
 
         ArgumentNullException.ThrowIfNull(audienceTags);
         AudienceTags = audienceTags.ToFrozenSet();
@@ -52,34 +58,38 @@ public sealed record FeedItem
 
         PublishedAt = publishedAt;
         ValidUntil = validUntil;
-        _linkedEntityView = _linkedEntities.AsReadOnly();
     }
 
-    public Guid Id { get; }
+    public Guid Id { get; private set; }
 
-    public Guid CityId { get; }
+    public Guid CityId { get; private set; }
 
     public City City { get; private set; } = null!;
 
-    public Code ContentType { get; }
+    public Code ContentType { get; private set; }
 
-    public Guid SourceId { get; }
+    public Guid SourceId { get; private set; }
 
     public DataSource Source { get; private set; } = null!;
 
-    public IReadOnlyList<Guid> LinkedEntityIds { get; }
+    public IReadOnlyList<Guid> LinkedEntityIds => _entityLinks.Select(link => link.EntityId).ToArray();
 
-    public IReadOnlyCollection<SpatialEntity> LinkedEntities => _linkedEntityView;
+    public IReadOnlyCollection<SpatialEntity> LinkedEntities => _entityLinks
+        .Where(link => link.Entity is not null)
+        .Select(link => link.Entity)
+        .ToArray();
 
-    public LocalizedContent LocalizedContent { get; }
+    internal IReadOnlyCollection<FeedItemEntityLink> EntityLinks => _entityLinks;
 
-    public DateTimeOffset PublishedAt { get; }
+    public LocalizedContent LocalizedContent { get; private set; }
 
-    public DateTimeOffset? ValidUntil { get; }
+    public DateTimeOffset PublishedAt { get; private set; }
 
-    public IReadOnlySet<Code> AudienceTags { get; }
+    public DateTimeOffset? ValidUntil { get; private set; }
 
-    public Code Provenance { get; }
+    public IReadOnlySet<Code> AudienceTags { get; private set; }
+
+    public Code Provenance { get; private set; }
 
     private static Guid RequireId(Guid id, string parameterName)
     {

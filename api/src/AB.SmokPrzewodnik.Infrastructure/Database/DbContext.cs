@@ -41,4 +41,9 @@ internal sealed class DbContext : Microsoft.EntityFrameworkCore.DbContext
             builder.UseNetTopologySuite();
         });
     }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(DbContext).Assembly);
+    }
 }
