@@ -1,6 +1,6 @@
-namespace AB.SmokPrzewodnik.Api.Endpoints;
+namespace AB.SmokPrzewodnik.Api.Extensions;
 
-public static class HealthEndpoints
+public static class HealthEndpointExtension
 {
     public static IEndpointRouteBuilder MapHealthEndpoints(this IEndpointRouteBuilder endpoints)
     {

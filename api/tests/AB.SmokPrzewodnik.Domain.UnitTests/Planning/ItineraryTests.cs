@@ -84,7 +84,8 @@ public sealed class ItineraryTests
             timeZone,
             [],
             [],
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow,
+            null);
 
     private static ItineraryItem Item(int position, DateTimeOffset? arrival = null) =>
         new(Guid.NewGuid(), position, Guid.NewGuid(), arrival, arrival?.AddMinutes(15), null);
