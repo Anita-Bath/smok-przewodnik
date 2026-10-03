@@ -127,7 +127,8 @@ internal sealed class EventDetailsMapping : IEntityTypeConfiguration<EventDetail
             .HasPrincipalKey(details => details.SpatialEntityId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(details => details.Categories)
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .AutoInclude();
         builder.Property(details => details.OrganizerEntityId)
             .HasColumnName("event_organizer_entity_id");
         builder.Property(details => details.StartsAt).HasColumnName("event_starts_at");
