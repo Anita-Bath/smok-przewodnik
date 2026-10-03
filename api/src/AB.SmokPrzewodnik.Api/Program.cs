@@ -13,6 +13,7 @@ builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSupabaseAuthentication(builder.Configuration);
 builder.Services.AddSingleton(TimeProvider.System);
 
 var app = builder.Build();
@@ -26,7 +27,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseExceptionHandler();
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.MapHealthEndpoints();
 app.MapControllers();

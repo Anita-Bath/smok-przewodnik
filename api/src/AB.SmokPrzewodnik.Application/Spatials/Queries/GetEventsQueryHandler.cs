@@ -1,5 +1,6 @@
 using AB.SmokPrzewodnik.Application.Common.Querying;
 using AB.SmokPrzewodnik.Application.Spatials.Dtos;
+using AB.SmokPrzewodnik.Application.Spatials.Mappers;
 using AB.SmokPrzewodnik.Domain.Enums;
 using AB.SmokPrzewodnik.Domain.Spatial.Details;
 using MediatR;
@@ -7,7 +8,7 @@ using MediatR;
 namespace AB.SmokPrzewodnik.Application.Spatials.Queries;
 
 public sealed class GetEventsQueryHandler
-    : IRequestHandler<GetEventsQuery, CursorPageResponse<EventListItemDto>>
+    : IRequestHandler<GetEventsQuery, CursorPageResponse<EventDto>>
 {
     private readonly ISpatialEntityRepository _repository;
 
@@ -16,7 +17,7 @@ public sealed class GetEventsQueryHandler
         _repository = repository;
     }
 
-    public async Task<CursorPageResponse<EventListItemDto>> Handle(
+    public async Task<CursorPageResponse<EventDto>> Handle(
         GetEventsQuery request,
         CancellationToken cancellationToken)
     {
@@ -35,9 +36,9 @@ public sealed class GetEventsQueryHandler
                 throw new InvalidOperationException("The event repository returned a non-event entity.");
             }
 
-            return SpatialDtoMapper.ToEventListItem(entity, details);
+            return SpatialDtoMapper.ToEvent(entity, details);
         }).ToArray();
 
-        return new CursorPageResponse<EventListItemDto>(items, page.NextCursor);
+        return new CursorPageResponse<EventDto>(items, page.NextCursor);
     }
 }
