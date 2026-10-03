@@ -21,6 +21,9 @@ internal sealed class DbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<FeedItem> FeedItems => Set<FeedItem>();
     public DbSet<SuggestionProjection> Suggestions => Set<SuggestionProjection>();
 
+    public DbSet<City> Cities => Set<City>();
+    public DbSet<DataSource> DataSources => Set<DataSource>();
+
     private readonly IConfiguration _configuration;
 
     public DbContext(IConfiguration configuration, DbContextOptions<DbContext> options) : base(options)
