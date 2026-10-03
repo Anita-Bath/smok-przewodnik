@@ -1,4 +1,5 @@
 using AB.SmokPrzewodnik.Application.Spatials.Dtos;
+using AB.SmokPrzewodnik.Application.Spatials.Mappers;
 using AB.SmokPrzewodnik.Domain.Enums;
 using AB.SmokPrzewodnik.Domain.Spatial.Details;
 using MediatR;

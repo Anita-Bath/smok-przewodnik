@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -10,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../AB.SmokPrzewodnik.Application/AB.SmokPrzewodnik.Application.csproj" />
+    <ProjectReference Include="../AB.SmokPrzewodnik.Common/AB.SmokPrzewodnik.Common.csproj" />
     <ProjectReference Include="../AB.SmokPrzewodnik.Infrastructure/AB.SmokPrzewodnik.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
