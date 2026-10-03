@@ -12,23 +12,31 @@ interface DragonLogoProps {
 export function DragonLogo({ size = 44, showText = true }: DragonLogoProps) {
   const { isHighContrast } = useAccessibility();
 
+  const badgeSize = size;
+  const iconSize = Math.round(size * 0.6);
+  const radius = Math.round(size * 0.28);
+
   return (
-    <View style={styles.container} accessible accessibilityRole="image" accessibilityLabel="Smok Przewodnik Logo">
+    <View
+      style={styles.container}
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel="Smok Przewodnik Logo">
       <View
         style={[
           styles.badge,
           {
-            width: size,
-            height: size,
-            borderRadius: Math.round(size * 0.28),
-            backgroundColor: isHighContrast ? '#000000' : BrandColors.primary,
+            width: badgeSize,
+            height: badgeSize,
+            borderRadius: radius,
+            backgroundColor: isHighContrast ? '#162C41' : BrandColors.primary,
             borderWidth: isHighContrast ? 2 : 0,
             borderColor: '#FFFFFF',
           },
         ]}>
         <MaterialCommunityIcons
-          name="chess-knight"
-          size={Math.round(size * 0.65)}
+          name="dragon"
+          size={iconSize}
           color="#FFFFFF"
         />
       </View>
@@ -54,14 +62,14 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   badge: {
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.18,
     shadowRadius: 4,
     elevation: 3,
   },
@@ -69,7 +77,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandTitle: {
-    fontSize: 22,
+    fontSize: 20,
     letterSpacing: -0.3,
   },
 });
+
