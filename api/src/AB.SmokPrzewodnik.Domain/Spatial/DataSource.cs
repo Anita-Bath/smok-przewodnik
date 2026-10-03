@@ -1,4 +1,7 @@
-namespace AB.SmokPrzewodnik.Domain.Entities;
+using AB.SmokPrzewodnik.Domain.Common;
+using AB.SmokPrzewodnik.Domain.ValueObjects;
+
+namespace AB.SmokPrzewodnik.Domain.Spatial;
 
 public sealed class DataSource : AggregateRoot<Guid>
 {
@@ -18,5 +21,14 @@ public sealed class DataSource : AggregateRoot<Guid>
         Uri? website,
         SourceLicenseMetadata license,
         decimal defaultConfidenceWeight,
-        bool isEnabled);
+        bool isEnabled) : base(id)
+    {
+        ProviderCode = providerCode;
+        DisplayName = displayName;
+        SourceType = sourceType;
+        Website = website;
+        License = license;
+        DefaultConfidenceWeight = defaultConfidenceWeight;
+        IsEnabled = isEnabled;
+    }
 }
