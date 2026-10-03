@@ -64,11 +64,25 @@ export function MapViewer({
         } else if (data.type === 'MAP_READY') {
           isMapReadyRef.current = true;
           // Sync current states
+          if (userLocation) {
+            sendMessageToIframe({
+              type: 'SET_USER_LOCATION',
+              coords: userLocation,
+              panToUser: !selectedPlace && !searchPin && !activeRoute,
+            });
+          }
           if (selectedPlace) {
             sendMessageToIframe({ type: 'SET_SELECTED_PLACE', placeId: selectedPlace.id });
           }
           if (searchPin) {
             sendMessageToIframe({ type: 'SET_SEARCH_PIN', coords: searchPin.coords, label: searchPin.label });
+          }
+          if (activeRoute && activeRoute.coordinates && activeRoute.coordinates.length > 0) {
+            sendMessageToIframe({
+              type: 'DRAW_ROUTE',
+              coordinates: activeRoute.coordinates,
+              profileType: activeRoute.profileType,
+            });
           }
         }
       } catch (err) {}
@@ -76,7 +90,18 @@ export function MapViewer({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [places, onSelectPlace, onMapClick, selectedPlace, searchPin]);
+  }, [places, onSelectPlace, onMapClick, selectedPlace, searchPin, userLocation, activeRoute]);
+
+  // Sync userLocation updates to iframe
+  useEffect(() => {
+    if (userLocation) {
+      sendMessageToIframe({
+        type: 'SET_USER_LOCATION',
+        coords: userLocation,
+        panToUser: !selectedPlace && !searchPin && !activeRoute,
+      });
+    }
+  }, [userLocation?.latitude, userLocation?.longitude]);
 
   // Sync selectedPlace updates to iframe
   useEffect(() => {

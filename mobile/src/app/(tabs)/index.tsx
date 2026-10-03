@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   LayoutAnimation,
   Platform,
-  UIManager,
   Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -30,10 +29,6 @@ import {
   fetchLiveKrakowRoutes,
   RoutePlanResult,
 } from '@/services/routingService';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 export default function ExploreScreen() {
   const router = useRouter();
