@@ -196,6 +196,10 @@ export function MapViewer({
         onMessage={handleMessage}
         javaScriptEnabled={true}
         domStorageEnabled={true}
+        onShouldStartLoadWithRequest={(request) => {
+          // Only allow the initial about:blank or data: HTML payload. Block all external links.
+          return request.url.startsWith('about:blank') || request.url.startsWith('data:') || request.url === 'about:srcdoc';
+        }}
         style={[
           styles.webview,
           {
