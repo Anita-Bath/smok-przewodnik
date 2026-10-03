@@ -257,7 +257,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.two,
   },
   form: {
-    marginTop: 8,
+    marginTop: 16,
+    flexDirection: 'column',
+    gap: 8,
   },
   forgotPassword: {
     alignSelf: 'flex-end',

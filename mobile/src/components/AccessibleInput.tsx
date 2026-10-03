@@ -108,7 +108,7 @@ export function AccessibleInput({
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginVertical: Spacing.one,
+    marginVertical: 8,
   },
   container: {
     borderRadius: 16,
