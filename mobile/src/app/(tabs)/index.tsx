@@ -72,6 +72,18 @@ export default function ExploreScreen() {
   }, [activeRouteAlternative]);
 
   const [filteredPlaces, setFilteredPlaces] = useState<KrakowPlace[]>(KRAKOW_PLACES);
+  const [allPlaces, setAllPlaces] = useState<KrakowPlace[]>(KRAKOW_PLACES);
+
+  useEffect(() => {
+    import('@/services/krakowData').then(({ fetchKrakowPlacesFromDB }) => {
+      fetchKrakowPlacesFromDB().then((places) => {
+        if (places && places.length > 0) {
+          setAllPlaces(places);
+          setFilteredPlaces(places);
+        }
+      });
+    });
+  }, []);
   const [locatedNotice, setLocatedNotice] = useState<string | null>(null);
   const [searchPin, setSearchPin] = useState<{ coords: { latitude: number; longitude: number }; label: string } | null>(null);
 
@@ -188,15 +200,15 @@ export default function ExploreScreen() {
     setActiveFilter(next);
 
     if (next === 'no_stairs') {
-      setFilteredPlaces(KRAKOW_PLACES.filter((p) => p.hasStepFreeAccess));
+      setFilteredPlaces(allPlaces.filter((p) => p.hasStepFreeAccess));
     } else if (next === 'toilets') {
-      setFilteredPlaces(KRAKOW_PLACES.filter((p) => p.hasAccessibleToilet));
+      setFilteredPlaces(allPlaces.filter((p) => p.hasAccessibleToilet));
     } else if (next === 'loop') {
-      setFilteredPlaces(KRAKOW_PLACES.filter((p) => p.hasInductionLoop));
+      setFilteredPlaces(allPlaces.filter((p) => p.hasInductionLoop));
     } else if (next === 'elevators') {
-      setFilteredPlaces(KRAKOW_PLACES.filter((p) => p.hasElevator));
+      setFilteredPlaces(allPlaces.filter((p) => p.hasElevator));
     } else {
-      setFilteredPlaces(KRAKOW_PLACES);
+      setFilteredPlaces(allPlaces);
     }
   };
 
