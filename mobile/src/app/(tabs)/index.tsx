@@ -14,7 +14,6 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AccessibilityToggle } from '@/components/AccessibilityToggle';
 import { FilterChip } from '@/components/FilterChip';
 import { MapViewer } from '@/components/MapViewer';
 import { PlaceBottomSheet } from '@/components/PlaceBottomSheet';
@@ -494,8 +493,6 @@ export default function ExploreScreen() {
             </Text>
           </View>
         )}
-
-        <AccessibilityToggle />
       </View>
 
       {/* Main Map Viewer with Leaflet & OpenStreetMap */}
