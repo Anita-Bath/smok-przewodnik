@@ -127,6 +127,8 @@ interface AccessibilityContextType {
   applyPreset: (presetId: string) => void;
   setConstraint: (code: string, level: ConstraintLevel) => void;
   toggleTravelMode: (mode: TravelMode) => void;
+  userLocation: { latitude: number; longitude: number } | null;
+  setUserLocation: (loc: { latitude: number; longitude: number } | null) => void;
   toggleFeedbackChannel: (channel: FeedbackChannel) => void;
   toggleSavePlace: (placeId: string) => void;
   loginAsGuest: () => void;
@@ -166,6 +168,10 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     'haptic',
   ]);
   const [savedPlaceIds, setSavedPlaceIds] = useState<string[]>(['wawel', 'rynek-glowny']);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>({
+    latitude: 50.0617,
+    longitude: 19.9373,
+  });
 
   const toggleHighContrast = () => setIsHighContrast((prev) => !prev);
 
@@ -245,6 +251,8 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
         applyPreset,
         setConstraint,
         toggleTravelMode,
+        userLocation,
+        setUserLocation,
         toggleFeedbackChannel,
         toggleSavePlace,
         loginAsGuest,

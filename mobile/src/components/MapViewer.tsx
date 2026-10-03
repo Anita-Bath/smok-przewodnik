@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,38 +9,49 @@ import { generateLeafletHtml } from './leafletMapHtml';
 import * as Location from 'expo-location';
 
 interface MapViewerProps {
-  selectedPlace: KrakowPlace | null;
-  onSelectPlace: (place: KrakowPlace) => void;
+  selectedPlace?: KrakowPlace | null;
+  onSelectPlace?: (place: KrakowPlace) => void;
   onLocateMe?: (coords: { latitude: number; longitude: number }) => void;
+  onMapClick?: () => void;
   places?: KrakowPlace[];
+  searchPin?: { coords: { latitude: number; longitude: number }; label: string } | null;
+  activeRoute?: { coordinates: [number, number][]; profileType?: string } | null;
+  focusedManeuver?: [number, number] | null;
 }
 
 export function MapViewer({
-  selectedPlace,
+  selectedPlace = null,
   onSelectPlace,
   onLocateMe,
+  onMapClick,
   places = KRAKOW_PLACES,
+  searchPin,
+  activeRoute,
+  focusedManeuver,
 }: MapViewerProps) {
-  const { isHighContrast } = useAccessibility();
+  const { isHighContrast, userLocation, setUserLocation } = useAccessibility();
   const webViewRef = useRef<WebView>(null);
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
 
-  // Generate initial Leaflet HTML
-  const htmlContent = generateLeafletHtml(
-    places,
-    selectedPlace?.id,
-    userLocation,
-    isHighContrast
+  // Generate initial HTML ONCE with useMemo
+  const initialHtml = useMemo(
+    () => generateLeafletHtml(places, selectedPlace?.id, userLocation, isHighContrast),
+    []
   );
 
   const handleMessage = (event: WebViewMessageEvent) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
-      if (data && data.type === 'SELECT_PLACE') {
+      if (!data) return;
+
+      if (data.type === 'SELECT_PLACE') {
         const found = places.find((p) => p.id === data.placeId);
-        if (found) {
+        if (found && onSelectPlace) {
           onSelectPlace(found);
+        }
+      } else if (data.type === 'MAP_CLICKED') {
+        if (onMapClick) {
+          onMapClick();
         }
       }
     } catch (err) {}
@@ -53,6 +64,14 @@ export function MapViewer({
       webViewRef.current.injectJavaScript(js);
     }
   }, [selectedPlace?.id]);
+
+  // Sync searchPin changes to WebView
+  useEffect(() => {
+    if (webViewRef.current && searchPin) {
+      const js = `window.postMessage(JSON.stringify({ type: 'SET_SEARCH_PIN', coords: ${JSON.stringify(searchPin.coords)}, label: '${searchPin.label}' }), '*'); true;`;
+      webViewRef.current.injectJavaScript(js);
+    }
+  }, [searchPin]);
 
   // Sync highContrast changes to WebView
   useEffect(() => {
@@ -69,6 +88,27 @@ export function MapViewer({
       webViewRef.current.injectJavaScript(js);
     }
   }, [places]);
+
+  // Sync activeRoute updates
+  useEffect(() => {
+    if (webViewRef.current) {
+      if (activeRoute && activeRoute.coordinates && activeRoute.coordinates.length > 0) {
+        const js = `window.postMessage(JSON.stringify({ type: 'DRAW_ROUTE', coordinates: ${JSON.stringify(activeRoute.coordinates)}, profileType: '${activeRoute.profileType || 'easiest'}' }), '*'); true;`;
+        webViewRef.current.injectJavaScript(js);
+      } else {
+        const js = `window.postMessage(JSON.stringify({ type: 'CLEAR_ROUTE' }), '*'); true;`;
+        webViewRef.current.injectJavaScript(js);
+      }
+    }
+  }, [activeRoute]);
+
+  // Sync focusedManeuver updates
+  useEffect(() => {
+    if (webViewRef.current && focusedManeuver) {
+      const js = `window.postMessage(JSON.stringify({ type: 'FOCUS_MANEUVER', location: ${JSON.stringify(focusedManeuver)} }), '*'); true;`;
+      webViewRef.current.injectJavaScript(js);
+    }
+  }, [focusedManeuver]);
 
   // Handle "Lokalizuj mnie" with actual GPS geolocation
   const handleLocateMe = async () => {
@@ -97,7 +137,6 @@ export function MapViewer({
         webViewRef.current.injectJavaScript(js);
       }
     } catch (err) {
-      // Kraków Old Town fallback
       const coords = { latitude: 50.0617, longitude: 19.9373 };
       setUserLocation(coords);
       if (onLocateMe) onLocateMe(coords);
@@ -111,7 +150,7 @@ export function MapViewer({
       <WebView
         ref={webViewRef}
         originWhitelist={['*']}
-        source={{ html: htmlContent }}
+        source={{ html: initialHtml }}
         onMessage={handleMessage}
         javaScriptEnabled={true}
         domStorageEnabled={true}
@@ -124,7 +163,7 @@ export function MapViewer({
         ]}
       />
 
-      {/* Floating "Lokalizuj mnie" button with real location execution */}
+      {/* Floating "Lokalizuj mnie" button */}
       <Pressable
         onPress={handleLocateMe}
         disabled={isLocating}

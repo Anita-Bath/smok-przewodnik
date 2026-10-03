@@ -8,14 +8,18 @@ import { AccessibleButton } from '@/components/AccessibleButton';
 import { BrandColors, Spacing, MaxContentWidth } from '@/constants/theme';
 import { KRAKOW_PLACES } from '@/services/krakowData';
 import { useAccessibility } from '@/context/AccessibilityContext';
+import { calculateDistanceMeters, formatDistance } from '@/services/routingService';
 
 export default function PlaceDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { isHighContrast, savedPlaceIds, toggleSavePlace, isGuest } = useAccessibility();
+  const { isHighContrast, savedPlaceIds, toggleSavePlace, isGuest, userLocation } = useAccessibility();
 
   const place = KRAKOW_PLACES.find((p) => p.id === id) || KRAKOW_PLACES[0];
   const isSaved = savedPlaceIds.includes(place.id);
+  const distanceMeters = userLocation
+    ? calculateDistanceMeters(userLocation, place.coordinates)
+    : place.distanceFromUserMeters;
 
   return (
     <SafeAreaView
@@ -99,7 +103,7 @@ export default function PlaceDetailScreen() {
                 styles.placeAddress,
                 { color: isHighContrast ? '#1E293B' : '#64748B' },
               ]}>
-              {place.distanceFromUserMeters} m stąd · {place.address}
+              {formatDistance(distanceMeters)} stąd · {place.address}
             </Text>
 
             <View
