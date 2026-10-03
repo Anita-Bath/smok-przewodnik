@@ -7,11 +7,15 @@ import { BrandColors } from '@/constants/theme';
 import { useAccessibility } from '@/context/AccessibilityContext';
 
 export default function TabsLayout() {
-  const { isHighContrast } = useAccessibility();
+  const { isHighContrast, isDark } = useAccessibility();
   const insets = useSafeAreaInsets();
 
-  const activeColor = isHighContrast ? '#000000' : BrandColors.primary;
-  const inactiveColor = isHighContrast ? '#555555' : '#64748B';
+  const activeColor = isHighContrast
+    ? (isDark ? '#FFFFFF' : '#000000')
+    : (isDark ? '#38BDF8' : BrandColors.primary);
+  const inactiveColor = isHighContrast
+    ? (isDark ? '#A1A1AA' : '#555555')
+    : (isDark ? '#64748B' : '#94A3B8');
 
   // Safe bottom padding:
   // On Android with gesture navigation (or edge-to-edge), insets.bottom is typically 24-48dp.
@@ -34,13 +38,17 @@ export default function TabsLayout() {
           height: tabHeight,
           paddingBottom: bottomPadding,
           paddingTop: 8,
-          backgroundColor: '#FFFFFF',
+          backgroundColor: isHighContrast
+            ? (isDark ? '#000000' : '#FFFFFF')
+            : (isDark ? '#0F172A' : '#FFFFFF'),
           borderTopWidth: isHighContrast ? 3 : 1,
-          borderTopColor: isHighContrast ? '#000000' : '#E2E8F0',
+          borderTopColor: isHighContrast
+            ? (isDark ? '#FFFFFF' : '#000000')
+            : (isDark ? '#1E293B' : '#E2E8F0'),
           elevation: 8,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.06,
+          shadowOpacity: isDark ? 0.3 : 0.06,
           shadowRadius: 4,
         },
         tabBarItemStyle: {

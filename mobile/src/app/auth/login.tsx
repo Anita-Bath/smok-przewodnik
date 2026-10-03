@@ -11,7 +11,7 @@ import { useAccessibility } from '@/context/AccessibilityContext';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { isHighContrast, login, loginAsGuest } = useAccessibility();
+  const { isDark, isHighContrast, login, loginAsGuest } = useAccessibility();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -29,7 +29,11 @@ export default function LoginScreen() {
     <SafeAreaView
       style={[
         styles.safeArea,
-        { backgroundColor: isHighContrast ? '#FFFFFF' : '#F8FAFC' },
+        {
+          backgroundColor: isHighContrast
+            ? (isDark ? '#000000' : '#FFFFFF')
+            : (isDark ? '#0F172A' : '#F8FAFC'),
+        },
       ]}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -48,8 +52,12 @@ export default function LoginScreen() {
             style={[
               styles.illustrationBox,
               {
-                backgroundColor: isHighContrast ? '#E5EBF2' : '#E8F4F1',
-                borderColor: isHighContrast ? '#000000' : '#D1E6E1',
+                backgroundColor: isHighContrast
+                  ? (isDark ? '#082F49' : '#E5EBF2')
+                  : (isDark ? '#1E293B' : '#E8F4F1'),
+                borderColor: isHighContrast
+                  ? (isDark ? '#38BDF8' : '#000000')
+                  : (isDark ? '#334155' : '#D1E6E1'),
                 borderWidth: isHighContrast ? 2 : 1,
               },
             ]}>
@@ -57,7 +65,11 @@ export default function LoginScreen() {
             <View
               style={[
                 styles.routeLine,
-                { backgroundColor: isHighContrast ? '#000000' : BrandColors.primary },
+                {
+                  backgroundColor: isHighContrast
+                    ? (isDark ? '#38BDF8' : '#000000')
+                    : BrandColors.primary,
+                },
               ]}
             />
             <View style={styles.routePinEnd}>
@@ -67,15 +79,23 @@ export default function LoginScreen() {
               style={[
                 styles.badgeStepFree,
                 {
-                  backgroundColor: '#FFFFFF',
-                  borderColor: isHighContrast ? '#000000' : '#B2DFDB',
+                  backgroundColor: isHighContrast
+                    ? (isDark ? '#000000' : '#FFFFFF')
+                    : (isDark ? '#0F172A' : '#FFFFFF'),
+                  borderColor: isHighContrast
+                    ? (isDark ? '#34D399' : '#000000')
+                    : (isDark ? '#115E59' : '#B2DFDB'),
                   borderWidth: isHighContrast ? 2 : 1,
                 },
               ]}>
               <Text
                 style={[
                   styles.badgeStepFreeText,
-                  { color: isHighContrast ? '#000000' : BrandColors.accentTeal },
+                  {
+                    color: isHighContrast
+                      ? (isDark ? '#34D399' : '#000000')
+                      : (isDark ? '#2DD4BF' : BrandColors.accentTeal),
+                  },
                 ]}>
                 ✓ Wejście bez schodów
               </Text>
@@ -87,7 +107,9 @@ export default function LoginScreen() {
             style={[
               styles.title,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontWeight: isHighContrast ? '900' : '800',
               },
             ]}>
@@ -98,7 +120,9 @@ export default function LoginScreen() {
             style={[
               styles.subtitle,
               {
-                color: isHighContrast ? '#1E293B' : '#475569',
+                color: isHighContrast
+                  ? (isDark ? '#CBD5E1' : '#1E293B')
+                  : (isDark ? '#94A3B8' : '#475569'),
                 fontWeight: isHighContrast ? '600' : '400',
               },
             ]}>
@@ -133,7 +157,11 @@ export default function LoginScreen() {
               <Text
                 style={[
                   styles.forgotPasswordText,
-                  { color: isHighContrast ? '#003366' : BrandColors.accentTeal },
+                  {
+                    color: isHighContrast
+                      ? (isDark ? '#38BDF8' : '#003366')
+                      : (isDark ? '#2DD4BF' : BrandColors.accentTeal),
+                  },
                 ]}>
                 Zapomniałeś hasła?
               </Text>
@@ -157,7 +185,11 @@ export default function LoginScreen() {
               <Text
                 style={[
                   styles.registerLinkText,
-                  { color: isHighContrast ? '#003366' : BrandColors.accentTeal },
+                  {
+                    color: isHighContrast
+                      ? (isDark ? '#38BDF8' : '#003366')
+                      : (isDark ? '#2DD4BF' : BrandColors.accentTeal),
+                  },
                 ]}>
                 Utwórz konto
               </Text>
@@ -175,7 +207,11 @@ export default function LoginScreen() {
             <Text
               style={[
                 styles.guestHint,
-                { color: isHighContrast ? '#1E293B' : '#64748B' },
+                {
+                  color: isHighContrast
+                    ? (isDark ? '#CBD5E1' : '#1E293B')
+                    : (isDark ? '#94A3B8' : '#64748B'),
+                },
               ]}>
               Przeglądaj mapę, konto niepotrzebne.
             </Text>

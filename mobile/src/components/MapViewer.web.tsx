@@ -28,14 +28,14 @@ export function MapViewer({
   activeRoute,
   focusedManeuver,
 }: MapViewerProps) {
-  const { isHighContrast, userLocation, setUserLocation } = useAccessibility();
+  const { isHighContrast, isDark, userLocation, setUserLocation } = useAccessibility();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isLocating, setIsLocating] = useState(false);
   const isMapReadyRef = useRef(false);
 
   // Generate initial HTML ONCE so iframe is not destroyed & recreated on re-renders!
   const initialHtml = useMemo(
-    () => generateLeafletHtml(places, selectedPlace?.id, userLocation, isHighContrast),
+    () => generateLeafletHtml(places, selectedPlace?.id, userLocation, isHighContrast, isDark),
     []
   );
 
@@ -64,6 +64,8 @@ export function MapViewer({
         } else if (data.type === 'MAP_READY') {
           isMapReadyRef.current = true;
           // Sync current states
+          sendMessageToIframe({ type: 'SET_DARK_MODE', enabled: isDark });
+          sendMessageToIframe({ type: 'SET_HIGH_CONTRAST', enabled: isHighContrast });
           if (userLocation) {
             sendMessageToIframe({
               type: 'SET_USER_LOCATION',
@@ -90,7 +92,23 @@ export function MapViewer({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [places, onSelectPlace, onMapClick, selectedPlace, searchPin, userLocation, activeRoute]);
+  }, [places, onSelectPlace, onMapClick, selectedPlace, searchPin, userLocation, activeRoute, isDark, isHighContrast]);
+
+  // Sync dark mode updates to iframe
+  useEffect(() => {
+    sendMessageToIframe({
+      type: 'SET_DARK_MODE',
+      enabled: isDark,
+    });
+  }, [isDark]);
+
+  // Sync highContrast updates to iframe
+  useEffect(() => {
+    sendMessageToIframe({
+      type: 'SET_HIGH_CONTRAST',
+      enabled: isHighContrast,
+    });
+  }, [isHighContrast]);
 
   // Sync userLocation updates to iframe
   useEffect(() => {
@@ -216,9 +234,11 @@ export function MapViewer({
         style={{
           width: '100%',
           height: '100%',
-          border: isHighContrast ? '3px solid #000000' : '1px solid #CBD5E1',
+          border: isHighContrast
+            ? (isDark ? '3px solid #FFFFFF' : '3px solid #000000')
+            : (isDark ? '1px solid #334155' : '1px solid #CBD5E1'),
           borderRadius: 16,
-          backgroundColor: '#F1F5F9',
+          backgroundColor: isDark ? '#0F172A' : '#F1F5F9',
         }}
         title="OpenStreetMap Kraków"
       />
@@ -234,8 +254,12 @@ export function MapViewer({
         style={({ pressed }) => [
           styles.locateButton,
           {
-            backgroundColor: '#FFFFFF',
-            borderColor: isHighContrast ? '#000000' : BrandColors.accentTeal,
+            backgroundColor: isHighContrast
+              ? (isDark ? '#000000' : '#FFFFFF')
+              : (isDark ? '#1E293B' : '#FFFFFF'),
+            borderColor: isHighContrast
+              ? (isDark ? '#FFFFFF' : '#000000')
+              : (isDark ? '#38BDF8' : BrandColors.accentTeal),
             borderWidth: isHighContrast ? 3 : 1.5,
             opacity: pressed || isLocating ? 0.8 : 1,
           },
@@ -243,20 +267,20 @@ export function MapViewer({
         {isLocating ? (
           <ActivityIndicator
             size="small"
-            color={isHighContrast ? '#000000' : BrandColors.accentTeal}
+            color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.accentTeal)}
           />
         ) : (
           <MaterialCommunityIcons
             name="crosshairs-gps"
             size={20}
-            color={isHighContrast ? '#000000' : BrandColors.accentTeal}
+            color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.accentTeal)}
           />
         )}
         <Text
           style={[
             styles.locateText,
             {
-              color: isHighContrast ? '#000000' : BrandColors.accentTeal,
+              color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.accentTeal),
               fontWeight: isHighContrast ? '900' : '700',
             },
           ]}>

@@ -27,6 +27,7 @@ export default function RoutePlannerScreen() {
     lon?: string;
   }>();
   const {
+    isDark,
     isHighContrast,
     constraints,
     transportCapabilities,
@@ -103,16 +104,24 @@ export default function RoutePlannerScreen() {
       edges={['top']}
       style={[
         styles.safeArea,
-        { backgroundColor: isHighContrast ? '#FFFFFF' : '#F8FAFC' },
+        {
+          backgroundColor: isHighContrast
+            ? (isDark ? '#000000' : '#FFFFFF')
+            : (isDark ? '#0F172A' : '#F8FAFC'),
+        },
       ]}>
       {/* Top Header */}
       <View
         style={[
           styles.header,
           {
-            borderBottomColor: isHighContrast ? '#000000' : '#E2E8F0',
+            borderBottomColor: isHighContrast
+              ? (isDark ? '#FFFFFF' : '#000000')
+              : (isDark ? '#334155' : '#E2E8F0'),
             borderBottomWidth: isHighContrast ? 2.5 : 1,
-            backgroundColor: '#FFFFFF',
+            backgroundColor: isHighContrast
+              ? (isDark ? '#000000' : '#FFFFFF')
+              : (isDark ? '#1E293B' : '#FFFFFF'),
           },
         ]}>
         <Pressable
@@ -127,7 +136,11 @@ export default function RoutePlannerScreen() {
           <MaterialCommunityIcons
             name="arrow-left"
             size={24}
-            color={isHighContrast ? '#000000' : '#0F172A'}
+            color={
+              isHighContrast
+                ? (isDark ? '#FFFFFF' : '#000000')
+                : (isDark ? '#F8FAFC' : '#0F172A')
+            }
           />
         </Pressable>
         <View style={styles.headerTitleBlock}>
@@ -136,7 +149,9 @@ export default function RoutePlannerScreen() {
             style={[
               styles.headerTitle,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontWeight: isHighContrast ? '900' : '800',
               },
             ]}>
@@ -146,7 +161,11 @@ export default function RoutePlannerScreen() {
             numberOfLines={1}
             style={[
               styles.headerSubtitle,
-              { color: isHighContrast ? '#1E293B' : '#64748B' },
+              {
+                color: isHighContrast
+                  ? (isDark ? '#CBD5E1' : '#1E293B')
+                  : (isDark ? '#94A3B8' : '#64748B'),
+              },
             ]}>
             {planResult.originName} ({formatDistance(selectedRoute.distanceMeters)}) → {destination.address}
           </Text>
@@ -286,7 +305,9 @@ export default function RoutePlannerScreen() {
                 style={[
                   styles.sectionTitle,
                   {
-                    color: isHighContrast ? '#000000' : '#0F172A',
+                    color: isHighContrast
+                      ? (isDark ? '#FFFFFF' : '#000000')
+                      : (isDark ? '#F8FAFC' : '#0F172A'),
                     fontWeight: isHighContrast ? '900' : '800',
                   },
                 ]}>
@@ -307,11 +328,11 @@ export default function RoutePlannerScreen() {
                       styles.routeCard,
                       {
                         backgroundColor: isSelected
-                          ? (isHighContrast ? '#E8F1FC' : '#F0F7FF')
-                          : '#FFFFFF',
+                          ? (isHighContrast ? (isDark ? '#0284C7' : '#E8F1FC') : (isDark ? '#0F2744' : '#F0F7FF'))
+                          : (isHighContrast ? (isDark ? '#000000' : '#FFFFFF') : (isDark ? '#1E293B' : '#FFFFFF')),
                         borderColor: isSelected
-                          ? (isHighContrast ? '#000000' : BrandColors.primary)
-                          : (isHighContrast ? '#000000' : '#E2E8F0'),
+                          ? (isHighContrast ? '#38BDF8' : (isDark ? '#38BDF8' : BrandColors.primary))
+                          : (isHighContrast ? (isDark ? '#475569' : '#000000') : (isDark ? '#334155' : '#E2E8F0')),
                         borderWidth: isSelected ? 3 : (isHighContrast ? 2 : 1),
                         cursor: 'pointer' as any,
                         opacity: pressed ? 0.85 : 1,
@@ -330,13 +351,19 @@ export default function RoutePlannerScreen() {
                               : 'bus'
                           }
                           size={24}
-                          color={isHighContrast ? '#000000' : BrandColors.primary}
+                          color={
+                            isHighContrast
+                              ? (isDark ? '#FFFFFF' : '#000000')
+                              : (isDark ? '#38BDF8' : BrandColors.primary)
+                          }
                         />
                         <Text
                           style={[
                             styles.routeTitle,
                             {
-                              color: isHighContrast ? '#000000' : '#0F172A',
+                              color: isHighContrast
+                                ? (isDark ? '#FFFFFF' : '#000000')
+                                : (isDark ? '#F8FAFC' : '#0F172A'),
                               fontWeight: isHighContrast ? '900' : '700',
                             },
                           ]}>
@@ -349,7 +376,9 @@ export default function RoutePlannerScreen() {
                           style={[
                             styles.routeDuration,
                             {
-                              color: isHighContrast ? '#000000' : BrandColors.primary,
+                              color: isHighContrast
+                                ? (isDark ? '#FFFFFF' : '#000000')
+                                : (isDark ? '#38BDF8' : BrandColors.primary),
                               fontWeight: isHighContrast ? '900' : '800',
                             },
                           ]}>
@@ -358,7 +387,11 @@ export default function RoutePlannerScreen() {
                         <Text
                           style={[
                             styles.routeDist,
-                            { color: isHighContrast ? '#1E293B' : '#64748B' },
+                            {
+                              color: isHighContrast
+                                ? (isDark ? '#CBD5E1' : '#1E293B')
+                                : (isDark ? '#94A3B8' : '#64748B'),
+                            },
                           ]}>
                           {formatDistance(alt.distanceMeters)}
                         </Text>
@@ -369,7 +402,9 @@ export default function RoutePlannerScreen() {
                       style={[
                         styles.routeAdvantage,
                         {
-                          color: isHighContrast ? '#000000' : BrandColors.accentTeal,
+                          color: isHighContrast
+                            ? (isDark ? '#5EEAD4' : '#000000')
+                            : (isDark ? '#2DD4BF' : BrandColors.accentTeal),
                           fontWeight: isHighContrast ? '800' : '600',
                         },
                       ]}>
@@ -383,14 +418,19 @@ export default function RoutePlannerScreen() {
                           styles.badgeChip,
                           {
                             backgroundColor:
-                              alt.stairsCount === 0 ? '#DCFCE7' : '#FEE2E2',
+                              alt.stairsCount === 0
+                                ? (isDark ? '#14532D' : '#DCFCE7')
+                                : (isDark ? '#7F1D1D' : '#FEE2E2'),
                           },
                         ]}>
                         <Text
                           style={[
                             styles.badgeChipText,
                             {
-                              color: alt.stairsCount === 0 ? '#15803D' : '#B91C1C',
+                              color:
+                                alt.stairsCount === 0
+                                  ? (isDark ? '#86EFAC' : '#15803D')
+                                  : (isDark ? '#FCA5A5' : '#B91C1C'),
                             },
                           ]}>
                           {alt.stairsCount === 0 ? '0 schodów' : `${alt.stairsCount} schodów`}
@@ -398,23 +438,50 @@ export default function RoutePlannerScreen() {
                       </View>
 
                       {alt.hasRoughSurface && (
-                        <View style={[styles.badgeChip, { backgroundColor: '#FEF3C7' }]}>
-                          <Text style={[styles.badgeChipText, { color: '#B45309' }]}>
+                        <View
+                          style={[
+                            styles.badgeChip,
+                            { backgroundColor: isDark ? '#78350F' : '#FEF3C7' },
+                          ]}>
+                          <Text
+                            style={[
+                              styles.badgeChipText,
+                              { color: isDark ? '#FCD34D' : '#B45309' },
+                            ]}>
                             Nierówny bruk
                           </Text>
                         </View>
                       )}
 
-                      <View style={[styles.badgeChip, { backgroundColor: '#E0F2FE' }]}>
-                        <Text style={[styles.badgeChipText, { color: '#0369A1' }]}>
+                      <View
+                        style={[
+                          styles.badgeChip,
+                          { backgroundColor: isDark ? '#082F49' : '#E0F2FE' },
+                        ]}>
+                        <Text
+                          style={[
+                            styles.badgeChipText,
+                            { color: isDark ? '#38BDF8' : '#0369A1' },
+                          ]}>
                           Pewność {alt.confidenceScore}%
                         </Text>
                       </View>
                     </View>
 
                     {alt.accessibilitySummary.warnings.length > 0 && (
-                      <View style={styles.warningBox}>
-                        <Text style={styles.warningText}>
+                      <View
+                        style={[
+                          styles.warningBox,
+                          {
+                            backgroundColor: isDark ? '#450A0A' : '#FEF2F2',
+                            borderColor: isDark ? '#991B1B' : '#FECACA',
+                          },
+                        ]}>
+                        <Text
+                          style={[
+                            styles.warningText,
+                            { color: isDark ? '#FCA5A5' : '#DC2626' },
+                          ]}>
                           ⚠ {alt.accessibilitySummary.warnings[0]}
                         </Text>
                       </View>
@@ -440,7 +507,9 @@ export default function RoutePlannerScreen() {
                 style={[
                   styles.sectionTitle,
                   {
-                    color: isHighContrast ? '#000000' : '#0F172A',
+                    color: isHighContrast
+                      ? (isDark ? '#FFFFFF' : '#000000')
+                      : (isDark ? '#F8FAFC' : '#0F172A'),
                     fontWeight: isHighContrast ? '800' : '700',
                   },
                 ]}>
@@ -451,8 +520,12 @@ export default function RoutePlannerScreen() {
                 style={[
                   styles.maneuversList,
                   {
-                    backgroundColor: '#FFFFFF',
-                    borderColor: isHighContrast ? '#000000' : '#E2E8F0',
+                    backgroundColor: isHighContrast
+                      ? (isDark ? '#000000' : '#FFFFFF')
+                      : (isDark ? '#1E293B' : '#FFFFFF'),
+                    borderColor: isHighContrast
+                      ? (isDark ? '#FFFFFF' : '#000000')
+                      : (isDark ? '#334155' : '#E2E8F0'),
                     borderWidth: isHighContrast ? 2.5 : 1,
                   },
                 ]}>
@@ -464,8 +537,13 @@ export default function RoutePlannerScreen() {
                     }}
                     style={({ pressed }) => [
                       styles.maneuverItem,
-                      idx < selectedRoute.maneuvers.length - 1 && styles.borderBottom,
-                      idx === activeManeuverIndex && styles.activeManeuverRow,
+                      idx < selectedRoute.maneuvers.length - 1 && {
+                        borderBottomWidth: 1,
+                        borderBottomColor: isDark ? '#334155' : '#F1F5F9',
+                      },
+                      idx === activeManeuverIndex && {
+                        backgroundColor: isDark ? '#064E3B' : '#F0FDF4',
+                      },
                       { opacity: pressed ? 0.7 : 1, cursor: 'pointer' as any },
                     ]}>
                     <View
@@ -476,8 +554,8 @@ export default function RoutePlannerScreen() {
                             idx === activeManeuverIndex
                               ? BrandColors.accentTeal
                               : isHighContrast
-                              ? '#000000'
-                              : BrandColors.primary,
+                              ? (isDark ? '#38BDF8' : '#000000')
+                              : (isDark ? '#0284C7' : BrandColors.primary),
                         },
                       ]}>
                       <Text style={styles.stepDotText}>{idx + 1}</Text>
@@ -487,26 +565,42 @@ export default function RoutePlannerScreen() {
                         style={[
                           styles.stepInstruction,
                           {
-                            color: isHighContrast ? '#000000' : '#0F172A',
+                            color: isHighContrast
+                              ? (isDark ? '#FFFFFF' : '#000000')
+                              : (isDark ? '#F8FAFC' : '#0F172A'),
                             fontWeight: isHighContrast ? '800' : '600',
                           },
                         ]}>
                         {m.instruction}
                       </Text>
-                      <Text style={styles.stepDistanceMeta}>
+                      <Text
+                        style={[
+                          styles.stepDistanceMeta,
+                          { color: isDark ? '#94A3B8' : '#64748B' },
+                        ]}>
                         Dystans: {m.distanceMeters} m
                       </Text>
                       {m.accessibilityNote && (
                         <Text
                           style={[
                             styles.stepNote,
-                            { color: isHighContrast ? '#005A4E' : BrandColors.accentTeal },
+                            {
+                              color: isHighContrast
+                                ? (isDark ? '#5EEAD4' : '#005A4E')
+                                : (isDark ? '#2DD4BF' : BrandColors.accentTeal),
+                            },
                           ]}>
                           ✓ {m.accessibilityNote}
                         </Text>
                       )}
                       {m.warning && (
-                        <Text style={styles.stepWarning}>⚠ {m.warning}</Text>
+                        <Text
+                          style={[
+                            styles.stepWarning,
+                            { color: isDark ? '#F87171' : '#DC2626' },
+                          ]}>
+                          ⚠ {m.warning}
+                        </Text>
                       )}
                     </View>
                   </Pressable>

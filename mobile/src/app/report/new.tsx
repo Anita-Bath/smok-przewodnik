@@ -15,7 +15,7 @@ type MaterialIconName = keyof typeof MaterialCommunityIcons.glyphMap;
 export default function NewReportScreen() {
   const router = useRouter();
   const { placeId } = useLocalSearchParams<{ placeId?: string }>();
-  const { isHighContrast, addPoints } = useAccessibility();
+  const { isDark, isHighContrast, addPoints } = useAccessibility();
 
   const place = KRAKOW_PLACES.find((p) => p.id === placeId);
 
@@ -40,20 +40,33 @@ export default function NewReportScreen() {
     }, 1800);
   };
 
+  const cardBg = isHighContrast
+    ? (isDark ? '#000000' : '#FFFFFF')
+    : (isDark ? '#1E293B' : '#FFFFFF');
+  const cardBorder = isHighContrast
+    ? (isDark ? '#FFFFFF' : '#000000')
+    : (isDark ? '#334155' : '#E2E8F0');
+
   return (
     <SafeAreaView
       style={[
         styles.safeArea,
-        { backgroundColor: isHighContrast ? '#FFFFFF' : '#F8FAFC' },
+        {
+          backgroundColor: isHighContrast
+            ? (isDark ? '#000000' : '#FFFFFF')
+            : (isDark ? '#0F172A' : '#F8FAFC'),
+        },
       ]}>
       {/* Header */}
       <View
         style={[
           styles.header,
           {
-            borderBottomColor: isHighContrast ? '#000000' : '#E2E8F0',
+            borderBottomColor: cardBorder,
             borderBottomWidth: isHighContrast ? 2.5 : 1,
-            backgroundColor: '#FFFFFF',
+            backgroundColor: isHighContrast
+              ? (isDark ? '#000000' : '#FFFFFF')
+              : (isDark ? '#1E293B' : '#FFFFFF'),
           },
         ]}>
         <Pressable
@@ -65,7 +78,11 @@ export default function NewReportScreen() {
           <MaterialCommunityIcons
             name="close"
             size={24}
-            color={isHighContrast ? '#000000' : '#0F172A'}
+            color={
+              isHighContrast
+                ? (isDark ? '#FFFFFF' : '#000000')
+                : (isDark ? '#F8FAFC' : '#0F172A')
+            }
           />
         </Pressable>
 
@@ -73,7 +90,9 @@ export default function NewReportScreen() {
           style={[
             styles.headerTitle,
             {
-              color: isHighContrast ? '#000000' : '#0F172A',
+              color: isHighContrast
+                ? (isDark ? '#FFFFFF' : '#000000')
+                : (isDark ? '#F8FAFC' : '#0F172A'),
               fontWeight: isHighContrast ? '900' : '800',
             },
           ]}>
@@ -92,18 +111,30 @@ export default function NewReportScreen() {
               style={[
                 styles.successCard,
                 {
-                  backgroundColor: '#DCFCE7',
-                  borderColor: isHighContrast ? '#000000' : '#86EFAC',
+                  backgroundColor: isDark ? '#064E3B' : '#DCFCE7',
+                  borderColor: isHighContrast
+                    ? (isDark ? '#34D399' : '#000000')
+                    : (isDark ? '#059669' : '#86EFAC'),
                   borderWidth: isHighContrast ? 3 : 1,
                 },
               ]}>
               <MaterialCommunityIcons
                 name="check-decagram"
                 size={54}
-                color="#15803D"
+                color={isDark ? '#34D399' : '#15803D'}
               />
-              <Text style={styles.successTitle}>Dziękujemy za zgłoszenie!</Text>
-              <Text style={styles.successSubtitle}>
+              <Text
+                style={[
+                  styles.successTitle,
+                  { color: isDark ? '#86EFAC' : '#15803D' },
+                ]}>
+                Dziękujemy za zgłoszenie!
+              </Text>
+              <Text
+                style={[
+                  styles.successSubtitle,
+                  { color: isDark ? '#D1FAE5' : '#166534' },
+                ]}>
                 Twoja obserwacja pomoże innym mieszkańcom Krakowa.
                 Otrzymujesz +15 Punktów Społeczności!
               </Text>
@@ -116,13 +147,27 @@ export default function NewReportScreen() {
                   style={[
                     styles.targetCard,
                     {
-                      backgroundColor: '#FFFFFF',
-                      borderColor: isHighContrast ? '#000000' : '#E2E8F0',
+                      backgroundColor: cardBg,
+                      borderColor: cardBorder,
                       borderWidth: isHighContrast ? 2 : 1,
                     },
                   ]}>
-                  <Text style={styles.targetLabel}>Lokalizacja zgłoszenia:</Text>
-                  <Text style={styles.targetName}>
+                  <Text
+                    style={[
+                      styles.targetLabel,
+                      { color: isDark ? '#94A3B8' : '#64748B' },
+                    ]}>
+                    Lokalizacja zgłoszenia:
+                  </Text>
+                  <Text
+                    style={[
+                      styles.targetName,
+                      {
+                        color: isHighContrast
+                          ? (isDark ? '#FFFFFF' : '#000000')
+                          : (isDark ? '#F8FAFC' : '#0F172A'),
+                      },
+                    ]}>
                     {place.name} ({place.address})
                   </Text>
                 </View>
@@ -133,7 +178,9 @@ export default function NewReportScreen() {
                 style={[
                   styles.sectionTitle,
                   {
-                    color: isHighContrast ? '#000000' : '#0F172A',
+                    color: isHighContrast
+                      ? (isDark ? '#FFFFFF' : '#000000')
+                      : (isDark ? '#F8FAFC' : '#0F172A'),
                     fontWeight: isHighContrast ? '900' : '800',
                   },
                 ]}>
@@ -154,11 +201,13 @@ export default function NewReportScreen() {
                         styles.typeItem,
                         {
                           backgroundColor: isSelected
-                            ? (isHighContrast ? '#000000' : BrandColors.primaryLight)
-                            : '#FFFFFF',
+                            ? (isHighContrast
+                                ? (isDark ? '#0284C7' : '#000000')
+                                : (isDark ? '#0369A1' : BrandColors.primaryLight))
+                            : cardBg,
                           borderColor: isSelected
-                            ? (isHighContrast ? '#000000' : BrandColors.primary)
-                            : (isHighContrast ? '#000000' : '#CBD5E1'),
+                            ? (isHighContrast ? '#38BDF8' : BrandColors.primary)
+                            : cardBorder,
                           borderWidth: isSelected ? 2.5 : (isHighContrast ? 2 : 1),
                         },
                       ]}>
@@ -167,8 +216,10 @@ export default function NewReportScreen() {
                         size={22}
                         color={
                           isSelected
-                            ? (isHighContrast ? '#FFFFFF' : BrandColors.primary)
-                            : (isHighContrast ? '#000000' : '#475569')
+                            ? '#FFFFFF'
+                            : (isHighContrast
+                                ? (isDark ? '#FFFFFF' : '#000000')
+                                : (isDark ? '#94A3B8' : '#475569'))
                         }
                       />
                       <Text
@@ -176,8 +227,10 @@ export default function NewReportScreen() {
                           styles.typeLabel,
                           {
                             color: isSelected
-                              ? (isHighContrast ? '#FFFFFF' : BrandColors.primary)
-                              : (isHighContrast ? '#000000' : '#1E293B'),
+                              ? '#FFFFFF'
+                              : (isHighContrast
+                                  ? (isDark ? '#FFFFFF' : '#000000')
+                                  : (isDark ? '#F8FAFC' : '#1E293B')),
                             fontWeight: isSelected || isHighContrast ? '800' : '600',
                           },
                         ]}>
@@ -207,23 +260,33 @@ export default function NewReportScreen() {
                 style={[
                   styles.photoButton,
                   {
-                    backgroundColor: hasPhoto ? '#E6F5F3' : '#FFFFFF',
+                    backgroundColor: hasPhoto
+                      ? (isDark ? '#064E3B' : '#E6F5F3')
+                      : cardBg,
                     borderColor: hasPhoto
-                      ? BrandColors.accentTeal
-                      : (isHighContrast ? '#000000' : '#CBD5E1'),
+                      ? (isDark ? '#34D399' : BrandColors.accentTeal)
+                      : cardBorder,
                     borderWidth: isHighContrast ? 2 : 1.5,
                   },
                 ]}>
                 <MaterialCommunityIcons
                   name={hasPhoto ? 'camera' : 'camera-outline'}
                   size={24}
-                  color={hasPhoto ? BrandColors.accentTeal : '#64748B'}
+                  color={
+                    hasPhoto
+                      ? (isDark ? '#34D399' : BrandColors.accentTeal)
+                      : (isDark ? '#94A3B8' : '#64748B')
+                  }
                 />
                 <Text
                   style={[
                     styles.photoText,
                     {
-                      color: hasPhoto ? BrandColors.accentTeal : '#475569',
+                      color: hasPhoto
+                        ? (isDark ? '#86EFAC' : BrandColors.accentTeal)
+                        : (isHighContrast
+                            ? (isDark ? '#FFFFFF' : '#000000')
+                            : (isDark ? '#CBD5E1' : '#475569')),
                       fontWeight: hasPhoto || isHighContrast ? '700' : '500',
                     },
                   ]}>

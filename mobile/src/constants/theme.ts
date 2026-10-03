@@ -17,11 +17,13 @@ export const Colors = {
   light: {
     text: '#0F172A',
     textSecondary: '#475569',
-    background: '#FFFFFF',
+    background: '#F8FAFC',
     backgroundElement: '#F1F5F9',
     backgroundSelected: '#E2E8F0',
-    border: '#CBD5E1',
+    border: '#E2E8F0',
     card: '#FFFFFF',
+    cardBorder: '#E2E8F0',
+    inputBg: '#FFFFFF',
     tint: BrandColors.primary,
     accent: BrandColors.accentTeal,
   },
@@ -33,6 +35,8 @@ export const Colors = {
     backgroundSelected: '#334155',
     border: '#334155',
     card: '#1E293B',
+    cardBorder: '#334155',
+    inputBg: '#1E293B',
     tint: '#38BDF8',
     accent: '#2DD4BF',
   },
@@ -44,6 +48,8 @@ export const Colors = {
     backgroundSelected: '#D0E2FF',
     border: '#000000',
     card: '#FFFFFF',
+    cardBorder: '#000000',
+    inputBg: '#FFFFFF',
     tint: '#003399',
     accent: '#005A4E',
   },
@@ -55,6 +61,8 @@ export const Colors = {
     backgroundSelected: '#1E3A8A',
     border: '#FFFFFF',
     card: '#0A0A0A',
+    cardBorder: '#FFFFFF',
+    inputBg: '#121212',
     tint: '#60A5FA',
     accent: '#5EEAD4',
   },
@@ -62,6 +70,7 @@ export const Colors = {
 
 export type ThemeMode = 'light' | 'dark' | 'highContrastLight' | 'highContrastDark';
 export type ThemeColor = keyof typeof Colors.light;
+export type ThemeColors = Record<ThemeColor, string>;
 
 export const Fonts = Platform.select({
   ios: {
