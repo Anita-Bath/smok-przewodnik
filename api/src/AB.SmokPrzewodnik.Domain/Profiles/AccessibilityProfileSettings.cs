@@ -49,7 +49,6 @@ public sealed class AccessibilityProfileSettings
 
     public void SetConstraint(Code code, ConstraintLevel level, DateTimeOffset updatedAt)
     {
-        ArgumentNullException.ThrowIfNull(code);
         EnsureCanUpdate(updatedAt);
         _constraints[code] = level;
         UpdatedAt = updatedAt;
@@ -57,7 +56,6 @@ public sealed class AccessibilityProfileSettings
 
     public bool RemoveConstraint(Code code, DateTimeOffset updatedAt)
     {
-        ArgumentNullException.ThrowIfNull(code);
         EnsureCanUpdate(updatedAt);
         var removed = _constraints.Remove(code);
 
