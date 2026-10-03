@@ -1,4 +1,5 @@
-using AB.SmokPrzewodnik.Api.Endpoints;
+using AB.SmokPrzewodnik.Api.Extensions;
+using AB.SmokPrzewodnik.Api.Errors;
 using AB.SmokPrzewodnik.Application;
 using AB.SmokPrzewodnik.Infrastructure;
 
@@ -6,10 +7,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
+builder.Services.AddExceptionHandler<ApplicationExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton(TimeProvider.System);
 
 var app = builder.Build();
 
@@ -19,9 +23,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UsePathBase("/v1");
+
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.MapHealthEndpoints();
+app.MapControllers();
 
 app.Run();
 
