@@ -307,6 +307,36 @@ export function PlaceBottomSheet({
               'Dostępność może się zmieniać. Przed wizytą sprawdź informacje u miejsca.'}
           </Text>
 
+          {/* External Contact & Info Details */}
+          {(place.openingHours || place.phone || place.email || place.website) && (
+            <View style={[styles.apiDetailsContainer, { borderColor: isDark ? '#334155' : '#E2E8F0' }]}>
+              {place.openingHours && (
+                <View style={styles.apiDetailRow}>
+                  <MaterialCommunityIcons name="clock-outline" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+                  <Text style={[styles.apiDetailText, { color: isDark ? '#E2E8F0' : '#334155' }]}>{place.openingHours}</Text>
+                </View>
+              )}
+              {place.phone && (
+                <View style={styles.apiDetailRow}>
+                  <MaterialCommunityIcons name="phone-outline" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+                  <Text style={[styles.apiDetailText, { color: isDark ? '#E2E8F0' : '#334155' }]}>{place.phone}</Text>
+                </View>
+              )}
+              {place.email && (
+                <View style={styles.apiDetailRow}>
+                  <MaterialCommunityIcons name="email-outline" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+                  <Text style={[styles.apiDetailText, { color: isDark ? '#E2E8F0' : '#334155' }]}>{place.email}</Text>
+                </View>
+              )}
+              {place.website && (
+                <View style={styles.apiDetailRow}>
+                  <MaterialCommunityIcons name="web" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+                  <Text style={[styles.apiDetailText, { color: isDark ? '#E2E8F0' : '#334155' }]}>{place.website}</Text>
+                </View>
+              )}
+            </View>
+          )}
+
           {/* Action buttons: Trasa & Szczegóły */}
           <View style={styles.buttonsRow}>
             <View style={styles.buttonFlex}>
@@ -466,6 +496,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     marginVertical: 8,
+  },
+  apiDetailsContainer: {
+    marginTop: 12,
+    marginBottom: 4,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    gap: 8,
+  },
+  apiDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  apiDetailText: {
+    fontSize: 14,
+    flex: 1,
   },
   buttonsRow: {
     flexDirection: 'row',

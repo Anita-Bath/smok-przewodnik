@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     paddingVertical: 4,
-    minHeight: 28,
+    minHeight: 48,
   },
   eyeButton: {
     padding: 6,

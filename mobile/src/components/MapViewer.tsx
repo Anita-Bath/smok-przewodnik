@@ -13,6 +13,7 @@ interface MapViewerProps {
   onSelectPlace?: (place: KrakowPlace) => void;
   onLocateMe?: (coords: { latitude: number; longitude: number }) => void;
   onMapClick?: () => void;
+  onMapMove?: (center: { latitude: number; longitude: number }) => void;
   places?: KrakowPlace[];
   searchPin?: { coords: { latitude: number; longitude: number }; label: string } | null;
   activeRoute?: { coordinates: [number, number][]; profileType?: string } | null;
@@ -24,18 +25,19 @@ export function MapViewer({
   onSelectPlace,
   onLocateMe,
   onMapClick,
+  onMapMove,
   places = KRAKOW_PLACES,
   searchPin,
   activeRoute,
   focusedManeuver,
 }: MapViewerProps) {
-  const { isHighContrast, isDark, userLocation, setUserLocation } = useAccessibility();
+  const { isHighContrast, isDark, userLocation, setUserLocation, activePresetId } = useAccessibility();
   const webViewRef = useRef<WebView>(null);
   const [isLocating, setIsLocating] = useState(false);
 
   // Generate initial HTML ONCE with useMemo
   const initialHtml = useMemo(
-    () => generateLeafletHtml(places, selectedPlace?.id, userLocation, isHighContrast, isDark),
+    () => generateLeafletHtml(places, selectedPlace?.id, userLocation, isHighContrast, isDark, activePresetId),
     []
   );
 
@@ -52,6 +54,10 @@ export function MapViewer({
       } else if (data.type === 'MAP_CLICKED') {
         if (onMapClick) {
           onMapClick();
+        }
+      } else if (data.type === 'MAP_MOVED') {
+        if (onMapMove) {
+          onMapMove({ latitude: data.lat, longitude: data.lng });
         }
       } else if (data.type === 'MAP_READY') {
         if (webViewRef.current) {
@@ -126,10 +132,10 @@ export function MapViewer({
   // Sync places updates
   useEffect(() => {
     if (webViewRef.current) {
-      const js = `window.postMessage(JSON.stringify({ type: 'UPDATE_PLACES', places: ${JSON.stringify(places)} }), '*'); true;`;
+      const js = `window.postMessage(JSON.stringify({ type: 'UPDATE_PLACES', places: ${JSON.stringify(places)}, activePreset: '${activePresetId}' }), '*'); true;`;
       webViewRef.current.injectJavaScript(js);
     }
-  }, [places]);
+  }, [places, activePresetId]);
 
   // Sync activeRoute updates
   useEffect(() => {

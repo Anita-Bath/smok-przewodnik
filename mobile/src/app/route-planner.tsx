@@ -173,7 +173,7 @@ export default function RoutePlannerScreen() {
       </View>
 
       {/* Embedded Live Leaflet Map Preview */}
-      <View style={styles.mapContainer}>
+      <View style={isNavigating ? { flex: 1, width: '100%' } : styles.mapContainer}>
         <MapViewer
           places={[destination]}
           selectedPlace={destination}
@@ -185,9 +185,13 @@ export default function RoutePlannerScreen() {
         />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.content}>
-          <AccessibilityToggle />
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        style={isNavigating ? styles.navOverlay : undefined}
+        pointerEvents="box-none"
+      >
+        <View style={styles.content} pointerEvents="box-none">
+          {!isNavigating && <AccessibilityToggle />}
 
           {/* Active Navigation Mode View */}
           {isNavigating ? (
@@ -645,6 +649,13 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     paddingBottom: 40,
+  },
+  navOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    maxHeight: '50%',
   },
   content: {
     padding: Spacing.four,
