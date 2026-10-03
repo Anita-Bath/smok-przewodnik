@@ -28,63 +28,82 @@ export interface KrakowPlace {
   hasRoughSurfaceNotice: boolean;
 }
 
-import { supabase } from './supabase';
+import { Platform } from 'react-native';
 
-function parseEWKBPoint(hexStr: string) {
-  if (!hexStr || hexStr.length < 50) return { latitude: 50.0619, longitude: 19.9368 };
-  const bytes = new Uint8Array(hexStr.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
-  const view = new DataView(bytes.buffer);
-  const longitude = view.getFloat64(9, true); // little-endian
-  const latitude = view.getFloat64(17, true);
-  return { latitude, longitude };
+let API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5123/api/v1';
+
+if (Platform.OS === 'android' && API_URL.includes('localhost')) {
+  // Android emulator needs 10.0.2.2 to access the host machine's localhost
+  API_URL = API_URL.replace('localhost', '10.0.2.2');
+} else if (Platform.OS === 'ios' && API_URL.includes('localhost')) {
+  // Fallback to the local network IP if .env failed to load
+  API_URL = API_URL.replace('localhost', '172.20.10.2');
 }
 
 export async function fetchKrakowPlacesFromDB(): Promise<KrakowPlace[]> {
-  const { data, error } = await supabase
-    .from('spatial_entities')
-    .select(`
-      id, kind, geometry, confidence_state,
-      entity_translations(locale, name, description),
-      spatial_entity_details(place_category_code),
-      accessibility_facts(id, attribute_code, value_kind, boolean_value, evidence_kind)
-    `);
+  try {
+    console.log(`[DEBUG] fetchKrakowPlacesFromDB calling API at: ${API_URL}`);
+    const response = await fetch(`${API_URL}/spatials/entities?limit=100`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const data = await response.json();
+    const entities = data.items || [];
 
-  if (error || !data) {
-    console.error('Error fetching places:', error);
+    // Filter out only places (Kind enum may be serialized as string 'Place' or int 1)
+    const placeEntities = entities.filter((e: any) => e.kind === 'Place' || e.kind === 1);
+
+    const places: (KrakowPlace | null)[] = await Promise.all(
+      placeEntities.map(async (entity: any) => {
+        try {
+          const detailResp = await fetch(`${API_URL}/spatials/places/${entity.id}`);
+          if (!detailResp.ok) {
+            return null;
+          }
+          const placeDetail = await detailResp.json();
+          
+          const coords = entity.geometry?.coordinates?.[0] || { latitude: 50.0619, longitude: 19.9368 };
+          
+          let name = 'Nieznane miejsce';
+          let description = '';
+          if (placeDetail.translations && placeDetail.translations.length > 0) {
+            const pl = placeDetail.translations.find((t: any) => t.locale === 'pl') || placeDetail.translations[0];
+            name = pl.name;
+            description = pl.description;
+          }
+
+          return {
+            id: entity.id,
+            name: name,
+            address: placeDetail.contact?.email || 'Kraków',
+            distanceFromUserMeters: 500,
+            category: (placeDetail.categoryCode as any) || 'monument',
+            coordinates: coords,
+            confidenceState: 'unverified',
+            confidenceLabel: 'Pobrano z bazy (.NET API)',
+            generalNote: description,
+            hasStepFreeAccess: false,
+            hasElevator: false,
+            hasAccessibleToilet: false,
+            hasInductionLoop: false,
+            hasAudioGuidance: false,
+            hasRoughSurfaceNotice: false,
+            facts: []
+          } as KrakowPlace;
+        } catch (e) {
+          console.error(`Error fetching details for place ${entity.id}:`, e);
+          return null;
+        }
+      })
+    );
+
+    const validPlaces = places.filter(Boolean) as KrakowPlace[];
+    return validPlaces.length > 0 ? validPlaces : KRAKOW_PLACES;
+
+  } catch (error) {
+    console.error('Error fetching places via .NET API:', error);
     return KRAKOW_PLACES; // fallback
   }
-
-  return data.map((row: any) => {
-    const coords = parseEWKBPoint(row.geometry);
-    const tr = row.entity_translations && row.entity_translations.length > 0 ? row.entity_translations[0] : { name: row.kind, description: '' };
-    const details = row.spatial_entity_details && row.spatial_entity_details.length > 0 ? row.spatial_entity_details[0] : {};
-    const facts = row.accessibility_facts || [];
-
-    return {
-      id: row.id,
-      name: tr.name || row.kind,
-      address: 'Kraków',
-      distanceFromUserMeters: 500,
-      category: (details.place_category_code as any) || 'monument',
-      coordinates: coords,
-      confidenceState: row.confidence_state as any,
-      confidenceLabel: 'Pobrano z bazy',
-      generalNote: tr.description,
-      hasStepFreeAccess: facts.some((f: any) => f.attribute_code === 'step_free' && f.boolean_value),
-      hasElevator: facts.some((f: any) => f.attribute_code === 'elevator' && f.boolean_value),
-      hasAccessibleToilet: facts.some((f: any) => f.attribute_code === 'accessible_toilet' && f.boolean_value),
-      hasInductionLoop: facts.some((f: any) => f.attribute_code === 'induction_loop' && f.boolean_value),
-      hasAudioGuidance: facts.some((f: any) => f.attribute_code === 'audio_guidance' && f.boolean_value),
-      hasRoughSurfaceNotice: false,
-      facts: facts.map((f: any) => ({
-        id: f.id,
-        name: f.attribute_code,
-        status: f.evidence_kind === 'verified' ? 'verified' : 'unverified',
-        label: f.attribute_code,
-        description: ''
-      }))
-    };
-  });
 }
 
 export const KRAKOW_PLACES: KrakowPlace[] = [
@@ -97,8 +116,10 @@ export const KRAKOW_PLACES: KrakowPlace[] = [
     coordinates: { latitude: 50.0540, longitude: 19.9354 },
     confidenceState: 'unverified',
     confidenceLabel: 'Dane demonstracyjne · niepotwierdzone',
-    facts: [],
-    generalNote: 'Dostępność może się zmieniać. Przed wizytą sprawdź informacje u miejsca.',
+    facts: [
+      { id: 'f1', name: 'Wejście', status: 'to_check', label: 'Wejście: do sprawdzenia', description: 'Główne podejście z podjazdem.' }
+    ],
+    generalNote: 'Dostępność może się zmieniać.',
     hasStepFreeAccess: true,
     hasElevator: true,
     hasAccessibleToilet: true,

@@ -193,7 +193,7 @@ export function generateLeafletHtml(
       center: [50.0617, 19.9373],
       zoom: 15,
       zoomControl: false,
-      attributionControl: true,
+      attributionControl: false,
       markerZoomAnimation: false,
       zoomAnimation: true,
       fadeAnimation: true
