@@ -1,6 +1,6 @@
 using AB.SmokPrzewodnik.Application.Common.Querying;
 using AB.SmokPrzewodnik.Application.Spatials.Dtos;
-using AB.SmokPrzewodnik.Domain.Spatial;
+using AB.SmokPrzewodnik.Application.Spatials.Mappers;
 using MediatR;
 
 namespace AB.SmokPrzewodnik.Application.Spatials.Queries;
@@ -25,27 +25,7 @@ public sealed class GetSpatialEntitiesQueryHandler
             cancellationToken);
 
         return new CursorPageResponse<SpatialEntityListItemDto>(
-            page.Items.Select(Map).ToArray(),
+            page.Items.Select(SpatialDtoMapper.ToListItem).ToArray(),
             page.NextCursor);
     }
-
-    private static SpatialEntityListItemDto Map(SpatialEntity entity) => new(
-        entity.Id,
-        entity.CityId,
-        entity.Kind,
-        entity.State,
-        new ConfidenceSummaryDto(
-            entity.Confidence.State,
-            entity.Confidence.Score,
-            entity.Confidence.EvidenceCount,
-            entity.Confidence.EvaluatedAt),
-        new GeometryDto(
-            entity.Geometry.Kind,
-            entity.Geometry.Coordinates
-                .Select(coordinate => new GeoCoordinateDto(
-                    coordinate.Latitude,
-                    coordinate.Longitude))
-                .ToArray()),
-        entity.CreatedAt,
-        entity.UpdatedAt);
 }
