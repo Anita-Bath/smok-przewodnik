@@ -6,7 +6,11 @@ pkgs.mkShell rec {
   name = "smok-przewodnik";
 
   buildInputs = with pkgs; [
-    dotnet-sdk
+    (dotnetCorePackages.combinePackages (with dotnetCorePackages; [
+	sdk_8_0-bin
+	sdk_10_0-bin
+    ]))
+    csharp-ls
     nodejs
     ngrok
     supabase-cli

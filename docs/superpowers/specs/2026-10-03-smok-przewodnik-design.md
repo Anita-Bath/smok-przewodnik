@@ -42,7 +42,7 @@ The product includes:
 - user-controlled routing constraints with three states: `allowed`,
   `prefer_avoid`, and `must_avoid`;
 - multimodal travel based on the user's actual transport capabilities;
-- visual, audio, haptic, and voice-assisted navigation;
+- visual, audio, and haptic navigation feedback with voice-assisted control;
 - simplified instructions, landmarks, pictograms, and reduced-complexity
   presentation;
 - permanent places, infrastructure elements, obstacles, and time-bound events;
@@ -165,8 +165,11 @@ channels:
 
 - visual instruction, high-contrast state, icon, or light cue;
 - localized speech and optional repetition;
-- a small documented haptic vocabulary;
-- a constrained voice-command response.
+- a small documented haptic vocabulary.
+
+Voice commands control or acknowledge navigation actions; they do not render
+navigation feedback. Spoken responses to those commands use the audio feedback
+channel.
 
 No critical instruction may depend solely on color, sound, vibration, a map
 gesture, or fine motor control. The app supports screen readers, scalable text,
@@ -182,8 +185,8 @@ The .NET API contains the following modules:
 - links Supabase subjects to application accounts;
 - synchronizes account-owned accessibility constraints and transport
   capabilities;
-- synchronizes account-owned visual, audio, haptic, voice, and
-  simplified-presentation preferences;
+- synchronizes account-owned feedback channels and simplified-presentation
+  preferences;
 - applies journey-history consent and account privacy rules;
 - manages roles for users, organizations, partners, moderators, and admins.
 
@@ -478,8 +481,12 @@ ConfidenceState    = unverified | supported | disputed | stale | resolved
 RewardPointState   = pending | spendable | spent | reversed | expired
 TravelMode         = walk | mobility_aid | bicycle | micromobility |
                      public_transport | car
-FeedbackChannel    = visual | audio | haptic | voice
+FeedbackChannel    = visual | audio | haptic
 ```
+
+Feedback channels describe navigation output delivered to the user. Voice
+commands are an input mechanism for controlling the interface and therefore do
+not belong to `FeedbackChannel`; spoken feedback is represented by `audio`.
 
 Canonical taxonomy codes are data, not application enums, when cities or source
 adapters may extend them. Examples include `stairs`, `curb`, `rough_surface`,
@@ -896,7 +903,7 @@ demonstrable increment and leave its module contracts usable by the next stage.
 ### Milestone 3: Accessible active navigation
 
 - Implement structured navigation events.
-- Render visual, spoken, haptic, and voice-assisted controls.
+- Render visual, spoken, and haptic feedback with voice-assisted controls.
 - Add simplified and landmark-based presentation.
 - Add short-lived navigation sessions, progress, warnings, and user-approved
   rerouting.
