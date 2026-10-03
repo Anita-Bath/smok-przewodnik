@@ -30,21 +30,6 @@ public static class AuthExtension
                     NameClaimType = "sub",
                     ClockSkew = TimeSpan.FromSeconds(30)
                 };
-
-                builder.Events = new JwtBearerEvents
-                {
-                    OnTokenValidated = context =>
-                    {
-                        var role = context.Principal?.FindFirst("role");
-
-                        if (role?.Value != claimRole)
-                        {
-                            context.Fail("Invalid token");
-                        }
-
-                        return Task.CompletedTask;
-                    }
-                };
             });
 
         services.AddAuthorization(options =>

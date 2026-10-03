@@ -1,10 +1,31 @@
+using AB.SmokPrzewodnik.Application.Spatials.Dtos;
 using AB.SmokPrzewodnik.Domain.Spatial;
 using AB.SmokPrzewodnik.Domain.Spatial.Details;
 
-namespace AB.SmokPrzewodnik.Application.Spatials.Dtos;
+namespace AB.SmokPrzewodnik.Application.Spatials.Mappers;
 
 internal static class SpatialDtoMapper
 {
+    public static SpatialEntityListItemDto ToListItem(SpatialEntity entity) => new(
+        entity.Id,
+        entity.CityId,
+        entity.Kind,
+        entity.State,
+        new ConfidenceSummaryDto(
+            entity.Confidence.State,
+            entity.Confidence.Score,
+            entity.Confidence.EvidenceCount,
+            entity.Confidence.EvaluatedAt),
+        new GeometryDto(
+            entity.Geometry.Kind,
+            entity.Geometry.Coordinates
+                .Select(coordinate => new GeoCoordinateDto(
+                    coordinate.Latitude,
+                    coordinate.Longitude))
+                .ToArray()),
+        entity.CreatedAt,
+        entity.UpdatedAt);
+
     public static PlaceDto ToPlace(SpatialEntity entity, PlaceDetails details) => new(
         entity.Id,
         entity.CityId,
@@ -37,21 +58,19 @@ internal static class SpatialDtoMapper
         entity.CreatedAt,
         entity.UpdatedAt);
 
-    public static EventListItemDto ToEventListItem(SpatialEntity entity, EventDetails details) => new(
+    public static InfrastructureDto ToInfrastructure(SpatialEntity entity, InfrastructureDetails details) => new(
         entity.Id,
         entity.CityId,
+        entity.Kind,
         entity.State,
         ToConfidence(entity),
         ToGeometry(entity),
-        ToTranslations(entity),
-        ToCategories(details),
-        details.OrganizerEntityId,
-        details.StartsAt,
-        details.EndsAt,
-        details.BookingUri,
-        details.Capacity,
+        details.InfrastructureCode,
+        details.OperationalState,
+        details.MaintenanceReference,
         entity.CreatedAt,
-        entity.UpdatedAt);
+        entity.UpdatedAt
+    );
 
     private static ConfidenceSummaryDto ToConfidence(SpatialEntity entity) => new(
         entity.Confidence.State,
