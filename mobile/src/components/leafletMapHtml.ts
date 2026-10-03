@@ -4,7 +4,8 @@ export function generateLeafletHtml(
   places: KrakowPlace[],
   selectedPlaceId?: string,
   userLocation?: { latitude: number; longitude: number } | null,
-  isHighContrast?: boolean
+  isHighContrast?: boolean,
+  isDark?: boolean
 ): string {
   const placesJson = JSON.stringify(places);
   const selectedIdJson = JSON.stringify(selectedPlaceId || null);
@@ -19,7 +20,7 @@ export function generateLeafletHtml(
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
-    /* Clean reset for map container only - avoid universal * reset which conflicts with Leaflet tile calculations */
+    /* Clean reset for map container only */
     html, body, #map {
       width: 100%;
       height: 100%;
@@ -29,19 +30,23 @@ export function generateLeafletHtml(
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
+    body.dark-mode, body.dark-mode #map {
+      background: #0F172A;
+    }
+
     /* High contrast tile overlay */
     body.high-contrast .leaflet-tile-pane {
       filter: contrast(135%) saturate(120%) brightness(95%);
     }
 
-    /* Transparent marker containers so Leaflet manages exact positioning without border/box-sizing interference */
+    /* Transparent marker containers */
     .poi-pin-icon, .search-pin-icon, .user-loc-icon {
       background: transparent !important;
       border: none !important;
       cursor: pointer;
     }
 
-    /* Custom Leaflet Tooltip for labels positioned cleanly above pin without shifting the marker anchor */
+    /* Custom Leaflet Tooltip for labels positioned cleanly above pin */
     .poi-map-tooltip {
       background: #FFFFFF !important;
       color: #0F172A !important;
@@ -69,6 +74,26 @@ export function generateLeafletHtml(
       border-top-color: #004F9E !important;
     }
 
+    /* Dark Mode Tooltips */
+    body.dark-mode .poi-map-tooltip {
+      background: #1E293B !important;
+      color: #F8FAFC !important;
+      border: 1px solid #334155 !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+    }
+    body.dark-mode .poi-map-tooltip::before {
+      border-top-color: #334155 !important;
+    }
+    body.dark-mode .poi-map-tooltip.selected {
+      border: 2px solid #38BDF8 !important;
+      color: #38BDF8 !important;
+      box-shadow: 0 3px 12px rgba(56,189,248,0.4) !important;
+    }
+    body.dark-mode .poi-map-tooltip.selected::before {
+      border-top-color: #38BDF8 !important;
+    }
+
+    /* High Contrast Tooltips */
     body.high-contrast .poi-map-tooltip {
       background: #000000 !important;
       color: #FFFFFF !important;
@@ -104,6 +129,9 @@ export function generateLeafletHtml(
       border-radius: 50%;
       animation: pulse 1.8s infinite;
     }
+    body.dark-mode .user-location-pulse {
+      background: rgba(56, 189, 248, 0.4);
+    }
     .user-location-dot {
       position: absolute;
       width: 18px;
@@ -114,6 +142,10 @@ export function generateLeafletHtml(
       border: 3px solid #FFFFFF;
       border-radius: 50%;
       box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    body.dark-mode .user-location-dot {
+      background: #38BDF8;
+      border-color: #0F172A;
     }
     @keyframes pulse {
       0% { transform: scale(0.8); opacity: 0.8; }
@@ -130,9 +162,21 @@ export function generateLeafletHtml(
       font-size: 9px !important;
       background: rgba(255, 255, 255, 0.85) !important;
     }
+    body.dark-mode .leaflet-control-attribution {
+      background: rgba(15, 23, 42, 0.85) !important;
+      color: #94A3B8 !important;
+    }
+    body.dark-mode .leaflet-control-attribution a {
+      color: #38BDF8 !important;
+    }
+    body.dark-mode .leaflet-bar a {
+      background-color: #1E293B !important;
+      color: #F8FAFC !important;
+      border-bottom-color: #334155 !important;
+    }
   </style>
 </head>
-<body class="${isHighContrast ? 'high-contrast' : ''}">
+<body class="${isHighContrast ? 'high-contrast' : ''} ${isDark ? 'dark-mode' : ''}">
   <div id="map"></div>
 
   <script>
@@ -140,9 +184,11 @@ export function generateLeafletHtml(
     var selectedId = ${selectedIdJson};
     var userLocation = ${userLocJson};
     var isHc = ${isHighContrast ? 'true' : 'false'};
+    var isDarkMode = ${isDark ? 'true' : 'false'};
+
+    var tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
     // Initialize Leaflet Map centered on Kraków Old Town
-    // NOTE: markerZoomAnimation: false prevents markers from drifting/lagging during zoom transitions
     var map = L.map('map', {
       center: [50.0617, 19.9373],
       zoom: 15,
@@ -153,11 +199,23 @@ export function generateLeafletHtml(
       fadeAnimation: true
     });
 
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    var currentTileLayer = L.tileLayer(tileUrl, {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
+
+    function setDarkMode(enabled) {
+      isDarkMode = !!enabled;
+      if (isDarkMode) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+      renderPlaces(places, selectedId);
+      if (lastRouteCoords) {
+        drawRoute(lastRouteCoords, lastRouteProfile);
+      }
+    }
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
@@ -167,20 +225,26 @@ export function generateLeafletHtml(
     var routePolyline = null;
     var routeOutline = null;
     var routeOriginMarker = null;
+    var lastRouteCoords = null;
+    var lastRouteProfile = null;
 
     function drawRoute(coords, profileType) {
       clearRoute();
       if (!coords || !coords.length) return;
+      lastRouteCoords = coords;
+      lastRouteProfile = profileType;
 
       var mainColor = '#008779';
-      if (profileType === 'fastest') mainColor = '#004F9E';
-      if (profileType === 'quietest') mainColor = '#15803D';
-      if (profileType === 'best_supported') mainColor = '#7C3AED';
-      if (isHc) mainColor = '#000000';
+      if (profileType === 'fastest') mainColor = isDarkMode ? '#38BDF8' : '#004F9E';
+      if (profileType === 'quietest') mainColor = isDarkMode ? '#4ADE80' : '#15803D';
+      if (profileType === 'best_supported') mainColor = isDarkMode ? '#A78BFA' : '#7C3AED';
+      if (profileType === 'easiest') mainColor = isDarkMode ? '#2DD4BF' : '#008779';
+      if (isHc) mainColor = isDarkMode ? '#FFFFFF' : '#000000';
 
       // Outer contrasting casing line
+      var outlineColor = isHc ? (isDarkMode ? '#000000' : '#FFFFFF') : (isDarkMode ? '#0F172A' : '#FFFFFF');
       routeOutline = L.polyline(coords, {
-        color: isHc ? '#FFFFFF' : '#FFFFFF',
+        color: outlineColor,
         weight: isHc ? 10 : 8,
         opacity: 0.95,
         lineCap: 'round',
@@ -216,6 +280,8 @@ export function generateLeafletHtml(
     }
 
     function clearRoute() {
+      lastRouteCoords = null;
+      lastRouteProfile = null;
       if (routePolyline) {
         map.removeLayer(routePolyline);
         routePolyline = null;
@@ -433,6 +499,8 @@ export function generateLeafletHtml(
           document.body.classList.remove('high-contrast');
         }
         renderPlaces(places, selectedId);
+      } else if (data.type === 'SET_DARK_MODE') {
+        setDarkMode(data.enabled);
       } else if (data.type === 'UPDATE_PLACES') {
         places = data.places;
         renderPlaces(places, selectedId);

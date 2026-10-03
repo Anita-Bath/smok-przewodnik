@@ -26,7 +26,7 @@ export function PlaceBottomSheet({
   onViewDetails,
   onAddReport,
 }: PlaceBottomSheetProps) {
-  const { isHighContrast, isGuest, savedPlaceIds, toggleSavePlace, userLocation } = useAccessibility();
+  const { isHighContrast, isDark, isGuest, savedPlaceIds, toggleSavePlace, userLocation } = useAccessibility();
   const isSaved = savedPlaceIds.includes(place.id);
 
   const realDistanceMeters = userLocation
@@ -45,8 +45,12 @@ export function PlaceBottomSheet({
       style={[
         styles.sheetContainer,
         {
-          backgroundColor: '#FFFFFF',
-          borderColor: isHighContrast ? '#000000' : '#E2E8F0',
+          backgroundColor: isHighContrast
+            ? (isDark ? '#000000' : '#FFFFFF')
+            : (isDark ? '#1E293B' : '#FFFFFF'),
+          borderColor: isHighContrast
+            ? (isDark ? '#FFFFFF' : '#000000')
+            : (isDark ? '#334155' : '#E2E8F0'),
           borderWidth: isHighContrast ? 3 : 1,
         },
       ]}
@@ -71,7 +75,7 @@ export function PlaceBottomSheet({
           pointerEvents="none"
           style={[
             styles.handle,
-            { backgroundColor: isHighContrast ? '#000000' : '#94A3B8' },
+            { backgroundColor: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#64748B' : '#94A3B8') },
           ]}
         />
       </Pressable>
@@ -95,7 +99,7 @@ export function PlaceBottomSheet({
             style={[
               styles.placeTitle,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontWeight: isHighContrast ? '900' : '800',
               },
             ]}>
@@ -106,7 +110,7 @@ export function PlaceBottomSheet({
             style={[
               styles.placeSubtitle,
               {
-                color: isHighContrast ? '#1E293B' : '#64748B',
+                color: isHighContrast ? (isDark ? '#E2E8F0' : '#1E293B') : (isDark ? '#94A3B8' : '#64748B'),
                 fontWeight: isHighContrast ? '600' : '400',
               },
             ]}>
@@ -124,11 +128,11 @@ export function PlaceBottomSheet({
             style={({ pressed }) => [
               styles.iconControlBtn,
               {
-                borderColor: isHighContrast ? '#000000' : '#CBD5E1',
+                borderColor: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#475569' : '#CBD5E1'),
                 borderWidth: isHighContrast ? 2 : 1,
                 backgroundColor: isSaved
-                  ? (isHighContrast ? '#000000' : BrandColors.primaryLight)
-                  : '#FFFFFF',
+                  ? (isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#0369A1' : BrandColors.primaryLight))
+                  : (isDark ? '#334155' : '#FFFFFF'),
                 cursor: 'pointer' as any,
                 opacity: pressed ? 0.7 : 1,
               },
@@ -138,10 +142,10 @@ export function PlaceBottomSheet({
               size={20}
               color={
                 isSaved && isHighContrast
-                  ? '#FFFFFF'
+                  ? (isDark ? '#000000' : '#FFFFFF')
                   : isHighContrast
-                  ? '#000000'
-                  : BrandColors.primary
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isSaved && isDark ? '#FFFFFF' : isDark ? '#94A3B8' : BrandColors.primary)
               }
             />
           </Pressable>
@@ -155,9 +159,9 @@ export function PlaceBottomSheet({
             style={({ pressed }) => [
               styles.iconControlBtn,
               {
-                borderColor: isHighContrast ? '#000000' : '#CBD5E1',
+                borderColor: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#475569' : '#CBD5E1'),
                 borderWidth: isHighContrast ? 2 : 1,
-                backgroundColor: '#F1F5F9',
+                backgroundColor: isDark ? '#334155' : '#F1F5F9',
                 cursor: 'pointer' as any,
                 opacity: pressed ? 0.7 : 1,
               },
@@ -165,7 +169,7 @@ export function PlaceBottomSheet({
             <MaterialCommunityIcons
               name={isExpanded ? 'chevron-down' : 'chevron-up'}
               size={24}
-              color={isHighContrast ? '#000000' : '#1E293B'}
+              color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : '#1E293B')}
             />
           </Pressable>
 
@@ -179,9 +183,9 @@ export function PlaceBottomSheet({
               style={({ pressed }) => [
                 styles.iconControlBtn,
                 {
-                  borderColor: isHighContrast ? '#000000' : '#CBD5E1',
+                  borderColor: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#475569' : '#CBD5E1'),
                   borderWidth: isHighContrast ? 2 : 1,
-                  backgroundColor: '#F1F5F9',
+                  backgroundColor: isDark ? '#334155' : '#F1F5F9',
                   cursor: 'pointer' as any,
                   opacity: pressed ? 0.7 : 1,
                 },
@@ -189,7 +193,7 @@ export function PlaceBottomSheet({
               <MaterialCommunityIcons
                 name="close"
                 size={20}
-                color={isHighContrast ? '#000000' : '#0F172A'}
+                color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : '#0F172A')}
               />
             </Pressable>
           )}
@@ -223,21 +227,27 @@ export function PlaceBottomSheet({
             style={[
               styles.statusBanner,
               {
-                backgroundColor: isHighContrast ? '#E2F1EE' : '#E6F5F3',
-                borderColor: isHighContrast ? '#005A4E' : '#B2DFDB',
+                backgroundColor: isHighContrast
+                  ? (isDark ? '#064E3B' : '#E2F1EE')
+                  : (isDark ? '#064E3B' : '#E6F5F3'),
+                borderColor: isHighContrast
+                  ? (isDark ? '#5EEAD4' : '#005A4E')
+                  : (isDark ? '#059669' : '#B2DFDB'),
                 borderWidth: isHighContrast ? 2 : 1,
               },
             ]}>
             <MaterialCommunityIcons
               name="account-group-outline"
               size={18}
-              color={BrandColors.accentTeal}
+              color={isDark ? '#2DD4BF' : BrandColors.accentTeal}
             />
             <Text
               style={[
                 styles.statusText,
                 {
-                  color: isHighContrast ? '#004D40' : '#00796B',
+                  color: isHighContrast
+                    ? (isDark ? '#FFFFFF' : '#004D40')
+                    : (isDark ? '#6EE7B7' : '#00796B'),
                   fontWeight: isHighContrast ? '800' : '700',
                 },
               ]}>
@@ -260,17 +270,19 @@ export function PlaceBottomSheet({
                   size={18}
                   color={
                     isHighContrast
-                      ? '#000000'
+                      ? (isDark ? '#FFFFFF' : '#000000')
                       : fact.status === 'verified'
-                      ? BrandColors.success
-                      : BrandColors.accentTeal
+                      ? (isDark ? '#4ADE80' : BrandColors.success)
+                      : (isDark ? '#2DD4BF' : BrandColors.accentTeal)
                   }
                 />
                 <Text
                   style={[
                     styles.factLabel,
                     {
-                      color: isHighContrast ? '#000000' : '#1E293B',
+                      color: isHighContrast
+                        ? (isDark ? '#FFFFFF' : '#000000')
+                        : (isDark ? '#F1F5F9' : '#1E293B'),
                       fontWeight: isHighContrast ? '700' : '500',
                     },
                   ]}>
@@ -285,7 +297,9 @@ export function PlaceBottomSheet({
             style={[
               styles.disclaimerText,
               {
-                color: isHighContrast ? '#111827' : '#64748B',
+                color: isHighContrast
+                  ? (isDark ? '#CBD5E1' : '#111827')
+                  : (isDark ? '#94A3B8' : '#64748B'),
                 fontWeight: isHighContrast ? '600' : '400',
               },
             ]}>
@@ -326,13 +340,15 @@ export function PlaceBottomSheet({
             <MaterialCommunityIcons
               name="pencil-outline"
               size={18}
-              color={isHighContrast ? '#000000' : BrandColors.accentTeal}
+              color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#2DD4BF' : BrandColors.accentTeal)}
             />
             <Text
               style={[
                 styles.addUpdateText,
                 {
-                  color: isHighContrast ? '#000000' : BrandColors.accentTeal,
+                  color: isHighContrast
+                    ? (isDark ? '#FFFFFF' : '#000000')
+                    : (isDark ? '#2DD4BF' : BrandColors.accentTeal),
                   fontWeight: isHighContrast ? '800' : '700',
                 },
               ]}>

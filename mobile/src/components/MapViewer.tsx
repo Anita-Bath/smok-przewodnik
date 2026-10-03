@@ -29,13 +29,13 @@ export function MapViewer({
   activeRoute,
   focusedManeuver,
 }: MapViewerProps) {
-  const { isHighContrast, userLocation, setUserLocation } = useAccessibility();
+  const { isHighContrast, isDark, userLocation, setUserLocation } = useAccessibility();
   const webViewRef = useRef<WebView>(null);
   const [isLocating, setIsLocating] = useState(false);
 
   // Generate initial HTML ONCE with useMemo
   const initialHtml = useMemo(
-    () => generateLeafletHtml(places, selectedPlace?.id, userLocation, isHighContrast),
+    () => generateLeafletHtml(places, selectedPlace?.id, userLocation, isHighContrast, isDark),
     []
   );
 
@@ -55,6 +55,11 @@ export function MapViewer({
         }
       } else if (data.type === 'MAP_READY') {
         if (webViewRef.current) {
+          const jsDark = `window.postMessage(JSON.stringify({ type: 'SET_DARK_MODE', enabled: ${isDark} }), '*'); true;`;
+          webViewRef.current.injectJavaScript(jsDark);
+          const jsHc = `window.postMessage(JSON.stringify({ type: 'SET_HIGH_CONTRAST', enabled: ${isHighContrast} }), '*'); true;`;
+          webViewRef.current.injectJavaScript(jsHc);
+
           if (userLocation) {
             const pan = !selectedPlace && !searchPin && !activeRoute;
             const jsLoc = `window.postMessage(JSON.stringify({ type: 'SET_USER_LOCATION', coords: ${JSON.stringify(userLocation)}, panToUser: ${pan} }), '*'); true;`;
@@ -76,6 +81,14 @@ export function MapViewer({
       }
     } catch (err) {}
   };
+
+  // Sync dark mode changes to WebView
+  useEffect(() => {
+    if (webViewRef.current) {
+      const js = `window.postMessage(JSON.stringify({ type: 'SET_DARK_MODE', enabled: ${isDark} }), '*'); true;`;
+      webViewRef.current.injectJavaScript(js);
+    }
+  }, [isDark]);
 
   // Sync userLocation changes to WebView
   useEffect(() => {
@@ -203,8 +216,12 @@ export function MapViewer({
         style={({ pressed }) => [
           styles.locateButton,
           {
-            backgroundColor: '#FFFFFF',
-            borderColor: isHighContrast ? '#000000' : BrandColors.accentTeal,
+            backgroundColor: isHighContrast
+              ? (isDark ? '#000000' : '#FFFFFF')
+              : (isDark ? '#1E293B' : '#FFFFFF'),
+            borderColor: isHighContrast
+              ? (isDark ? '#FFFFFF' : '#000000')
+              : (isDark ? '#38BDF8' : BrandColors.accentTeal),
             borderWidth: isHighContrast ? 3 : 1.5,
             opacity: pressed || isLocating ? 0.8 : 1,
           },
@@ -212,20 +229,20 @@ export function MapViewer({
         {isLocating ? (
           <ActivityIndicator
             size="small"
-            color={isHighContrast ? '#000000' : BrandColors.accentTeal}
+            color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.accentTeal)}
           />
         ) : (
           <MaterialCommunityIcons
             name="crosshairs-gps"
             size={20}
-            color={isHighContrast ? '#000000' : BrandColors.accentTeal}
+            color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.accentTeal)}
           />
         )}
         <Text
           style={[
             styles.locateText,
             {
-              color: isHighContrast ? '#000000' : BrandColors.accentTeal,
+              color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.accentTeal),
               fontWeight: isHighContrast ? '900' : '700',
             },
           ]}>

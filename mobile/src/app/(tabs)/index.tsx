@@ -34,6 +34,7 @@ export default function ExploreScreen() {
   const router = useRouter();
   const {
     isHighContrast,
+    isDark,
     isGuest,
     user,
     userLocation,
@@ -260,7 +261,11 @@ export default function ExploreScreen() {
       edges={['top']}
       style={[
         styles.safeArea,
-        { backgroundColor: isHighContrast ? '#FFFFFF' : '#F8FAFC' },
+        {
+          backgroundColor: isHighContrast
+            ? (isDark ? '#000000' : '#FFFFFF')
+            : (isDark ? '#0F172A' : '#F8FAFC'),
+        },
       ]}>
       {/* Top Search & Filter Container */}
       <View style={styles.topContainer}>
@@ -268,19 +273,23 @@ export default function ExploreScreen() {
           style={[
             styles.searchBar,
             {
-              backgroundColor: '#FFFFFF',
-              borderColor: isHighContrast ? '#000000' : '#E2E8F0',
+              backgroundColor: isHighContrast
+                ? (isDark ? '#000000' : '#FFFFFF')
+                : (isDark ? '#1E293B' : '#FFFFFF'),
+              borderColor: isHighContrast
+                ? (isDark ? '#FFFFFF' : '#000000')
+                : (isDark ? '#334155' : '#E2E8F0'),
               borderWidth: isHighContrast ? 2.5 : 1,
             },
           ]}>
           <MaterialCommunityIcons
             name="magnify"
             size={22}
-            color={isHighContrast ? '#000000' : '#64748B'}
+            color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#94A3B8' : '#64748B')}
           />
           <TextInput
             placeholder="Szukaj adresu w Krakowie (np. Floriańska, Grodzka)"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={handleSearchSubmit}
@@ -290,7 +299,7 @@ export default function ExploreScreen() {
             style={[
               styles.searchInput,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontWeight: isHighContrast ? '700' : '500',
               },
             ]}
@@ -298,7 +307,7 @@ export default function ExploreScreen() {
           {isSearching && (
             <ActivityIndicator
               size="small"
-              color={isHighContrast ? '#000000' : BrandColors.primary}
+              color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.primary)}
               style={{ marginRight: 6 }}
             />
           )}
@@ -314,7 +323,7 @@ export default function ExploreScreen() {
               <MaterialCommunityIcons
                 name="close-circle"
                 size={18}
-                color="#94A3B8"
+                color={isDark ? '#64748B' : '#94A3B8'}
               />
             </Pressable>
           )}
@@ -326,8 +335,12 @@ export default function ExploreScreen() {
             style={[
               styles.suggestionsCard,
               {
-                backgroundColor: '#FFFFFF',
-                borderColor: isHighContrast ? '#000000' : '#CBD5E1',
+                backgroundColor: isHighContrast
+                  ? (isDark ? '#000000' : '#FFFFFF')
+                  : (isDark ? '#1E293B' : '#FFFFFF'),
+                borderColor: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#334155' : '#CBD5E1'),
                 borderWidth: isHighContrast ? 2.5 : 1.5,
               },
             ]}>
@@ -344,16 +357,19 @@ export default function ExploreScreen() {
                   style={[
                     styles.suggestionRow,
                     idx < suggestions.length - 1 && styles.suggestionBorder,
+                    {
+                      borderBottomColor: isDark ? '#334155' : '#F1F5F9',
+                    },
                   ]}>
                   <MaterialCommunityIcons
                     name={item.isPoi ? 'castle' : 'map-marker'}
                     size={20}
                     color={
                       isHighContrast
-                        ? '#000000'
+                        ? (isDark ? '#FFFFFF' : '#000000')
                         : item.isPoi
-                        ? BrandColors.primary
-                        : BrandColors.accentTeal
+                        ? (isDark ? '#38BDF8' : BrandColors.primary)
+                        : (isDark ? '#2DD4BF' : BrandColors.accentTeal)
                     }
                   />
                   <View style={styles.suggestionTextWrap}>
@@ -361,7 +377,7 @@ export default function ExploreScreen() {
                       style={[
                         styles.suggestionTitle,
                         {
-                          color: isHighContrast ? '#000000' : '#0F172A',
+                          color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : '#0F172A'),
                           fontWeight: isHighContrast ? '800' : '600',
                         },
                       ]}>
@@ -371,7 +387,7 @@ export default function ExploreScreen() {
                       numberOfLines={1}
                       style={[
                         styles.suggestionSubtitle,
-                        { color: isHighContrast ? '#1E293B' : '#64748B' },
+                        { color: isHighContrast ? (isDark ? '#CBD5E1' : '#1E293B') : (isDark ? '#94A3B8' : '#64748B') },
                       ]}>
                       {userLocation ? `${formatDistance(calculateDistanceMeters(userLocation, item.coordinates))} · ` : ''}
                       {item.subtitle}
@@ -422,20 +438,28 @@ export default function ExploreScreen() {
             style={[
               styles.userBadge,
               {
-                backgroundColor: isHighContrast ? '#E2F1EE' : '#E6F5F3',
-                borderColor: isHighContrast ? '#005A4E' : '#B2DFDB',
+                backgroundColor: isDark
+                  ? '#1E293B'
+                  : (isHighContrast ? '#E2F1EE' : '#E6F5F3'),
+                borderColor: isDark
+                  ? '#334155'
+                  : (isHighContrast ? '#005A4E' : '#B2DFDB'),
                 borderWidth: isHighContrast ? 2 : 1,
               },
             ]}>
             <MaterialCommunityIcons
               name="account-outline"
               size={16}
-              color={BrandColors.accentTeal}
+              color={isDark ? '#2DD4BF' : BrandColors.accentTeal}
             />
             <Text
               style={[
                 styles.userBadgeText,
-                { color: isHighContrast ? '#004D40' : '#00796B' },
+                {
+                  color: isDark
+                    ? '#2DD4BF'
+                    : (isHighContrast ? '#004D40' : '#00796B'),
+                },
               ]}>
               {isGuest ? 'Tryb gościa' : (user?.name || 'Zalogowany')}
             </Text>
@@ -447,13 +471,27 @@ export default function ExploreScreen() {
             style={[
               styles.locatedBanner,
               {
-                backgroundColor: isHighContrast ? '#E8F5E9' : '#DCFCE7',
-                borderColor: isHighContrast ? '#000000' : '#86EFAC',
+                backgroundColor: isDark
+                  ? '#064E3B'
+                  : (isHighContrast ? '#E8F5E9' : '#DCFCE7'),
+                borderColor: isDark
+                  ? '#059669'
+                  : (isHighContrast ? '#000000' : '#86EFAC'),
                 borderWidth: isHighContrast ? 2 : 1,
               },
             ]}>
-            <MaterialCommunityIcons name="crosshairs-gps" size={16} color="#15803D" />
-            <Text style={styles.locatedNoticeText}>{locatedNotice}</Text>
+            <MaterialCommunityIcons
+              name="crosshairs-gps"
+              size={16}
+              color={isDark ? '#4ADE80' : '#15803D'}
+            />
+            <Text
+              style={[
+                styles.locatedNoticeText,
+                { color: isDark ? '#6EE7B7' : '#15803D' },
+              ]}>
+              {locatedNotice}
+            </Text>
           </View>
         )}
 
@@ -481,8 +519,12 @@ export default function ExploreScreen() {
             style={[
               styles.routePreviewCard,
               {
-                backgroundColor: '#FFFFFF',
-                borderColor: isHighContrast ? '#000000' : BrandColors.primary,
+                backgroundColor: isHighContrast
+                  ? (isDark ? '#000000' : '#FFFFFF')
+                  : (isDark ? '#1E293B' : '#FFFFFF'),
+                borderColor: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#38BDF8' : BrandColors.primary),
                 borderWidth: isHighContrast ? 3 : 2,
               },
             ]}>
@@ -490,12 +532,21 @@ export default function ExploreScreen() {
             <View style={styles.routePreviewHeader}>
               <View style={styles.routePreviewTitleCol}>
                 <View style={styles.routeHeaderBadge}>
-                  <MaterialCommunityIcons name="navigation-variant" size={18} color={BrandColors.primary} />
+                  <MaterialCommunityIcons
+                    name="navigation-variant"
+                    size={18}
+                    color={isDark ? '#38BDF8' : BrandColors.primary}
+                  />
                   <Text
                     numberOfLines={1}
                     style={[
                       styles.routeHeaderBadgeText,
-                      { color: isHighContrast ? '#000000' : BrandColors.primary, fontWeight: '800' },
+                      {
+                        color: isHighContrast
+                          ? (isDark ? '#FFFFFF' : '#000000')
+                          : (isDark ? '#38BDF8' : BrandColors.primary),
+                        fontWeight: '800',
+                      },
                     ]}>
                     Trasa: {routePlan.destination.name}
                   </Text>
@@ -503,7 +554,12 @@ export default function ExploreScreen() {
                 <Text
                   style={[
                     styles.routePreviewMetrics,
-                    { color: isHighContrast ? '#000000' : '#0F172A', fontWeight: isHighContrast ? '800' : '700' },
+                    {
+                      color: isHighContrast
+                        ? (isDark ? '#FFFFFF' : '#000000')
+                        : (isDark ? '#F8FAFC' : '#0F172A'),
+                      fontWeight: isHighContrast ? '800' : '700',
+                    },
                   ]}>
                   {formatDistance(activeRouteAlternative.distanceMeters)} · ok. {activeRouteAlternative.durationMinutes} min
                   {activeRouteAlternative.stairsCount === 0 ? ' · 0 schodów' : ` · ${activeRouteAlternative.stairsCount} sch.`}
@@ -519,7 +575,11 @@ export default function ExploreScreen() {
                   styles.closeRouteBtn,
                   { opacity: pressed ? 0.7 : 1, cursor: 'pointer' as any },
                 ]}>
-                <MaterialCommunityIcons name="close" size={20} color={isHighContrast ? '#000000' : '#475569'} />
+                <MaterialCommunityIcons
+                  name="close"
+                  size={20}
+                  color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#94A3B8' : '#475569')}
+                />
               </Pressable>
             </View>
 
@@ -535,9 +595,15 @@ export default function ExploreScreen() {
                       styles.routeAltChip,
                       {
                         backgroundColor: isSelected
-                          ? (isHighContrast ? '#000000' : BrandColors.primary)
-                          : '#F1F5F9',
-                        borderColor: isHighContrast ? '#000000' : isSelected ? BrandColors.primary : '#CBD5E1',
+                          ? (isHighContrast
+                              ? (isDark ? '#FFFFFF' : '#000000')
+                              : (isDark ? '#0284C7' : BrandColors.primary))
+                          : (isDark ? '#334155' : '#F1F5F9'),
+                        borderColor: isHighContrast
+                          ? (isDark ? '#FFFFFF' : '#000000')
+                          : isSelected
+                          ? (isDark ? '#38BDF8' : BrandColors.primary)
+                          : (isDark ? '#475569' : '#CBD5E1'),
                         borderWidth: isHighContrast ? 2 : 1,
                         cursor: 'pointer' as any,
                         opacity: pressed ? 0.7 : 1,
@@ -548,8 +614,8 @@ export default function ExploreScreen() {
                         styles.routeAltChipText,
                         {
                           color: isSelected
-                            ? '#FFFFFF'
-                            : (isHighContrast ? '#000000' : '#1E293B'),
+                            ? (isHighContrast && isDark ? '#000000' : '#FFFFFF')
+                            : (isDark ? '#F8FAFC' : (isHighContrast ? '#000000' : '#1E293B')),
                           fontWeight: isSelected ? '800' : '600',
                         },
                       ]}>
@@ -577,14 +643,26 @@ export default function ExploreScreen() {
               style={({ pressed }) => [
                 styles.navStartBtn,
                 {
-                  backgroundColor: isHighContrast ? '#000000' : BrandColors.primary,
-                  borderColor: isHighContrast ? '#FFFFFF' : 'transparent',
+                  backgroundColor: isHighContrast
+                    ? (isDark ? '#FFFFFF' : '#000000')
+                    : (isDark ? '#0284C7' : BrandColors.primary),
+                  borderColor: isHighContrast ? (isDark ? '#000000' : '#FFFFFF') : 'transparent',
                   cursor: 'pointer' as any,
                   opacity: pressed ? 0.8 : 1,
                 },
               ]}>
-              <MaterialCommunityIcons name="navigation" size={18} color="#FFFFFF" />
-              <Text style={styles.navStartBtnText}>Nawiguj krok po kroku</Text>
+              <MaterialCommunityIcons
+                name="navigation"
+                size={18}
+                color={isHighContrast && isDark ? '#000000' : '#FFFFFF'}
+              />
+              <Text
+                style={[
+                  styles.navStartBtnText,
+                  { color: isHighContrast && isDark ? '#000000' : '#FFFFFF' },
+                ]}>
+                Nawiguj krok po kroku
+              </Text>
             </Pressable>
           </View>
         )}
@@ -605,21 +683,25 @@ export default function ExploreScreen() {
             style={[
               styles.restoreSheetPill,
               {
-                backgroundColor: '#FFFFFF',
-                borderColor: isHighContrast ? '#000000' : BrandColors.primary,
+                backgroundColor: isHighContrast
+                  ? (isDark ? '#000000' : '#FFFFFF')
+                  : (isDark ? '#1E293B' : '#FFFFFF'),
+                borderColor: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#38BDF8' : BrandColors.primary),
                 borderWidth: isHighContrast ? 2.5 : 1.5,
               },
             ]}>
             <MaterialCommunityIcons
               name="map-marker"
               size={20}
-              color={isHighContrast ? '#000000' : BrandColors.primary}
+              color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.primary)}
             />
             <Text
               style={[
                 styles.restoreSheetText,
                 {
-                  color: isHighContrast ? '#000000' : BrandColors.primary,
+                  color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : BrandColors.primary),
                   fontWeight: isHighContrast ? '900' : '700',
                 },
               ]}>
@@ -628,7 +710,7 @@ export default function ExploreScreen() {
             <MaterialCommunityIcons
               name="chevron-up"
               size={20}
-              color={isHighContrast ? '#000000' : BrandColors.primary}
+              color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.primary)}
             />
           </Pressable>
         )}

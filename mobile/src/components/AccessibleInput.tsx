@@ -19,7 +19,7 @@ export function AccessibleInput({
   style,
   ...rest
 }: AccessibleInputProps) {
-  const { isHighContrast } = useAccessibility();
+  const { isHighContrast, isDark } = useAccessibility();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -32,10 +32,10 @@ export function AccessibleInput({
             borderColor: error
               ? BrandColors.danger
               : isFocused
-              ? (isHighContrast ? '#000000' : BrandColors.primary)
-              : (isHighContrast ? '#333333' : '#CBD5E1'),
+              ? (isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.primary))
+              : (isHighContrast ? (isDark ? '#888888' : '#333333') : (isDark ? '#334155' : '#CBD5E1')),
             borderWidth: isHighContrast ? 2.5 : 1.5,
-            backgroundColor: '#FFFFFF',
+            backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
           },
         ]}>
         <Text
@@ -45,8 +45,8 @@ export function AccessibleInput({
               color: error
                 ? BrandColors.danger
                 : isHighContrast
-                ? '#000000'
-                : '#64748B',
+                ? (isDark ? '#FFFFFF' : '#000000')
+                : (isDark ? '#94A3B8' : '#64748B'),
               fontWeight: isHighContrast ? '700' : '600',
             },
           ]}>
@@ -59,11 +59,11 @@ export function AccessibleInput({
             secureTextEntry={isPassword && !isPasswordVisible}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
             style={[
               styles.input,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontSize: isHighContrast ? 17 : 16,
               },
               style,

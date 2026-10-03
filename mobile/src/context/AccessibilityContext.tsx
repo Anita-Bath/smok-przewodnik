@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Platform } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
 import * as Location from 'expo-location';
+import { Colors, ThemeColors } from '@/constants/theme';
 
 export type ConstraintLevel = 'allowed' | 'prefer_avoid' | 'must_avoid';
 
@@ -116,6 +117,10 @@ export const ACCESSIBILITY_PRESETS: Preset[] = [
 interface AccessibilityContextType {
   isHighContrast: boolean;
   toggleHighContrast: () => void;
+  isDark: boolean;
+  toggleDarkTheme: () => void;
+  setDarkTheme: (enabled: boolean) => void;
+  theme: ThemeColors;
   fontScale: FontScale;
   setFontScale: (scale: FontScale) => void;
   isGuest: boolean;
@@ -152,8 +157,18 @@ const defaultConstraints: Record<string, ConstraintLevel> = {
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
 
 export function AccessibilityProvider({ children }: { children: ReactNode }) {
+  const systemColorScheme = useColorScheme();
   const [isHighContrast, setIsHighContrast] = useState(false);
+  const [isDark, setIsDark] = useState<boolean>(() => systemColorScheme === 'dark');
   const [fontScale, setFontScale] = useState<FontScale>('default');
+
+  const toggleHighContrast = () => setIsHighContrast((prev) => !prev);
+  const toggleDarkTheme = () => setIsDark((prev) => !prev);
+  const setDarkTheme = (enabled: boolean) => setIsDark(enabled);
+
+  const theme = isHighContrast
+    ? (isDark ? Colors.highContrastDark : Colors.highContrastLight)
+    : (isDark ? Colors.dark : Colors.light);
   const [isGuest, setIsGuest] = useState(true);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [points, setPoints] = useState(120); // initial demo points
@@ -242,8 +257,6 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const toggleHighContrast = () => setIsHighContrast((prev) => !prev);
-
   const applyPreset = (presetId: string) => {
     const found = ACCESSIBILITY_PRESETS.find((p) => p.id === presetId);
     if (found) {
@@ -307,6 +320,10 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
       value={{
         isHighContrast,
         toggleHighContrast,
+        isDark,
+        toggleDarkTheme,
+        setDarkTheme,
+        theme,
         fontScale,
         setFontScale,
         isGuest,

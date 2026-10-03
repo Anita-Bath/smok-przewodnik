@@ -13,7 +13,7 @@ import { calculateDistanceMeters, formatDistance } from '@/services/routingServi
 export default function PlaceDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { isHighContrast, savedPlaceIds, toggleSavePlace, isGuest, userLocation } = useAccessibility();
+  const { isDark, isHighContrast, savedPlaceIds, toggleSavePlace, isGuest, userLocation } = useAccessibility();
 
   const place = KRAKOW_PLACES.find((p) => p.id === id) || KRAKOW_PLACES[0];
   const isSaved = savedPlaceIds.includes(place.id);
@@ -21,20 +21,34 @@ export default function PlaceDetailScreen() {
     ? calculateDistanceMeters(userLocation, place.coordinates)
     : place.distanceFromUserMeters;
 
+  const cardBg = isHighContrast
+    ? (isDark ? '#000000' : '#FFFFFF')
+    : (isDark ? '#1E293B' : '#FFFFFF');
+  const cardBorder = isHighContrast
+    ? (isDark ? '#FFFFFF' : '#000000')
+    : (isDark ? '#334155' : '#E2E8F0');
+  const dividerColor = isDark ? '#334155' : '#F1F5F9';
+
   return (
     <SafeAreaView
       style={[
         styles.safeArea,
-        { backgroundColor: isHighContrast ? '#FFFFFF' : '#F8FAFC' },
+        {
+          backgroundColor: isHighContrast
+            ? (isDark ? '#000000' : '#FFFFFF')
+            : (isDark ? '#0F172A' : '#F8FAFC'),
+        },
       ]}>
       {/* Header */}
       <View
         style={[
           styles.header,
           {
-            borderBottomColor: isHighContrast ? '#000000' : '#E2E8F0',
+            borderBottomColor: cardBorder,
             borderBottomWidth: isHighContrast ? 2.5 : 1,
-            backgroundColor: '#FFFFFF',
+            backgroundColor: isHighContrast
+              ? (isDark ? '#000000' : '#FFFFFF')
+              : (isDark ? '#1E293B' : '#FFFFFF'),
           },
         ]}>
         <Pressable
@@ -46,7 +60,11 @@ export default function PlaceDetailScreen() {
           <MaterialCommunityIcons
             name="arrow-left"
             size={24}
-            color={isHighContrast ? '#000000' : '#0F172A'}
+            color={
+              isHighContrast
+                ? (isDark ? '#FFFFFF' : '#000000')
+                : (isDark ? '#F8FAFC' : '#0F172A')
+            }
           />
         </Pressable>
 
@@ -54,7 +72,9 @@ export default function PlaceDetailScreen() {
           style={[
             styles.headerTitle,
             {
-              color: isHighContrast ? '#000000' : '#0F172A',
+              color: isHighContrast
+                ? (isDark ? '#FFFFFF' : '#000000')
+                : (isDark ? '#F8FAFC' : '#0F172A'),
               fontWeight: isHighContrast ? '900' : '800',
             },
           ]}>
@@ -69,7 +89,11 @@ export default function PlaceDetailScreen() {
           <MaterialCommunityIcons
             name={isSaved ? 'bookmark' : 'bookmark-outline'}
             size={26}
-            color={isHighContrast ? '#000000' : BrandColors.primary}
+            color={
+              isHighContrast
+                ? (isDark ? '#FFFFFF' : '#000000')
+                : (isDark ? '#38BDF8' : BrandColors.primary)
+            }
           />
         </Pressable>
       </View>
@@ -83,8 +107,8 @@ export default function PlaceDetailScreen() {
             style={[
               styles.card,
               {
-                backgroundColor: '#FFFFFF',
-                borderColor: isHighContrast ? '#000000' : '#E2E8F0',
+                backgroundColor: cardBg,
+                borderColor: cardBorder,
                 borderWidth: isHighContrast ? 2.5 : 1,
               },
             ]}>
@@ -92,7 +116,9 @@ export default function PlaceDetailScreen() {
               style={[
                 styles.placeName,
                 {
-                  color: isHighContrast ? '#000000' : '#0F172A',
+                  color: isHighContrast
+                    ? (isDark ? '#FFFFFF' : '#000000')
+                    : (isDark ? '#F8FAFC' : '#0F172A'),
                   fontWeight: isHighContrast ? '900' : '800',
                 },
               ]}>
@@ -101,7 +127,11 @@ export default function PlaceDetailScreen() {
             <Text
               style={[
                 styles.placeAddress,
-                { color: isHighContrast ? '#1E293B' : '#64748B' },
+                {
+                  color: isHighContrast
+                    ? (isDark ? '#CBD5E1' : '#1E293B')
+                    : (isDark ? '#94A3B8' : '#64748B'),
+                },
               ]}>
               {formatDistance(distanceMeters)} stąd · {place.address}
             </Text>
@@ -110,21 +140,31 @@ export default function PlaceDetailScreen() {
               style={[
                 styles.statusBanner,
                 {
-                  backgroundColor: isHighContrast ? '#E8F5E9' : '#E6F5F3',
-                  borderColor: isHighContrast ? '#000000' : '#B2DFDB',
+                  backgroundColor: isHighContrast
+                    ? (isDark ? '#064E3B' : '#E8F5E9')
+                    : (isDark ? '#0F2E2B' : '#E6F5F3'),
+                  borderColor: isHighContrast
+                    ? (isDark ? '#34D399' : '#000000')
+                    : (isDark ? '#115E59' : '#B2DFDB'),
                   borderWidth: isHighContrast ? 2 : 1,
                 },
               ]}>
               <MaterialCommunityIcons
                 name="shield-check-outline"
                 size={20}
-                color={isHighContrast ? '#000000' : BrandColors.accentTeal}
+                color={
+                  isHighContrast
+                    ? (isDark ? '#34D399' : '#000000')
+                    : (isDark ? '#2DD4BF' : BrandColors.accentTeal)
+                }
               />
               <Text
                 style={[
                   styles.statusText,
                   {
-                    color: isHighContrast ? '#000000' : '#00796B',
+                    color: isHighContrast
+                      ? (isDark ? '#FFFFFF' : '#000000')
+                      : (isDark ? '#2DD4BF' : '#00796B'),
                     fontWeight: isHighContrast ? '800' : '700',
                   },
                 ]}>
@@ -164,7 +204,9 @@ export default function PlaceDetailScreen() {
             style={[
               styles.sectionTitle,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontWeight: isHighContrast ? '900' : '800',
               },
             ]}>
@@ -175,8 +217,8 @@ export default function PlaceDetailScreen() {
             style={[
               styles.card,
               {
-                backgroundColor: '#FFFFFF',
-                borderColor: isHighContrast ? '#000000' : '#E2E8F0',
+                backgroundColor: cardBg,
+                borderColor: cardBorder,
                 borderWidth: isHighContrast ? 2.5 : 1,
               },
             ]}>
@@ -185,7 +227,10 @@ export default function PlaceDetailScreen() {
                 key={fact.id}
                 style={[
                   styles.factItem,
-                  index < place.facts.length - 1 && styles.borderBottom,
+                  index < place.facts.length - 1 && {
+                    borderBottomWidth: 1,
+                    borderBottomColor: dividerColor,
+                  },
                 ]}>
                 <View style={styles.factIconWrap}>
                   <MaterialCommunityIcons
@@ -197,10 +242,10 @@ export default function PlaceDetailScreen() {
                     size={22}
                     color={
                       isHighContrast
-                        ? '#000000'
+                        ? (isDark ? '#FFFFFF' : '#000000')
                         : fact.status === 'verified'
-                        ? BrandColors.success
-                        : BrandColors.accentTeal
+                        ? (isDark ? '#4ADE80' : BrandColors.success)
+                        : (isDark ? '#2DD4BF' : BrandColors.accentTeal)
                     }
                   />
                 </View>
@@ -209,7 +254,9 @@ export default function PlaceDetailScreen() {
                     style={[
                       styles.factTitle,
                       {
-                        color: isHighContrast ? '#000000' : '#0F172A',
+                        color: isHighContrast
+                          ? (isDark ? '#FFFFFF' : '#000000')
+                          : (isDark ? '#F8FAFC' : '#0F172A'),
                         fontWeight: isHighContrast ? '800' : '700',
                       },
                     ]}>
@@ -219,7 +266,11 @@ export default function PlaceDetailScreen() {
                     <Text
                       style={[
                         styles.factDesc,
-                        { color: isHighContrast ? '#1E293B' : '#64748B' },
+                        {
+                          color: isHighContrast
+                            ? (isDark ? '#CBD5E1' : '#1E293B')
+                            : (isDark ? '#94A3B8' : '#64748B'),
+                        },
                       ]}>
                       {fact.description}
                     </Text>
@@ -234,7 +285,9 @@ export default function PlaceDetailScreen() {
             style={[
               styles.sectionTitle,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontWeight: isHighContrast ? '800' : '700',
               },
             ]}>
@@ -245,8 +298,8 @@ export default function PlaceDetailScreen() {
             style={[
               styles.card,
               {
-                backgroundColor: '#FFFFFF',
-                borderColor: isHighContrast ? '#000000' : '#E2E8F0',
+                backgroundColor: cardBg,
+                borderColor: cardBorder,
                 borderWidth: isHighContrast ? 2.5 : 1,
                 marginBottom: 24,
               },
@@ -254,7 +307,11 @@ export default function PlaceDetailScreen() {
             <Text
               style={[
                 styles.noteText,
-                { color: isHighContrast ? '#000000' : '#334155' },
+                {
+                  color: isHighContrast
+                    ? (isDark ? '#FFFFFF' : '#000000')
+                    : (isDark ? '#CBD5E1' : '#334155'),
+                },
               ]}>
               {place.generalNote ||
                 'Wszystkie dane pochodzą z miejskich rejestrów dostępności oraz weryfikacji społeczności Smok Przewodnik Kraków.'}

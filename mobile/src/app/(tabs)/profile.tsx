@@ -17,7 +17,10 @@ type MaterialIconName = keyof typeof MaterialCommunityIcons.glyphMap;
 export default function ProfileScreen() {
   const router = useRouter();
   const {
+    isDark,
+    toggleDarkTheme,
     isHighContrast,
+    toggleHighContrast,
     isGuest,
     user,
     points,
@@ -54,33 +57,45 @@ export default function ProfileScreen() {
     if (level === 'must_avoid') {
       return {
         text: 'Niedozwolone',
-        bg: '#FEE2E2',
-        color: '#DC2626',
+        bg: isDark ? '#7F1D1D' : '#FEE2E2',
+        color: isDark ? '#FCA5A5' : '#DC2626',
         icon: 'cancel' as MaterialIconName,
       };
     }
     if (level === 'prefer_avoid') {
       return {
         text: 'Unikaj',
-        bg: '#FEF3C7',
-        color: '#D97706',
+        bg: isDark ? '#78350F' : '#FEF3C7',
+        color: isDark ? '#FCD34D' : '#D97706',
         icon: 'alert-circle-outline' as MaterialIconName,
       };
     }
     return {
       text: 'Dozwolone',
-      bg: '#DCFCE7',
-      color: '#16A34A',
+      bg: isDark ? '#14532D' : '#DCFCE7',
+      color: isDark ? '#86EFAC' : '#16A34A',
       icon: 'check-circle-outline' as MaterialIconName,
     };
   };
+
+  const cardBorderColor = isHighContrast
+    ? (isDark ? '#FFFFFF' : '#000000')
+    : (isDark ? '#334155' : '#E2E8F0');
+  const cardBgColor = isHighContrast
+    ? (isDark ? '#000000' : '#FFFFFF')
+    : (isDark ? '#1E293B' : '#FFFFFF');
+  const dividerColor = isDark ? '#334155' : '#F1F5F9';
 
   return (
     <SafeAreaView
       edges={['top']}
       style={[
         styles.safeArea,
-        { backgroundColor: isHighContrast ? '#FFFFFF' : '#F8FAFC' },
+        {
+          backgroundColor: isHighContrast
+            ? (isDark ? '#000000' : '#FFFFFF')
+            : (isDark ? '#0F172A' : '#F8FAFC'),
+        },
       ]}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.contentWrapper}>
@@ -88,7 +103,9 @@ export default function ProfileScreen() {
             style={[
               styles.headerTitle,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontWeight: isHighContrast ? '900' : '800',
               },
             ]}>
@@ -102,8 +119,8 @@ export default function ProfileScreen() {
             style={[
               styles.userCard,
               {
-                backgroundColor: '#FFFFFF',
-                borderColor: isHighContrast ? '#000000' : '#E2E8F0',
+                backgroundColor: cardBgColor,
+                borderColor: cardBorderColor,
                 borderWidth: isHighContrast ? 2.5 : 1,
               },
             ]}>
@@ -111,7 +128,11 @@ export default function ProfileScreen() {
               <View
                 style={[
                   styles.avatarCircle,
-                  { backgroundColor: isHighContrast ? '#000000' : BrandColors.primary },
+                  {
+                    backgroundColor: isHighContrast
+                      ? (isDark ? '#38BDF8' : '#000000')
+                      : BrandColors.primary,
+                  },
                 ]}>
                 <MaterialCommunityIcons name="account" size={32} color="#FFFFFF" />
               </View>
@@ -120,7 +141,9 @@ export default function ProfileScreen() {
                   style={[
                     styles.userName,
                     {
-                      color: isHighContrast ? '#000000' : '#0F172A',
+                      color: isHighContrast
+                        ? (isDark ? '#FFFFFF' : '#000000')
+                        : (isDark ? '#F8FAFC' : '#0F172A'),
                       fontWeight: isHighContrast ? '800' : '700',
                     },
                   ]}>
@@ -129,7 +152,11 @@ export default function ProfileScreen() {
                 <Text
                   style={[
                     styles.userEmail,
-                    { color: isHighContrast ? '#1E293B' : '#64748B' },
+                    {
+                      color: isHighContrast
+                        ? (isDark ? '#CBD5E1' : '#1E293B')
+                        : (isDark ? '#94A3B8' : '#64748B'),
+                    },
                   ]}>
                   {isGuest
                     ? 'Ustawienia zapisywane tylko na urządzeniu'
@@ -155,23 +182,159 @@ export default function ProfileScreen() {
             )}
           </View>
 
+          {/* Theme & Appearance Section */}
+          <Text
+            style={[
+              styles.sectionTitle,
+              {
+                color: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#F8FAFC' : '#0F172A'),
+                fontWeight: isHighContrast ? '800' : '700',
+              },
+            ]}>
+            Wygląd i motyw
+          </Text>
+
+          <View
+            style={[
+              styles.channelsCard,
+              {
+                backgroundColor: cardBgColor,
+                borderColor: cardBorderColor,
+                borderWidth: isHighContrast ? 2.5 : 1,
+              },
+            ]}>
+            {/* Dark Mode Switch */}
+            <View style={styles.channelRow}>
+              <View style={styles.themeRowLeft}>
+                <View
+                  style={[
+                    styles.themeIconCircle,
+                    { backgroundColor: isDark ? '#334155' : '#FEF3C7' },
+                  ]}>
+                  <MaterialCommunityIcons
+                    name={isDark ? 'weather-night' : 'white-balance-sunny'}
+                    size={20}
+                    color={isDark ? '#38BDF8' : '#D97706'}
+                  />
+                </View>
+                <View style={styles.themeTextWrap}>
+                  <Text
+                    style={[
+                      styles.channelLabel,
+                      {
+                        color: isHighContrast
+                          ? (isDark ? '#FFFFFF' : '#000000')
+                          : (isDark ? '#F8FAFC' : '#1E293B'),
+                      },
+                    ]}>
+                    Tryb ciemny
+                  </Text>
+                  <Text
+                    style={[
+                      styles.themeSubtitle,
+                      {
+                        color: isHighContrast
+                          ? (isDark ? '#CBD5E1' : '#1E293B')
+                          : (isDark ? '#94A3B8' : '#64748B'),
+                      },
+                    ]}>
+                    {isDark ? 'Włączony — oszczędza wzrok i baterię' : 'Wyłączony — jasny motyw'}
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={isDark}
+                onValueChange={toggleDarkTheme}
+                trackColor={{
+                  false: isDark ? '#334155' : '#D1D5DB',
+                  true: isHighContrast ? '#38BDF8' : BrandColors.primary,
+                }}
+                thumbColor="#FFFFFF"
+                accessibilityLabel="Przełącz ciemny motyw"
+              />
+            </View>
+
+            {/* High Contrast Switch */}
+            <View
+              style={[
+                styles.channelRow,
+                { borderTopWidth: 1, borderTopColor: dividerColor },
+              ]}>
+              <View style={styles.themeRowLeft}>
+                <View
+                  style={[
+                    styles.themeIconCircle,
+                    { backgroundColor: isDark ? '#334155' : '#E6F5F3' },
+                  ]}>
+                  <MaterialCommunityIcons
+                    name="eye-outline"
+                    size={20}
+                    color={isDark ? '#2DD4BF' : '#008779'}
+                  />
+                </View>
+                <View style={styles.themeTextWrap}>
+                  <Text
+                    style={[
+                      styles.channelLabel,
+                      {
+                        color: isHighContrast
+                          ? (isDark ? '#FFFFFF' : '#000000')
+                          : (isDark ? '#F8FAFC' : '#1E293B'),
+                      },
+                    ]}>
+                    Wysoki kontrast (WCAG AAA)
+                  </Text>
+                  <Text
+                    style={[
+                      styles.themeSubtitle,
+                      {
+                        color: isHighContrast
+                          ? (isDark ? '#CBD5E1' : '#1E293B')
+                          : (isDark ? '#94A3B8' : '#64748B'),
+                      },
+                    ]}>
+                    {isHighContrast ? 'Włączony — wyraziste ramki i gruby tekst' : 'Wyłączony'}
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={isHighContrast}
+                onValueChange={toggleHighContrast}
+                trackColor={{
+                  false: isDark ? '#334155' : '#D1D5DB',
+                  true: '#008779',
+                }}
+                thumbColor="#FFFFFF"
+                accessibilityLabel="Przełącz wysoki kontrast"
+              />
+            </View>
+          </View>
+
           {/* Points & Community Rewards Card */}
           <View
             style={[
               styles.rewardsCard,
               {
-                backgroundColor: isHighContrast ? '#FFFBEB' : '#FEF3C7',
-                borderColor: isHighContrast ? '#000000' : '#FDE68A',
+                backgroundColor: isHighContrast
+                  ? (isDark ? '#451A03' : '#FFFBEB')
+                  : (isDark ? '#1E293B' : '#FEF3C7'),
+                borderColor: isHighContrast
+                  ? (isDark ? '#F59E0B' : '#000000')
+                  : (isDark ? '#B45309' : '#FDE68A'),
                 borderWidth: isHighContrast ? 2.5 : 1,
               },
             ]}>
             <View style={styles.rewardsHeader}>
-              <MaterialCommunityIcons name="star-circle" size={26} color="#D97706" />
+              <MaterialCommunityIcons name="star-circle" size={26} color="#F59E0B" />
               <Text
                 style={[
                   styles.rewardsTitle,
                   {
-                    color: isHighContrast ? '#000000' : '#78350F',
+                    color: isHighContrast
+                      ? (isDark ? '#FDE68A' : '#000000')
+                      : (isDark ? '#FCD34D' : '#78350F'),
                     fontWeight: isHighContrast ? '800' : '700',
                   },
                 ]}>
@@ -181,7 +344,11 @@ export default function ProfileScreen() {
             <Text
               style={[
                 styles.rewardsDesc,
-                { color: isHighContrast ? '#1E293B' : '#92400E' },
+                {
+                  color: isHighContrast
+                    ? (isDark ? '#FDE68A' : '#1E293B')
+                    : (isDark ? '#CBD5E1' : '#92400E'),
+                },
               ]}>
               Zdobywaj punkty za zgłaszanie barier i potwierdzanie dostępności.
               Wymieniaj na cyfrowe zniżki MPK oraz bilety partnerów w Krakowie.
@@ -193,7 +360,9 @@ export default function ProfileScreen() {
             style={[
               styles.sectionTitle,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontWeight: isHighContrast ? '800' : '700',
               },
             ]}>
@@ -214,11 +383,11 @@ export default function ProfileScreen() {
                     styles.presetCard,
                     {
                       backgroundColor: isSelected
-                        ? (isHighContrast ? '#000000' : BrandColors.primaryLight)
-                        : '#FFFFFF',
+                        ? (isHighContrast ? (isDark ? '#0284C7' : '#000000') : (isDark ? '#0369A1' : BrandColors.primaryLight))
+                        : cardBgColor,
                       borderColor: isSelected
-                        ? (isHighContrast ? '#000000' : BrandColors.primary)
-                        : (isHighContrast ? '#000000' : '#CBD5E1'),
+                        ? (isHighContrast ? '#38BDF8' : BrandColors.primary)
+                        : cardBorderColor,
                       borderWidth: isSelected ? 2.5 : (isHighContrast ? 2 : 1),
                     },
                   ]}>
@@ -227,8 +396,8 @@ export default function ProfileScreen() {
                     size={24}
                     color={
                       isSelected
-                        ? (isHighContrast ? '#FFFFFF' : BrandColors.primary)
-                        : (isHighContrast ? '#000000' : '#475569')
+                        ? '#FFFFFF'
+                        : (isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#94A3B8' : '#475569'))
                     }
                   />
                   <Text
@@ -236,8 +405,8 @@ export default function ProfileScreen() {
                       styles.presetName,
                       {
                         color: isSelected
-                          ? (isHighContrast ? '#FFFFFF' : BrandColors.primary)
-                          : (isHighContrast ? '#000000' : '#1E293B'),
+                          ? '#FFFFFF'
+                          : (isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : '#1E293B')),
                         fontWeight: isSelected || isHighContrast ? '800' : '600',
                       },
                     ]}>
@@ -253,7 +422,9 @@ export default function ProfileScreen() {
             style={[
               styles.sectionTitle,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontWeight: isHighContrast ? '800' : '700',
               },
             ]}>
@@ -262,7 +433,11 @@ export default function ProfileScreen() {
           <Text
             style={[
               styles.sectionSubtitle,
-              { color: isHighContrast ? '#1E293B' : '#64748B' },
+              {
+                color: isHighContrast
+                  ? (isDark ? '#CBD5E1' : '#1E293B')
+                  : (isDark ? '#94A3B8' : '#64748B'),
+              },
             ]}>
             Kliknij na status, aby przełączać: Dozwolone → Unikaj → Niedozwolone.
           </Text>
@@ -271,8 +446,8 @@ export default function ProfileScreen() {
             style={[
               styles.constraintsList,
               {
-                backgroundColor: '#FFFFFF',
-                borderColor: isHighContrast ? '#000000' : '#E2E8F0',
+                backgroundColor: cardBgColor,
+                borderColor: cardBorderColor,
                 borderWidth: isHighContrast ? 2.5 : 1,
               },
             ]}>
@@ -285,13 +460,18 @@ export default function ProfileScreen() {
                   key={item.key}
                   style={[
                     styles.constraintRow,
-                    index < constraintItems.length - 1 && styles.borderBottom,
+                    index < constraintItems.length - 1 && {
+                      borderBottomWidth: 1,
+                      borderBottomColor: dividerColor,
+                    },
                   ]}>
                   <Text
                     style={[
                       styles.constraintLabel,
                       {
-                        color: isHighContrast ? '#000000' : '#1E293B',
+                        color: isHighContrast
+                          ? (isDark ? '#FFFFFF' : '#000000')
+                          : (isDark ? '#F8FAFC' : '#1E293B'),
                         fontWeight: isHighContrast ? '700' : '500',
                       },
                     ]}>
@@ -306,21 +486,25 @@ export default function ProfileScreen() {
                     style={[
                       styles.badgePressable,
                       {
-                        backgroundColor: isHighContrast ? '#FFFFFF' : badge.bg,
-                        borderColor: isHighContrast ? '#000000' : badge.color,
+                        backgroundColor: isHighContrast
+                          ? (isDark ? '#000000' : '#FFFFFF')
+                          : badge.bg,
+                        borderColor: isHighContrast
+                          ? (isDark ? '#FFFFFF' : '#000000')
+                          : badge.color,
                         borderWidth: isHighContrast ? 2 : 1,
                       },
                     ]}>
                     <MaterialCommunityIcons
                       name={badge.icon}
                       size={16}
-                      color={isHighContrast ? '#000000' : badge.color}
+                      color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : badge.color}
                     />
                     <Text
                       style={[
                         styles.badgeText,
                         {
-                          color: isHighContrast ? '#000000' : badge.color,
+                          color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : badge.color,
                           fontWeight: isHighContrast ? '800' : '700',
                         },
                       ]}>
@@ -337,7 +521,9 @@ export default function ProfileScreen() {
             style={[
               styles.sectionTitle,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontWeight: isHighContrast ? '800' : '700',
               },
             ]}>
@@ -348,8 +534,8 @@ export default function ProfileScreen() {
             style={[
               styles.channelsCard,
               {
-                backgroundColor: '#FFFFFF',
-                borderColor: isHighContrast ? '#000000' : '#E2E8F0',
+                backgroundColor: cardBgColor,
+                borderColor: cardBorderColor,
                 borderWidth: isHighContrast ? 2.5 : 1,
               },
             ]}>
@@ -357,44 +543,73 @@ export default function ProfileScreen() {
               <Text
                 style={[
                   styles.channelLabel,
-                  { color: isHighContrast ? '#000000' : '#1E293B' },
+                  {
+                    color: isHighContrast
+                      ? (isDark ? '#FFFFFF' : '#000000')
+                      : (isDark ? '#F8FAFC' : '#1E293B'),
+                  },
                 ]}>
                 Wskazówki wizualne (wysoki kontrast / piktogramy)
               </Text>
               <Switch
                 value={feedbackChannels.includes('visual')}
                 onValueChange={() => toggleFeedbackChannel('visual')}
-                trackColor={{ false: '#D1D5DB', true: BrandColors.primary }}
+                trackColor={{
+                  false: isDark ? '#334155' : '#D1D5DB',
+                  true: BrandColors.primary,
+                }}
               />
             </View>
 
-            <View style={[styles.channelRow, styles.borderTop]}>
+            <View
+              style={[
+                styles.channelRow,
+                { borderTopWidth: 1, borderTopColor: dividerColor },
+              ]}>
               <Text
                 style={[
                   styles.channelLabel,
-                  { color: isHighContrast ? '#000000' : '#1E293B' },
+                  {
+                    color: isHighContrast
+                      ? (isDark ? '#FFFFFF' : '#000000')
+                      : (isDark ? '#F8FAFC' : '#1E293B'),
+                  },
                 ]}>
                 Wskazówki dźwiękowe i lektor (Audio)
               </Text>
               <Switch
                 value={feedbackChannels.includes('audio')}
                 onValueChange={() => toggleFeedbackChannel('audio')}
-                trackColor={{ false: '#D1D5DB', true: BrandColors.primary }}
+                trackColor={{
+                  false: isDark ? '#334155' : '#D1D5DB',
+                  true: BrandColors.primary,
+                }}
               />
             </View>
 
-            <View style={[styles.channelRow, styles.borderTop]}>
+            <View
+              style={[
+                styles.channelRow,
+                { borderTopWidth: 1, borderTopColor: dividerColor },
+              ]}>
               <Text
                 style={[
                   styles.channelLabel,
-                  { color: isHighContrast ? '#000000' : '#1E293B' },
+                  {
+                    color: isHighContrast
+                      ? (isDark ? '#FFFFFF' : '#000000')
+                      : (isDark ? '#F8FAFC' : '#1E293B'),
+                  },
                 ]}>
                 Wibracje i haptyka (Haptic)
               </Text>
               <Switch
                 value={feedbackChannels.includes('haptic')}
                 onValueChange={() => toggleFeedbackChannel('haptic')}
-                trackColor={{ false: '#D1D5DB', true: BrandColors.primary }}
+                trackColor={{
+                  false: isDark ? '#334155' : '#D1D5DB',
+                  true: BrandColors.primary,
+                }}
               />
             </View>
           </View>
@@ -543,5 +758,26 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
     fontWeight: '500',
+  },
+  themeRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+    marginRight: 10,
+  },
+  themeIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  themeTextWrap: {
+    flex: 1,
+  },
+  themeSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
   },
 });
