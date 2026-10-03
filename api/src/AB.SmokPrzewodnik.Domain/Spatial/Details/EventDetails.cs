@@ -6,6 +6,12 @@ namespace AB.SmokPrzewodnik.Domain.Spatial.Details;
 
 public sealed record EventDetails : SpatialEntityDetails
 {
+    private readonly List<EventCategory> _categories = [];
+
+    private EventDetails() : base(EntityKind.Event)
+    {
+    }
+
     public EventDetails(
         IEnumerable<Code> categoryCodes,
         Guid? organizerEntityId,
@@ -16,11 +22,15 @@ public sealed record EventDetails : SpatialEntityDetails
         : base(EntityKind.Event)
     {
         ArgumentNullException.ThrowIfNull(categoryCodes);
-        CategoryCodes = categoryCodes.ToFrozenSet();
-        if (CategoryCodes.Count == 0)
+        var categories = categoryCodes.ToFrozenSet();
+        if (categories.Count == 0)
         {
             throw new ArgumentException("At least one event category is required.", nameof(categoryCodes));
         }
+
+        _categories.AddRange(categories
+            .Select(category => new EventCategory(category))
+            .OrderBy(category => category.Code.Value, StringComparer.Ordinal));
 
         if (endsAt < startsAt)
         {
@@ -34,11 +44,12 @@ public sealed record EventDetails : SpatialEntityDetails
         Capacity = capacity;
     }
 
-    public IReadOnlySet<Code> CategoryCodes { get; }
-    public Guid? OrganizerEntityId { get; }
+    public IReadOnlySet<Code> CategoryCodes => _categories.Select(category => category.Code).ToFrozenSet();
+    internal IReadOnlyCollection<EventCategory> Categories => _categories;
+    public Guid? OrganizerEntityId { get; private set; }
     public SpatialEntity? Organizer { get; private set; }
-    public DateTimeOffset StartsAt { get; }
-    public DateTimeOffset EndsAt { get; }
-    public Uri? BookingUri { get; }
-    public uint? Capacity { get; }
+    public DateTimeOffset StartsAt { get; private set; }
+    public DateTimeOffset EndsAt { get; private set; }
+    public Uri? BookingUri { get; private set; }
+    public uint? Capacity { get; private set; }
 }

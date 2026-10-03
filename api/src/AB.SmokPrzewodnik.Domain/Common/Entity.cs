@@ -5,12 +5,17 @@ namespace AB.SmokPrzewodnik.Domain.Common;
 public abstract class Entity<TId> : IEquatable<Entity<TId>>
     where TId : notnull
 {
+    protected Entity()
+    {
+        Id = default!;
+    }
+
     protected Entity(TId id)
     {
         Id = id;
     }
 
-    public TId Id { get; }
+    public TId Id { get; private set; }
 
     public static bool operator ==(Entity<TId>? left, Entity<TId>? right)
     {

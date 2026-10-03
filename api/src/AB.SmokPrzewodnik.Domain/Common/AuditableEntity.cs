@@ -3,6 +3,10 @@ namespace AB.SmokPrzewodnik.Domain.Common;
 public abstract class AuditableEntity<TId> : Entity<TId>
     where TId : notnull
 {
+    protected AuditableEntity()
+    {
+    }
+
     protected AuditableEntity(
         TId id,
         DateTimeOffset? createdAt = null,
@@ -19,7 +23,7 @@ public abstract class AuditableEntity<TId> : Entity<TId>
         UpdatedAt = updatedAt;
     }
 
-    public DateTimeOffset CreatedAt { get; }
+    public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset? UpdatedAt { get; private set; }
 

@@ -7,6 +7,11 @@ namespace AB.SmokPrzewodnik.Domain.Planning;
 
 public sealed record SuggestionProjection
 {
+    private SuggestionProjection()
+    {
+        ReasonCodes = FrozenSet<Code>.Empty;
+    }
+
     public SuggestionProjection(
         Guid accountId,
         Guid suggestedEntityId,
@@ -34,19 +39,19 @@ public sealed record SuggestionProjection
         ExpiresAt = expiresAt;
     }
 
-    public Guid AccountId { get; }
+    public Guid AccountId { get; private set; }
 
-    public Guid SuggestedEntityId { get; }
+    public Guid SuggestedEntityId { get; private set; }
 
     public SpatialEntity SuggestedEntity { get; private set; } = null!;
 
-    public IReadOnlySet<Code> ReasonCodes { get; }
+    public IReadOnlySet<Code> ReasonCodes { get; private set; }
 
-    public decimal Score { get; }
+    public decimal Score { get; private set; }
 
-    public DateTimeOffset GeneratedAt { get; }
+    public DateTimeOffset GeneratedAt { get; private set; }
 
-    public DateTimeOffset ExpiresAt { get; }
+    public DateTimeOffset ExpiresAt { get; private set; }
 
     private static Guid RequireId(Guid id, string parameterName)
     {

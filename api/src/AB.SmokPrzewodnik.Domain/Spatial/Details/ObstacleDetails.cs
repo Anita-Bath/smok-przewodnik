@@ -6,6 +6,11 @@ namespace AB.SmokPrzewodnik.Domain.Spatial.Details;
 
 public sealed record ObstacleDetails : SpatialEntityDetails
 {
+    private ObstacleDetails() : base(EntityKind.Obstacle)
+    {
+        AffectedTravelModes = FrozenSet<TravelMode>.Empty;
+    }
+
     public ObstacleDetails(
         Code obstacleCode,
         uint severity,
@@ -31,8 +36,8 @@ public sealed record ObstacleDetails : SpatialEntityDetails
         AffectedTravelModes = modes;
     }
 
-    public Code ObstacleCode { get; }
-    public uint Severity { get; }
-    public DateTimeOffset? ExpectedUntil { get; }
-    public IReadOnlySet<TravelMode> AffectedTravelModes { get; }
+    public Code ObstacleCode { get; private set; }
+    public uint Severity { get; private set; }
+    public DateTimeOffset? ExpectedUntil { get; private set; }
+    public IReadOnlySet<TravelMode> AffectedTravelModes { get; private set; }
 }

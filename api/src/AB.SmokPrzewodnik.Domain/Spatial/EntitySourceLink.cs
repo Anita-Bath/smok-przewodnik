@@ -4,6 +4,13 @@ namespace AB.SmokPrzewodnik.Domain.Spatial;
 
 public sealed class EntitySourceLink : AuditableEntity<Guid>
 {
+    private EntitySourceLink()
+    {
+        ExternalId = string.Empty;
+        License = null!;
+        TransformVersion = string.Empty;
+    }
+
     public EntitySourceLink(
         Guid id,
         Guid entityId,
@@ -34,19 +41,19 @@ public sealed class EntitySourceLink : AuditableEntity<Guid>
         TransformVersion = Guard.NotBlank(transformVersion, nameof(transformVersion));
     }
 
-    public Guid EntityId { get; }
+    public Guid EntityId { get; private set; }
 
     public SpatialEntity Entity { get; private set; } = null!;
 
-    public Guid SourceId { get; }
+    public Guid SourceId { get; private set; }
 
     public DataSource Source { get; private set; } = null!;
 
-    public string ExternalId { get; }
+    public string ExternalId { get; private set; }
 
-    public DateTimeOffset RetrievedAt { get; }
+    public DateTimeOffset RetrievedAt { get; private set; }
 
-    public SourceLicenseMetadata License { get; }
+    public SourceLicenseMetadata License { get; private set; }
 
-    public string TransformVersion { get; }
+    public string TransformVersion { get; private set; }
 }

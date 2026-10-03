@@ -28,6 +28,7 @@ internal sealed class SpatialEntityRepository : ISpatialEntityRepository
         CancellationToken cancellationToken) =>
         _dbContext.SpatialEntities
             .AsNoTracking()
+            .Include(entity => entity.Details)
             .Include(entity => entity.Translations)
             .SingleOrDefaultAsync(entity => entity.Id == id, cancellationToken);
 
@@ -67,11 +68,7 @@ internal sealed class SpatialEntityRepository : ISpatialEntityRepository
                 criteria.Categories,
                 fromIsDynamic: true)
             : criteria;
-        var query = ApplyCriteria(
-            _dbContext.SpatialEntities
-                .AsNoTracking()
-                .Include(entity => entity.Translations),
-            effectiveCriteria);
+        var query = BuildQuery(effectiveCriteria);
 
         if (cursor is not null)
         {
@@ -96,44 +93,79 @@ internal sealed class SpatialEntityRepository : ISpatialEntityRepository
         return new CursorPage<SpatialEntity>(items, nextCursor);
     }
 
-    private static IQueryable<SpatialEntity> ApplyCriteria(
-        IQueryable<SpatialEntity> query,
-        SpatialEntityCriteria criteria)
+    internal IQueryable<SpatialEntity> BuildQuery(SpatialEntityCriteria criteria)
     {
-        if (criteria.Kind.HasValue)
+        ArgumentNullException.ThrowIfNull(criteria);
+
+        IQueryable<SpatialEntity> query;
+        if (criteria.Kind == EntityKind.Event)
+        {
+            var from = criteria.From;
+            var to = criteria.To;
+            var categories = criteria.Categories.Order(StringComparer.Ordinal).ToArray();
+            var minLongitude = criteria.BoundingBox?.MinLongitude ?? -180m;
+            var minLatitude = criteria.BoundingBox?.MinLatitude ?? -90m;
+            var maxLongitude = criteria.BoundingBox?.MaxLongitude ?? 180m;
+            var maxLatitude = criteria.BoundingBox?.MaxLatitude ?? 90m;
+
+            query = _dbContext.SpatialEntities.FromSqlInterpolated($$"""
+                SELECT entity.*
+                FROM spatial_entities AS entity
+                INNER JOIN spatial_entity_details AS details
+                    ON details.spatial_entity_id = entity.id
+                    AND details.detail_type = 'event'
+                WHERE (
+                    CAST({{from}} AS timestamp with time zone) IS NULL
+                    OR details.event_ends_at >= CAST({{from}} AS timestamp with time zone))
+                  AND (
+                    CAST({{to}} AS timestamp with time zone) IS NULL
+                    OR details.event_starts_at <= CAST({{to}} AS timestamp with time zone))
+                  AND (
+                    cardinality(CAST({{categories}} AS text[])) = 0
+                    OR EXISTS (
+                        SELECT 1
+                        FROM event_categories AS category
+                        WHERE category.spatial_entity_id = entity.id
+                          AND category.category_code = ANY(CAST({{categories}} AS text[]))))
+                  AND ST_Intersects(
+                    entity.geometry,
+                    ST_MakeEnvelope(
+                        CAST({{minLongitude}} AS double precision),
+                        CAST({{minLatitude}} AS double precision),
+                        CAST({{maxLongitude}} AS double precision),
+                        CAST({{maxLatitude}} AS double precision),
+                        4326))
+                """);
+        }
+        else if (criteria.BoundingBox is { } bounds)
+        {
+            query = _dbContext.SpatialEntities.FromSqlInterpolated($$"""
+                SELECT entity.*
+                FROM spatial_entities AS entity
+                WHERE ST_Intersects(
+                    entity.geometry,
+                    ST_MakeEnvelope(
+                        CAST({{bounds.MinLongitude}} AS double precision),
+                        CAST({{bounds.MinLatitude}} AS double precision),
+                        CAST({{bounds.MaxLongitude}} AS double precision),
+                        CAST({{bounds.MaxLatitude}} AS double precision),
+                        4326))
+                """);
+        }
+        else
+        {
+            query = _dbContext.SpatialEntities;
+        }
+
+        if (criteria.Kind.HasValue && criteria.Kind != EntityKind.Event)
         {
             query = query.Where(entity => entity.Kind == criteria.Kind.Value);
         }
 
-        if (criteria.BoundingBox is { } bounds)
-        {
-            query = query.Where(entity => entity.Geometry.Coordinates.Any(coordinate =>
-                coordinate.Longitude >= bounds.MinLongitude &&
-                coordinate.Longitude <= bounds.MaxLongitude &&
-                coordinate.Latitude >= bounds.MinLatitude &&
-                coordinate.Latitude <= bounds.MaxLatitude));
-        }
-
-        if (criteria.From.HasValue)
-        {
-            query = query.Where(entity =>
-                ((EventDetails)entity.Details!).EndsAt >= criteria.From.Value);
-        }
-
-        if (criteria.To.HasValue)
-        {
-            query = query.Where(entity =>
-                ((EventDetails)entity.Details!).StartsAt <= criteria.To.Value);
-        }
-
-        if (criteria.Categories.Count > 0)
-        {
-            query = query.Where(entity =>
-                ((EventDetails)entity.Details!).CategoryCodes.Any(category =>
-                    criteria.Categories.Contains(category.Value.ToLower())));
-        }
-
-        return query;
+        return query
+            .AsNoTracking()
+            .Include(entity => entity.Details)
+            .Include(entity => entity.Translations);
     }
 
     private static string CreateFilterHash(SpatialEntityCriteria criteria)
