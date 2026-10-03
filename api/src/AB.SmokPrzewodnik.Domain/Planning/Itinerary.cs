@@ -11,6 +11,16 @@ public sealed class Itinerary : AggregateRoot<Guid>
     private readonly List<Guid> _routeLegReferences;
     private readonly ReadOnlyCollection<Guid> _routeLegReferencesView;
 
+    private Itinerary()
+    {
+        LocalizedTitle = null!;
+        TimeZone = string.Empty;
+        _items = [];
+        _itemsView = _items.AsReadOnly();
+        _routeLegReferences = [];
+        _routeLegReferencesView = _routeLegReferences.AsReadOnly();
+    }
+
     public Itinerary(
         Guid id,
         Guid accountId,
@@ -41,7 +51,7 @@ public sealed class Itinerary : AggregateRoot<Guid>
         _routeLegReferencesView = _routeLegReferences.AsReadOnly();
     }
 
-    public Guid AccountId { get; }
+    public Guid AccountId { get; private set; }
 
     public LocalizedContent LocalizedTitle { get; private set; }
 

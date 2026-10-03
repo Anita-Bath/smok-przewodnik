@@ -8,6 +8,11 @@ where TId : notnull
     private readonly List<IDomainEvent> _domainEvents = [];
     private readonly ReadOnlyCollection<IDomainEvent> _domainEventsView;
 
+    protected AggregateRoot()
+    {
+        _domainEventsView = _domainEvents.AsReadOnly();
+    }
+
     protected AggregateRoot(
           TId id,
           DateTimeOffset? createdAt = null,

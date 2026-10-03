@@ -4,6 +4,10 @@ namespace AB.SmokPrzewodnik.Domain.Confidence;
 
 public sealed record ConfidenceAssessment
 {
+    private ConfidenceAssessment()
+    {
+    }
+
     public ConfidenceAssessment(
         ConfidenceState state,
         decimal score,
@@ -26,11 +30,11 @@ public sealed record ConfidenceAssessment
         EvaluatedAt = evaluatedAt;
     }
 
-    public ConfidenceState State { get; }
+    public ConfidenceState State { get; private set; }
 
-    public decimal Score { get; }
+    public decimal Score { get; private set; }
 
-    public int EvidenceCount { get; }
+    public int EvidenceCount { get; private set; }
 
-    public DateTimeOffset EvaluatedAt { get; }
+    public DateTimeOffset EvaluatedAt { get; private set; }
 }

@@ -10,6 +10,7 @@ pkgs.mkShell rec {
 	sdk_8_0-bin
 	sdk_10_0-bin
     ]))
+    dotnet-ef
     csharp-ls
     nodejs
     ngrok

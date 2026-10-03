@@ -14,14 +14,24 @@ public sealed class SpatialEntity : AggregateRoot<Guid>
     private readonly List<EntitySourceLink> _sourceLinks = [];
     private readonly List<AccessibilityFact> _accessibilityFacts = [];
     private readonly List<ItineraryItem> _itineraryItems = [];
-    private readonly List<FeedItem> _feedItems = [];
+    private readonly List<FeedItemEntityLink> _feedItemLinks = [];
     private readonly List<SuggestionProjection> _suggestions = [];
     private readonly ReadOnlyCollection<EntityTranslation> _translationView;
     private readonly ReadOnlyCollection<EntitySourceLink> _sourceLinkView;
     private readonly ReadOnlyCollection<AccessibilityFact> _accessibilityFactView;
     private readonly ReadOnlyCollection<ItineraryItem> _itineraryItemView;
-    private readonly ReadOnlyCollection<FeedItem> _feedItemView;
     private readonly ReadOnlyCollection<SuggestionProjection> _suggestionView;
+
+    private SpatialEntity()
+    {
+        Geometry = null!;
+        Confidence = null!;
+        _translationView = _translations.AsReadOnly();
+        _sourceLinkView = _sourceLinks.AsReadOnly();
+        _accessibilityFactView = _accessibilityFacts.AsReadOnly();
+        _itineraryItemView = _itineraryItems.AsReadOnly();
+        _suggestionView = _suggestions.AsReadOnly();
+    }
 
     public SpatialEntity(
         Guid id,
@@ -48,13 +58,12 @@ public sealed class SpatialEntity : AggregateRoot<Guid>
         _sourceLinkView = _sourceLinks.AsReadOnly();
         _accessibilityFactView = _accessibilityFacts.AsReadOnly();
         _itineraryItemView = _itineraryItems.AsReadOnly();
-        _feedItemView = _feedItems.AsReadOnly();
         _suggestionView = _suggestions.AsReadOnly();
     }
 
-    public Guid CityId { get; }
+    public Guid CityId { get; private set; }
     public City City { get; private set; } = null!;
-    public EntityKind Kind { get; }
+    public EntityKind Kind { get; private set; }
     public SpatialGeometry Geometry { get; private set; }
     public LifecycleState State { get; private set; }
     public ConfidenceAssessment Confidence { get; private set; }
@@ -63,7 +72,11 @@ public sealed class SpatialEntity : AggregateRoot<Guid>
     public IReadOnlyCollection<EntitySourceLink> SourceLinks => _sourceLinkView;
     public IReadOnlyCollection<AccessibilityFact> AccessibilityFacts => _accessibilityFactView;
     public IReadOnlyCollection<ItineraryItem> ItineraryItems => _itineraryItemView;
-    public IReadOnlyCollection<FeedItem> FeedItems => _feedItemView;
+    public IReadOnlyCollection<FeedItem> FeedItems => _feedItemLinks
+        .Where(link => link.FeedItem is not null)
+        .Select(link => link.FeedItem)
+        .ToArray();
+    internal IReadOnlyCollection<FeedItemEntityLink> FeedItemLinks => _feedItemLinks;
     public IReadOnlyCollection<SuggestionProjection> Suggestions => _suggestionView;
 
     public static SpatialEntity Create(
