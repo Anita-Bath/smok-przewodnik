@@ -10,4 +10,4 @@ public sealed record GetEventsQuery(
     DateTimeOffset? To,
     IReadOnlyCollection<string> Categories,
     CursorPageRequest Page,
-    bool FromIsDynamic = false) : IRequest<CursorPageResponse<EventListItemDto>>;
+    bool FromIsDynamic = false) : IRequest<CursorPageResponse<EventDto>>;
