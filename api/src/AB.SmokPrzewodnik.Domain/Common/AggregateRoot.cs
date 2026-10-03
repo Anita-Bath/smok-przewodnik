@@ -2,14 +2,17 @@ using System.Collections.ObjectModel;
 
 namespace AB.SmokPrzewodnik.Domain.Common;
 
-public abstract class AggregateRoot<TId> : Entity<TId>
-    where TId : notnull
+public abstract class AggregateRoot<TId> : AuditableEntity<TId>
+where TId : notnull
 {
     private readonly List<IDomainEvent> _domainEvents = [];
     private readonly ReadOnlyCollection<IDomainEvent> _domainEventsView;
 
-    protected AggregateRoot(TId id)
-        : base(id)
+    protected AggregateRoot(
+          TId id,
+          DateTimeOffset? createdAt = null,
+          DateTimeOffset? updatedAt = null)
+    : base(id, createdAt, updatedAt)
     {
         _domainEventsView = _domainEvents.AsReadOnly();
     }

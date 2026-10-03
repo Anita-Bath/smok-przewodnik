@@ -1,3 +1,5 @@
+using AB.SmokPrzewodnik.Domain.Spatial;
+
 namespace AB.SmokPrzewodnik.Domain.Planning;
 
 public sealed record ItineraryItem
@@ -43,6 +45,8 @@ public sealed record ItineraryItem
     public int Position { get; }
 
     public Guid EntityId { get; }
+
+    public SpatialEntity Entity { get; private set; } = null!;
 
     public DateTimeOffset? PlannedArrival { get; }
 

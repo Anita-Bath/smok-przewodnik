@@ -20,8 +20,9 @@ public sealed class Itinerary : AggregateRoot<Guid>
         string timeZone,
         IEnumerable<ItineraryItem> items,
         IEnumerable<Guid> routeLegReferences,
-        DateTimeOffset updatedAt)
-        : base(RequireId(id, nameof(id)))
+        DateTimeOffset? createdAt,
+        DateTimeOffset? updatedAt)
+        : base(RequireId(id, nameof(id)), createdAt, updatedAt)
     {
         AccountId = RequireId(accountId, nameof(accountId));
         LocalizedTitle = localizedTitle ?? throw new ArgumentNullException(nameof(localizedTitle));
@@ -29,7 +30,6 @@ public sealed class Itinerary : AggregateRoot<Guid>
         ValidateRange(startsAt, endsAt);
         StartsAt = startsAt;
         EndsAt = endsAt;
-        UpdatedAt = updatedAt;
 
         ArgumentNullException.ThrowIfNull(items);
         _items = items.OrderBy(item => item.Position).ToList();
@@ -55,8 +55,6 @@ public sealed class Itinerary : AggregateRoot<Guid>
 
     public IReadOnlyList<Guid> RouteLegReferences => _routeLegReferencesView;
 
-    public DateTimeOffset UpdatedAt { get; private set; }
-
     public static Itinerary Create(
         Guid accountId,
         LocalizedContent localizedTitle,
@@ -64,7 +62,7 @@ public sealed class Itinerary : AggregateRoot<Guid>
         DateTimeOffset endsAt,
         string timeZone,
         DateTimeOffset createdAt) =>
-        new(Guid.NewGuid(), accountId, localizedTitle, startsAt, endsAt, timeZone, [], [], createdAt);
+        new(Guid.NewGuid(), accountId, localizedTitle, startsAt, endsAt, timeZone, [], [], createdAt, null);
 
     public void Rename(LocalizedContent localizedTitle, DateTimeOffset updatedAt)
     {
@@ -202,7 +200,7 @@ public sealed class Itinerary : AggregateRoot<Guid>
             throw new ArgumentOutOfRangeException(nameof(updatedAt), "The update timestamp cannot move backwards.");
         }
 
-        UpdatedAt = updatedAt;
+        MarkUpdated(updatedAt);
     }
 
     private static void ValidateRange(DateTimeOffset startsAt, DateTimeOffset endsAt)
