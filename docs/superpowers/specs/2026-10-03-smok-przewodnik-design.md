@@ -100,8 +100,7 @@ accessibility models.
 
 The system uses a modular .NET monolith as its single business boundary.
 The Expo application calls the .NET API for all domain queries and commands.
-Supabase provides authentication, PostgreSQL/PostGIS, object storage, and
-supporting realtime infrastructure.
+Supabase provides authentication, PostgreSQL/PostGIS, and object storage.
 
 Two deliberate direct mobile-to-Supabase flows are allowed:
 
@@ -214,8 +213,11 @@ an existing synchronized profile.
 
 - tracks short-lived active journey sessions;
 - matches current or newly reported conditions against upcoming segments;
-- emits accessible warning and confirmation events;
+- emits accessible warning and confirmation events through SignalR while the
+  app is in the foreground;
 - requests rerouting without changing a route unexpectedly;
+- exposes cursor-based recovery for missed navigation events;
+- continues route guidance locally when the app is backgrounded or disconnected;
 - avoids retaining location traces when history collection is disabled.
 
 #### Planning and Personalization
@@ -356,9 +358,16 @@ persist a continuous trace.
 
 When new evidence affects upcoming segments, the server evaluates severity,
 confidence, freshness, and distance. A material change emits a navigation event
-through the app's active realtime channel. The app presents the warning through
-all appropriate enabled feedback channels and offers a recalculated route.
-It never switches routes without user confirmation.
+through SignalR while the app is active in the foreground. The app presents the
+warning through all appropriate enabled feedback channels and offers a
+recalculated route. It never switches routes without user confirmation.
+
+When the app is backgrounded, the operating system may suspend its live
+connection. Turn-by-turn guidance therefore continues locally from the loaded
+route and device location. Important server-side changes may produce a push
+notification, but push delivery is best-effort and is not treated as a reliable
+navigation event stream. On foregrounding or reconnecting, the app retrieves
+missed events through the session cursor before resuming live updates.
 
 Users approaching an existing observation may receive an unobtrusive confirm or
 deny prompt. The prompt must be suppressible, safe to answer without fine motor
@@ -387,12 +396,18 @@ provenance, but they cannot silently erase credible current community evidence.
 An area pack may contain:
 
 - vector or raster map resources permitted by the selected provider;
-- the local routing graph or an offline-compatible route representation;
 - current accessibility projections and source metadata;
 - places and infrastructure;
 - public transport schedules;
 - bounded upcoming-event and active-obstacle caches;
 - localization resources required by the pack.
+
+The mobile app does not embed a routing engine or download a routing graph.
+While offline, it can navigate routes whose geometry, maneuvers, and relevant
+accessibility data were saved or recently cached while connected. Planning a new
+route or recalculating an existing route requires connectivity. If an obstacle
+invalidates a stored route while offline, the app warns the user but does not
+pretend that it can calculate a safe detour.
 
 Account-owned saved places and suggestions synchronize automatically. Recent
 route retention has a configurable limit. Raw or precise journey history only
@@ -440,8 +455,8 @@ delete optional journey history, report harmful content, and appeal moderation.
 Failure behavior is explicit:
 
 - unavailable live feeds fall back to dated cached data;
-- an unavailable routing provider can fall back to compatible offline or saved
-  routes;
+- an unavailable routing provider can fall back only to an already saved or
+  recently cached route;
 - queued uploads retry without duplicating commands;
 - contradictory evidence produces a disputed state;
 - unavailable output hardware falls back to other enabled channels;
@@ -711,14 +726,20 @@ POST /v1/routes/plan
 POST /v1/navigation/sessions
 POST /v1/navigation/sessions/{sessionId}/progress
 POST /v1/navigation/sessions/{sessionId}/reroute
+GET  /v1/navigation/sessions/{sessionId}/events?afterSequence=
 DELETE /v1/navigation/sessions/{sessionId}
-GET  /v1/offline/areas
-GET  /v1/offline/areas/{areaId}/manifest
-GET  /v1/offline/areas/{areaId}/changes?after=
+GET  /v1/area-packs
+GET  /v1/area-packs/{areaId}/manifest
+GET  /v1/area-packs/{areaId}/changes?afterVersion=
 ```
 
 Guest navigation sessions use short-lived opaque credentials and must not create
 an account or durable journey record.
+
+Area-pack endpoints are used only while connected to discover, download, and
+incrementally refresh local data. Offline reads never call these endpoints; they
+use the mobile database. Queued writes use the sync endpoints after connectivity
+returns.
 
 #### Authenticated user
 
@@ -778,20 +799,42 @@ POST /v1/moderation/appeals/{appealId}/decisions
 Partner and moderation operations may later use a separate web console, but the
 contracts remain part of the same API boundary.
 
-### 3.10 Realtime contract
+### 3.10 Live updates, push, and durable recovery
 
-The .NET API owns the client-facing realtime channel, implemented with ASP.NET
-Core SignalR over WebSockets with transport fallback. Initial channel topics are:
+Realtime transport responsibilities are intentionally narrow:
+
+- **SignalR:** foreground events for an active navigation session;
+- **HTTP:** all commands, queries, area-pack changes, account synchronization,
+  and recovery of missed events;
+- **push notifications:** best-effort background alerts that invite the app to
+  fetch current state;
+- **local processing:** maneuver timing and enabled visual, audio, and haptic
+  guidance from the currently loaded route.
+
+The .NET API exposes an ASP.NET Core SignalR hub for active navigation. SignalR
+prefers WebSockets and may negotiate a supported fallback transport. The client
+uses bounded automatic reconnection and then switches to cursor recovery rather
+than retrying indefinitely.
 
 ```text
 navigation:{sessionId}   warning | reroute_available | source_status
-city:{cityId}:{areaId}   entity_changed | observation_changed | feed_status
-account:{accountId}      sync_result | reward_changed | moderation_changed
 ```
 
-Every event includes a monotonic server sequence or resumable cursor. Clients
-that disconnect recover through the ordinary changes endpoint rather than
-assuming realtime delivery is durable.
+Every navigation event contains a monotonically increasing session sequence.
+The server retains events for the short lifetime of the navigation session. A
+client that reconnects requests events after its last applied sequence through
+the HTTP session-events endpoint, applies them in order, and then resumes the
+SignalR stream. Event handlers are idempotent.
+
+City-feed, entity, reward, moderation, and ordinary sync changes do not require
+persistent SignalR subscriptions. They use cursor-based HTTP synchronization;
+important account-level changes may additionally trigger a push notification.
+Push payloads contain only a notification type and opaque reference, not precise
+location, accessibility-profile data, or reward codes. The app fetches and
+authorizes the current details after it opens.
+
+SignalR and push notifications are delivery optimizations, never the durable
+source of truth. Losing either channel cannot lose a domain change.
 
 ### 3.11 Verification strategy
 
@@ -857,6 +900,8 @@ demonstrable increment and leave its module contracts usable by the next stage.
 - Add simplified and landmark-based presentation.
 - Add short-lived navigation sessions, progress, warnings, and user-approved
   rerouting.
+- Add foreground SignalR delivery, cursor-based event recovery, and local
+  guidance continuity when the connection or foreground session is lost.
 - Validate the experience with representative accessibility profiles.
 
 ### Milestone 4: Community evidence and progressive trust
@@ -869,7 +914,9 @@ demonstrable increment and leave its module contracts usable by the next stage.
 
 ### Milestone 5: Offline packs and synchronization
 
-- Package Krakow map, routing, place, transport, and accessibility data.
+- Package Krakow map, place, transport-schedule, and accessibility data.
+- Navigate saved and recently cached route geometry and instructions without a
+  connection; require connectivity for new routes and rerouting.
 - Support cached events and obstacles with visible freshness.
 - Add idempotent offline contribution queues and incremental sync.
 - Add saved places, bounded recent routes, and optional journey-history sync.
