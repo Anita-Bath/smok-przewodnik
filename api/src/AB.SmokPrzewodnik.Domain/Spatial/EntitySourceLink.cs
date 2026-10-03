@@ -36,7 +36,11 @@ public sealed class EntitySourceLink : AuditableEntity<Guid>
 
     public Guid EntityId { get; }
 
+    public SpatialEntity Entity { get; private set; } = null!;
+
     public Guid SourceId { get; }
+
+    public DataSource Source { get; private set; } = null!;
 
     public string ExternalId { get; }
 

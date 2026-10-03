@@ -1,11 +1,15 @@
 using System.Collections.Frozen;
 using System.Collections.ObjectModel;
+using AB.SmokPrzewodnik.Domain.Spatial;
 using AB.SmokPrzewodnik.Domain.ValueObjects;
 
 namespace AB.SmokPrzewodnik.Domain.Planning;
 
 public sealed record FeedItem
 {
+    private readonly List<SpatialEntity> _linkedEntities = [];
+    private readonly ReadOnlyCollection<SpatialEntity> _linkedEntityView;
+
     public FeedItem(
         Guid id,
         Guid cityId,
@@ -48,17 +52,24 @@ public sealed record FeedItem
 
         PublishedAt = publishedAt;
         ValidUntil = validUntil;
+        _linkedEntityView = _linkedEntities.AsReadOnly();
     }
 
     public Guid Id { get; }
 
     public Guid CityId { get; }
 
+    public City City { get; private set; } = null!;
+
     public Code ContentType { get; }
 
     public Guid SourceId { get; }
 
+    public DataSource Source { get; private set; } = null!;
+
     public IReadOnlyList<Guid> LinkedEntityIds { get; }
+
+    public IReadOnlyCollection<SpatialEntity> LinkedEntities => _linkedEntityView;
 
     public LocalizedContent LocalizedContent { get; }
 

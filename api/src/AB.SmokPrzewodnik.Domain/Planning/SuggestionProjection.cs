@@ -1,5 +1,6 @@
 using System.Collections.Frozen;
 using AB.SmokPrzewodnik.Domain.Common;
+using AB.SmokPrzewodnik.Domain.Spatial;
 using AB.SmokPrzewodnik.Domain.ValueObjects;
 
 namespace AB.SmokPrzewodnik.Domain.Planning;
@@ -36,6 +37,8 @@ public sealed record SuggestionProjection
     public Guid AccountId { get; }
 
     public Guid SuggestedEntityId { get; }
+
+    public SpatialEntity SuggestedEntity { get; private set; } = null!;
 
     public IReadOnlySet<Code> ReasonCodes { get; }
 

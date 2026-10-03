@@ -2,17 +2,26 @@ using System.Collections.ObjectModel;
 using AB.SmokPrzewodnik.Domain.Common;
 using AB.SmokPrzewodnik.Domain.Confidence;
 using AB.SmokPrzewodnik.Domain.Enums;
+using AB.SmokPrzewodnik.Domain.Planning;
 using AB.SmokPrzewodnik.Domain.Spatial.Details;
 using AB.SmokPrzewodnik.Domain.ValueObjects;
 
 namespace AB.SmokPrzewodnik.Domain.Spatial;
 
-public sealed class SpatialEntity : AuditableEntity<Guid>
+public sealed class SpatialEntity : AggregateRoot<Guid>
 {
     private readonly List<EntityTranslation> _translations = [];
     private readonly List<EntitySourceLink> _sourceLinks = [];
+    private readonly List<AccessibilityFact> _accessibilityFacts = [];
+    private readonly List<ItineraryItem> _itineraryItems = [];
+    private readonly List<FeedItem> _feedItems = [];
+    private readonly List<SuggestionProjection> _suggestions = [];
     private readonly ReadOnlyCollection<EntityTranslation> _translationView;
     private readonly ReadOnlyCollection<EntitySourceLink> _sourceLinkView;
+    private readonly ReadOnlyCollection<AccessibilityFact> _accessibilityFactView;
+    private readonly ReadOnlyCollection<ItineraryItem> _itineraryItemView;
+    private readonly ReadOnlyCollection<FeedItem> _feedItemView;
+    private readonly ReadOnlyCollection<SuggestionProjection> _suggestionView;
 
     public SpatialEntity(
         Guid id,
@@ -37,9 +46,14 @@ public sealed class SpatialEntity : AuditableEntity<Guid>
         Confidence = confidence ?? throw new ArgumentNullException(nameof(confidence));
         _translationView = _translations.AsReadOnly();
         _sourceLinkView = _sourceLinks.AsReadOnly();
+        _accessibilityFactView = _accessibilityFacts.AsReadOnly();
+        _itineraryItemView = _itineraryItems.AsReadOnly();
+        _feedItemView = _feedItems.AsReadOnly();
+        _suggestionView = _suggestions.AsReadOnly();
     }
 
     public Guid CityId { get; }
+    public City City { get; private set; } = null!;
     public EntityKind Kind { get; }
     public SpatialGeometry Geometry { get; private set; }
     public LifecycleState State { get; private set; }
@@ -47,6 +61,10 @@ public sealed class SpatialEntity : AuditableEntity<Guid>
     public SpatialEntityDetails? Details { get; private set; }
     public IReadOnlyCollection<EntityTranslation> Translations => _translationView;
     public IReadOnlyCollection<EntitySourceLink> SourceLinks => _sourceLinkView;
+    public IReadOnlyCollection<AccessibilityFact> AccessibilityFacts => _accessibilityFactView;
+    public IReadOnlyCollection<ItineraryItem> ItineraryItems => _itineraryItemView;
+    public IReadOnlyCollection<FeedItem> FeedItems => _feedItemView;
+    public IReadOnlyCollection<SuggestionProjection> Suggestions => _suggestionView;
 
     public static SpatialEntity Create(
         Guid cityId,

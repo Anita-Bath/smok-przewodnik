@@ -19,6 +19,7 @@ public sealed class EntityTranslation : Entity<Guid>
     }
 
     public Guid EntityId { get; }
+    public SpatialEntity Entity { get; private set; } = null!;
     public string Locale { get; }
     public string Name { get; }
     public string Description { get; }
