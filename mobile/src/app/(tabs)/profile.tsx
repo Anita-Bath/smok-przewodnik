@@ -393,7 +393,7 @@ export default function ProfileScreen() {
                     size={24}
                     color={
                       isSelected
-                        ? '#FFFFFF'
+                        ? (isDark || isHighContrast ? '#FFFFFF' : BrandColors.primary)
                         : (isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#94A3B8' : '#475569'))
                     }
                   />
@@ -402,7 +402,7 @@ export default function ProfileScreen() {
                       styles.presetName,
                       {
                         color: isSelected
-                          ? '#FFFFFF'
+                          ? (isDark || isHighContrast ? '#FFFFFF' : BrandColors.primaryDark)
                           : (isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : '#1E293B')),
                         fontWeight: isSelected || isHighContrast ? '800' : '600',
                       },
