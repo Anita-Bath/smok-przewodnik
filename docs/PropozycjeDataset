@@ -1,0 +1,20 @@
+https://msip.krakow.pl/dataset/1359 // fontanny woda pitna
+https://msip.krakow.pl/dataset/1361 // mapa hałasu 
+https://gtfs.ztp.krakow.pl/ 
+Parkingi koperty
+
+
+https://overpass-turbo.eu/
+
+
+[out:json][timeout:25];
+// Definiujemy obszar Krakowa
+area["name"="Kraków"]["admin_level"="8"]->.searchArea;
+(
+  // Szukamy wszystkich węzłów (punktów) i budynków/obszarów, które mają jakikolwiek tag "wheelchair"
+  node["wheelchair"](area.searchArea);
+  way["wheelchair"](area.searchArea);
+  relation["wheelchair"](area.searchArea);
+);
+// "center" zamienia budynki na pojedynczy punkt na mapie
+out center;
