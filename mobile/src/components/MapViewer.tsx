@@ -53,9 +53,38 @@ export function MapViewer({
         if (onMapClick) {
           onMapClick();
         }
+      } else if (data.type === 'MAP_READY') {
+        if (webViewRef.current) {
+          if (userLocation) {
+            const pan = !selectedPlace && !searchPin && !activeRoute;
+            const jsLoc = `window.postMessage(JSON.stringify({ type: 'SET_USER_LOCATION', coords: ${JSON.stringify(userLocation)}, panToUser: ${pan} }), '*'); true;`;
+            webViewRef.current.injectJavaScript(jsLoc);
+          }
+          if (selectedPlace) {
+            const jsPlace = `window.postMessage(JSON.stringify({ type: 'SET_SELECTED_PLACE', placeId: '${selectedPlace.id}' }), '*'); true;`;
+            webViewRef.current.injectJavaScript(jsPlace);
+          }
+          if (searchPin) {
+            const jsPin = `window.postMessage(JSON.stringify({ type: 'SET_SEARCH_PIN', coords: ${JSON.stringify(searchPin.coords)}, label: '${searchPin.label}' }), '*'); true;`;
+            webViewRef.current.injectJavaScript(jsPin);
+          }
+          if (activeRoute && activeRoute.coordinates && activeRoute.coordinates.length > 0) {
+            const jsRoute = `window.postMessage(JSON.stringify({ type: 'DRAW_ROUTE', coordinates: ${JSON.stringify(activeRoute.coordinates)}, profileType: '${activeRoute.profileType || 'easiest'}' }), '*'); true;`;
+            webViewRef.current.injectJavaScript(jsRoute);
+          }
+        }
       }
     } catch (err) {}
   };
+
+  // Sync userLocation changes to WebView
+  useEffect(() => {
+    if (webViewRef.current && userLocation) {
+      const pan = !selectedPlace && !searchPin && !activeRoute;
+      const js = `window.postMessage(JSON.stringify({ type: 'SET_USER_LOCATION', coords: ${JSON.stringify(userLocation)}, panToUser: ${pan} }), '*'); true;`;
+      webViewRef.current.injectJavaScript(js);
+    }
+  }, [userLocation?.latitude, userLocation?.longitude]);
 
   // Sync selectedPlace changes to WebView
   useEffect(() => {

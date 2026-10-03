@@ -1,14 +1,28 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandColors } from '@/constants/theme';
 import { useAccessibility } from '@/context/AccessibilityContext';
 
 export default function TabsLayout() {
   const { isHighContrast } = useAccessibility();
+  const insets = useSafeAreaInsets();
 
   const activeColor = isHighContrast ? '#000000' : BrandColors.primary;
   const inactiveColor = isHighContrast ? '#555555' : '#64748B';
+
+  // Safe bottom padding:
+  // On Android with gesture navigation (or edge-to-edge), insets.bottom is typically 24-48dp.
+  // We add insets.bottom so the labels sit safely above the Android horizontal gesture line.
+  // Even if insets.bottom is 0, provide at least 20dp on Android and 10dp on web.
+  const bottomPadding = Platform.select({
+    android: Math.max(insets.bottom + 6, 20),
+    ios: Math.max(insets.bottom, 12),
+    default: 10,
+  });
+  const tabHeight = 58 + bottomPadding;
 
   return (
     <Tabs
@@ -17,16 +31,25 @@ export default function TabsLayout() {
         tabBarActiveTintColor: activeColor,
         tabBarInactiveTintColor: inactiveColor,
         tabBarStyle: {
-          height: 64,
-          paddingBottom: 10,
+          height: tabHeight,
+          paddingBottom: bottomPadding,
           paddingTop: 8,
           backgroundColor: '#FFFFFF',
           borderTopWidth: isHighContrast ? 3 : 1,
           borderTopColor: isHighContrast ? '#000000' : '#E2E8F0',
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 4,
+        },
+        tabBarItemStyle: {
+          paddingTop: 2,
         },
         tabBarLabelStyle: {
           fontSize: isHighContrast ? 13 : 12,
           fontWeight: isHighContrast ? '800' : '600',
+          marginBottom: 2,
         },
       }}>
       <Tabs.Screen

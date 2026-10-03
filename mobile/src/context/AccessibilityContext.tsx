@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Platform } from 'react-native';
+import * as Location from 'expo-location';
 
 export type ConstraintLevel = 'allowed' | 'prefer_avoid' | 'must_avoid';
 
@@ -172,6 +174,73 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     latitude: 50.0617,
     longitude: 19.9373,
   });
+
+  // Automatically acquire real user GPS localization on app startup
+  useEffect(() => {
+    let isMounted = true;
+    let locationSubscription: { remove: () => void } | null = null;
+
+    async function autoAcquireLocation() {
+      try {
+        if (Platform.OS === 'web') {
+          if (typeof navigator !== 'undefined' && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                if (isMounted) {
+                  setUserLocation({
+                    latitude: pos.coords.latitude,
+                    longitude: pos.coords.longitude,
+                  });
+                }
+              },
+              () => {},
+              { timeout: 8000, enableHighAccuracy: true }
+            );
+          }
+        } else {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status === 'granted') {
+            const initialPos = await Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.Balanced,
+            });
+            if (isMounted) {
+              setUserLocation({
+                latitude: initialPos.coords.latitude,
+                longitude: initialPos.coords.longitude,
+              });
+            }
+
+            locationSubscription = await Location.watchPositionAsync(
+              {
+                accuracy: Location.Accuracy.Balanced,
+                distanceInterval: 15,
+                timeInterval: 8000,
+              },
+              (location) => {
+                if (isMounted) {
+                  setUserLocation({
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude,
+                  });
+                }
+              }
+            );
+          }
+        }
+      } catch (err) {
+        // Fallback silently kept at Kraków center
+      }
+    }
+
+    autoAcquireLocation();
+
+    return () => {
+      isMounted = false;
+      if (locationSubscription) {
+        locationSubscription.remove();
+      }
+    };
+  }, []);
 
   const toggleHighContrast = () => setIsHighContrast((prev) => !prev);
 
