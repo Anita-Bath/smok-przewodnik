@@ -7,7 +7,7 @@ public sealed record CursorPageRequest
 
     public CursorPageRequest(
         string? cursor = null,
-        int limit = DefaultLimit)
+        int? limit = DefaultLimit)
     {
         if (limit is < 1 or > MaximumLimit)
         {
@@ -25,5 +25,5 @@ public sealed record CursorPageRequest
 
     public string? Cursor { get; }
 
-    public int Limit { get; }
+    public int? Limit { get; }
 }

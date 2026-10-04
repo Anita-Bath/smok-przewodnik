@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using AB.SmokPrzewodnik.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -13,9 +14,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AB.SmokPrzewodnik.Infrastructure.Migrations
 {
     [DbContext(typeof(Database.DbContext))]
-    partial class DbContextModelSnapshot : ModelSnapshot
+    [Migration("20261004003244_NavigationSessions_Extend_Index")]
+    partial class NavigationSessions_Extend_Index
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,14 +44,12 @@ namespace AB.SmokPrzewodnik.Infrastructure.Migrations
 
                     b.Property<string>("Hash")
                         .IsRequired()
-                        .HasMaxLength(43)
-                        .HasColumnType("character varying(43)")
+                        .HasColumnType("text")
                         .HasColumnName("hash");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Hash")
-                        .IsUnique();
+                    b.HasIndex("Id", "Hash", "AccountId");
 
                     b.ToTable("navigation_sessions", (string)null);
                 });
