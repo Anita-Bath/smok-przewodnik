@@ -231,7 +231,7 @@ export function generateLeafletHtml(
     var lastRouteCoords = null;
     var lastRouteProfile = null;
 
-    function drawRoute(coords, profileType) {
+    function drawRoute(coords, profileType, autoFit = true) {
       clearRoute();
       if (!coords || !coords.length) return;
       lastRouteCoords = coords;
@@ -273,13 +273,15 @@ export function generateLeafletHtml(
       });
       routeOriginMarker = L.marker(startCoord, { icon: startIcon, zIndexOffset: 2500 }).addTo(map);
 
-      // Fit map view to encompass the entire route
-      try {
-        var bounds = routePolyline.getBounds();
-        if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [55, 55], animate: true, duration: 0.8 });
-        }
-      } catch (err) {}
+      // Fit map view to encompass the entire route only if autoFit is true
+      if (autoFit) {
+        try {
+          var bounds = routePolyline.getBounds();
+          if (bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [55, 55], animate: true, duration: 0.8 });
+          }
+        } catch (err) {}
+      }
     }
 
     function clearRoute() {
@@ -521,7 +523,7 @@ export function generateLeafletHtml(
         places = data.places;
         renderPlaces(places, selectedId);
       } else if (data.type === 'DRAW_ROUTE') {
-        drawRoute(data.coordinates, data.profileType);
+        drawRoute(data.coordinates, data.profileType, data.autoFit !== false);
       } else if (data.type === 'CLEAR_ROUTE') {
         clearRoute();
       } else if (data.type === 'FOCUS_MANEUVER') {
