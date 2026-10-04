@@ -8,6 +8,12 @@ namespace AB.SmokPrzewodnik.Domain.Navigation;
 
 public sealed record NavigationEvent
 {
+    private NavigationEvent()
+    {
+        LocalizedParameters = null!;
+        SupportedFeedbackPatterns = null!;
+    }
+
     public NavigationEvent(
         Guid sessionId,
         long sequence,
@@ -18,7 +24,8 @@ public sealed record NavigationEvent
         Code? landmarkCode,
         decimal? remainingDistanceMetres,
         IReadOnlyDictionary<string, string> localizedParameters,
-        IEnumerable<Code> supportedFeedbackPatterns)
+        IEnumerable<Code> supportedFeedbackPatterns,
+        DateTimeOffset? createdAt = null)
     {
         if (sessionId == Guid.Empty)
         {
@@ -50,16 +57,18 @@ public sealed record NavigationEvent
             pair => Guard.NotBlank(pair.Value, nameof(localizedParameters)),
             StringComparer.Ordinal));
         SupportedFeedbackPatterns = supportedFeedbackPatterns.ToFrozenSet();
+        CreatedAt = createdAt ?? DateTimeOffset.UtcNow;
     }
 
-    public Guid SessionId { get; }
-    public long Sequence { get; }
-    public NavigationEventType EventType { get; }
-    public NavigationUrgency Urgency { get; }
-    public Maneuver? Maneuver { get; }
-    public Code? HazardCode { get; }
-    public Code? LandmarkCode { get; }
-    public decimal? RemainingDistanceMetres { get; }
-    public IReadOnlyDictionary<string, string> LocalizedParameters { get; }
-    public IReadOnlySet<Code> SupportedFeedbackPatterns { get; }
+    public Guid SessionId { get; private set; }
+    public long Sequence { get; private set; }
+    public NavigationEventType EventType { get; private set; }
+    public NavigationUrgency Urgency { get; private set; }
+    public Maneuver? Maneuver { get; private set; }
+    public Code? HazardCode { get; private set; }
+    public Code? LandmarkCode { get; private set; }
+    public decimal? RemainingDistanceMetres { get; private set; }
+    public IReadOnlyDictionary<string, string> LocalizedParameters { get; private set; }
+    public IReadOnlySet<Code> SupportedFeedbackPatterns { get; private set; }
+    public DateTimeOffset CreatedAt { get; private set; }
 }

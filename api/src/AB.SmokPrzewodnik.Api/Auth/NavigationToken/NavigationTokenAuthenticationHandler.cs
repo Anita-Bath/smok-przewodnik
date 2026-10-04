@@ -18,6 +18,10 @@ public sealed class NavigationTokenAuthenticationHandler : AuthenticationHandler
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         var token = Request.Headers?[Options.HttpHeader].FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(token) && Request.Path.StartsWithSegments("/hubs/navigation"))
+        {
+            token = Request.Query["access_token"].FirstOrDefault();
+        }
 
         if (string.IsNullOrWhiteSpace(token))
         {

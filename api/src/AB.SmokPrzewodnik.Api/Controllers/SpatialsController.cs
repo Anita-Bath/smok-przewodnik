@@ -51,7 +51,7 @@ public sealed class SpatialsController : ControllerBase
         return Ok(response);
     }
 
-    [HttpGet("places/{placeId:guid}")]
+    [HttpGet("/places/{placeId:guid}")]
     [ProducesResponseType<PlaceDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PlaceDto>> GetPlaceAsync(
@@ -65,7 +65,7 @@ public sealed class SpatialsController : ControllerBase
         return response is null ? NotFound() : Ok(response);
     }
 
-    [HttpGet("events/{eventId:guid}")]
+    [HttpGet("/events/{eventId:guid}")]
     [ProducesResponseType<EventDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<EventDto>> GetEventAsync(
@@ -79,7 +79,7 @@ public sealed class SpatialsController : ControllerBase
         return response is null ? NotFound() : Ok(response);
     }
 
-    [HttpGet("events")]
+    [HttpGet("/events")]
     [ProducesResponseType<CursorPageResponse<EventDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CursorPageResponse<EventDto>>> FindEventsAsync(

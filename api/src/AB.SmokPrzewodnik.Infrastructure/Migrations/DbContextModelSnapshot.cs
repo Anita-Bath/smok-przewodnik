@@ -25,6 +25,61 @@ namespace AB.SmokPrzewodnik.Infrastructure.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("AB.SmokPrzewodnik.Domain.Navigation.NavigationEvent", b =>
+                {
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("session_id");
+
+                    b.Property<long>("Sequence")
+                        .HasColumnType("bigint")
+                        .HasColumnName("sequence");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("event_type");
+
+                    b.Property<string>("HazardCode")
+                        .HasColumnType("text")
+                        .HasColumnName("hazard_code");
+
+                    b.Property<string>("LandmarkCode")
+                        .HasColumnType("text")
+                        .HasColumnName("landmark_code");
+
+                    b.Property<string>("LocalizedParameters")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("localized_parameters");
+
+                    b.Property<string>("Maneuver")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("maneuver");
+
+                    b.Property<decimal?>("RemainingDistanceMetres")
+                        .HasColumnType("numeric")
+                        .HasColumnName("remaining_distance_metres");
+
+                    b.Property<string>("SupportedFeedbackPatterns")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("supported_feedback_patterns");
+
+                    b.Property<string>("Urgency")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("urgency");
+
+                    b.HasKey("SessionId", "Sequence");
+
+                    b.ToTable("navigation_events", (string)null);
+                });
+
             modelBuilder.Entity("AB.SmokPrzewodnik.Domain.Navigation.NavigationSession", b =>
                 {
                     b.Property<Guid>("Id")
@@ -34,6 +89,20 @@ namespace AB.SmokPrzewodnik.Infrastructure.Migrations
                     b.Property<Guid?>("AccountId")
                         .HasColumnType("uuid")
                         .HasColumnName("account_id");
+
+                    b.Property<string>("ActiveRoute")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("active_route");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("EffectiveRouteRequest")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("effective_route_request");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone")
@@ -45,7 +114,28 @@ namespace AB.SmokPrzewodnik.Infrastructure.Migrations
                         .HasColumnType("character varying(43)")
                         .HasColumnName("hash");
 
+                    b.Property<string>("LatestProgress")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("latest_progress");
+
+                    b.Property<long>("NextEventSequence")
+                        .HasColumnType("bigint")
+                        .HasColumnName("next_event_sequence");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("ExpiresAt");
 
                     b.HasIndex("Hash")
                         .IsUnique();
@@ -287,6 +377,47 @@ namespace AB.SmokPrzewodnik.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("accessibility_profiles", (string)null);
+                });
+
+            modelBuilder.Entity("AB.SmokPrzewodnik.Domain.Routing.RoutePlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<string>("Alternatives")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("alternatives");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("Request")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("request");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.ToTable("route_plans", (string)null);
                 });
 
             modelBuilder.Entity("AB.SmokPrzewodnik.Domain.Spatial.AccessibilityFact", b =>
@@ -863,6 +994,15 @@ namespace AB.SmokPrzewodnik.Infrastructure.Migrations
                         .HasColumnName("place_website");
 
                     b.HasDiscriminator().HasValue("place");
+                });
+
+            modelBuilder.Entity("AB.SmokPrzewodnik.Domain.Navigation.NavigationEvent", b =>
+                {
+                    b.HasOne("AB.SmokPrzewodnik.Domain.Navigation.NavigationSession", null)
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("AB.SmokPrzewodnik.Domain.Planning.FeedItem", b =>
