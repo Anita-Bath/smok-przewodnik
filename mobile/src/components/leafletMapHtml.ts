@@ -42,7 +42,7 @@ export function generateLeafletHtml(
     }
 
     /* Transparent marker containers */
-    .poi-pin-icon, .search-pin-icon, .user-loc-icon {
+    .poi-pin-icon, .search-pin-icon, .user-loc-icon, .user-loc-wrapper {
       background: transparent !important;
       border: none !important;
       cursor: pointer;
@@ -416,7 +416,23 @@ export function generateLeafletHtml(
       if (!coords) return;
       
       if (userMarker) {
-        userMarker.setLatLng([coords.latitude, coords.longitude]);
+        var startLatLng = userMarker.getLatLng();
+        var endLatLng = L.latLng(coords.latitude, coords.longitude);
+        var startTime = performance.now();
+        var duration = 900; // ms
+
+        if (window.userMarkerAnim) cancelAnimationFrame(window.userMarkerAnim);
+
+        function animateMarker(time) {
+          var progress = Math.min((time - startTime) / duration, 1);
+          var lat = startLatLng.lat + (endLatLng.lat - startLatLng.lat) * progress;
+          var lng = startLatLng.lng + (endLatLng.lng - startLatLng.lng) * progress;
+          userMarker.setLatLng([lat, lng]);
+          if (progress < 1) {
+            window.userMarkerAnim = requestAnimationFrame(animateMarker);
+          }
+        }
+        window.userMarkerAnim = requestAnimationFrame(animateMarker);
       } else {
         var userIcon = L.divIcon({
           className: 'user-loc-icon',
@@ -435,7 +451,7 @@ export function generateLeafletHtml(
       }
 
       if (shouldPan) {
-        map.flyTo([coords.latitude, coords.longitude], 16, { animate: true, duration: 1.0 });
+        map.panTo([coords.latitude, coords.longitude], { animate: true, duration: 0.8 });
       }
     }
 

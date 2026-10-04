@@ -83,8 +83,14 @@ export default function RoutePlannerScreen() {
   const [isNavigating, setIsNavigating] = useState(false);
   const [activeManeuverIndex, setActiveManeuverIndex] = useState(0);
 
-  // Re-fetch / calculate live OSRM routes when destination or location changes
+  const lastCalculatedDestId = React.useRef<string | null>(null);
+
+  // Re-fetch / calculate live OSRM routes only when destination changes (and we have userLocation)
   useEffect(() => {
+    if (!userLocation || lastCalculatedDestId.current === destination.id) return;
+
+    lastCalculatedDestId.current = destination.id;
+
     const fallback = calculateKrakowRoutes(
       destination,
       constraints,
@@ -222,6 +228,7 @@ export default function RoutePlannerScreen() {
             profileType: selectedRoute.profileType,
           }}
           focusedManeuver={activeManeuver?.location}
+          isAutoFollowing={isNavigating}
         />
       </View>
 
