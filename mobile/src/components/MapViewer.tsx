@@ -18,6 +18,7 @@ interface MapViewerProps {
   searchPin?: { coords: { latitude: number; longitude: number }; label: string } | null;
   activeRoute?: { coordinates: [number, number][]; profileType?: string } | null;
   focusedManeuver?: [number, number] | null;
+  isAutoFollowing?: boolean;
 }
 
 export function MapViewer({
@@ -30,6 +31,7 @@ export function MapViewer({
   searchPin,
   activeRoute,
   focusedManeuver,
+  isAutoFollowing = false,
 }: MapViewerProps) {
   const { isHighContrast, isDark, userLocation, setUserLocation, activePresetId } = useAccessibility();
   const webViewRef = useRef<WebView>(null);
@@ -67,7 +69,7 @@ export function MapViewer({
           webViewRef.current.injectJavaScript(jsHc);
 
           if (userLocation) {
-            const pan = !selectedPlace && !searchPin && !activeRoute;
+            const pan = isAutoFollowing || (!selectedPlace && !searchPin && !activeRoute);
             const jsLoc = `window.postMessage(JSON.stringify({ type: 'SET_USER_LOCATION', coords: ${JSON.stringify(userLocation)}, panToUser: ${pan} }), '*'); true;`;
             webViewRef.current.injectJavaScript(jsLoc);
           }
@@ -99,7 +101,7 @@ export function MapViewer({
   // Sync userLocation changes to WebView
   useEffect(() => {
     if (webViewRef.current && userLocation) {
-      const pan = !selectedPlace && !searchPin && !activeRoute;
+      const pan = isAutoFollowing || (!selectedPlace && !searchPin && !activeRoute);
       const js = `window.postMessage(JSON.stringify({ type: 'SET_USER_LOCATION', coords: ${JSON.stringify(userLocation)}, panToUser: ${pan} }), '*'); true;`;
       webViewRef.current.injectJavaScript(js);
     }
