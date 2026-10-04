@@ -1,39 +1,49 @@
 import { DarkTheme, DefaultTheme, ThemeProvider, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
-import { AccessibilityProvider } from '@/context/AccessibilityContext';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AccessibilityProvider, useAccessibility } from '@/context/AccessibilityContext';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function RootNavigation() {
+  const { isDark } = useAccessibility();
 
+  return (
+    <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/register" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="route-planner"
+          options={{ presentation: 'modal', headerShown: false }}
+        />
+        <Stack.Screen
+          name="place/[id]"
+          options={{ presentation: 'modal', headerShown: false }}
+        />
+        <Stack.Screen
+          name="report/new"
+          options={{ presentation: 'modal', headerShown: false }}
+        />
+      </Stack>
+    </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
   useEffect(() => {
     SplashScreen.hideAsync();
   }, []);
 
   return (
-    <AccessibilityProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/login" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/register" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="route-planner"
-            options={{ presentation: 'modal', headerShown: false }}
-          />
-          <Stack.Screen
-            name="place/[id]"
-            options={{ presentation: 'modal', headerShown: false }}
-          />
-          <Stack.Screen
-            name="report/new"
-            options={{ presentation: 'modal', headerShown: false }}
-          />
-        </Stack>
-      </ThemeProvider>
-    </AccessibilityProvider>
+    <SafeAreaProvider>
+      <AccessibilityProvider>
+        <RootNavigation />
+      </AccessibilityProvider>
+    </SafeAreaProvider>
   );
 }

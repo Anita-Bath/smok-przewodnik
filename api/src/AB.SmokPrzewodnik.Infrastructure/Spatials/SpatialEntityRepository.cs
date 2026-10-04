@@ -29,6 +29,7 @@ internal sealed class SpatialEntityRepository : ISpatialEntityRepository
         CancellationToken cancellationToken) =>
         _dbContext.SpatialEntities
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(entity => entity.Details)
             .Include(entity => entity.Translations)
             .SingleOrDefaultAsync(entity => entity.Id == id, cancellationToken);
@@ -144,6 +145,7 @@ internal sealed class SpatialEntityRepository : ISpatialEntityRepository
 
         return query
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(entity => entity.Details)
             .Include(entity => entity.Translations);
     }

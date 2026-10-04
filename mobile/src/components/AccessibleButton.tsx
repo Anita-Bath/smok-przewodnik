@@ -33,9 +33,9 @@ export function AccessibleButton({
   style,
   textStyle,
 }: AccessibleButtonProps) {
-  const { isHighContrast } = useAccessibility();
+  const { isHighContrast, isDark } = useAccessibility();
 
-  // Compute styles based on variant & contrast
+  // Compute styles based on variant, contrast & dark mode
   const getContainerStyle = (pressed: boolean): ViewStyle => {
     let base: ViewStyle = {
       minHeight: Math.max(MinTouchTargetSize, 50),
@@ -49,27 +49,37 @@ export function AccessibleButton({
     };
 
     if (variant === 'primary') {
-      base.backgroundColor = isHighContrast ? '#000000' : BrandColors.primary;
+      base.backgroundColor = isHighContrast
+        ? (isDark ? '#FFFFFF' : '#000000')
+        : (isDark ? '#0284C7' : BrandColors.primary);
       if (isHighContrast) {
         base.borderWidth = 3;
-        base.borderColor = '#000000';
+        base.borderColor = isDark ? '#FFFFFF' : '#000000';
       }
       if (pressed) base.opacity = 0.85;
     } else if (variant === 'secondary') {
-      base.backgroundColor = '#FFFFFF';
+      base.backgroundColor = isHighContrast
+        ? (isDark ? '#000000' : '#FFFFFF')
+        : (isDark ? '#1E293B' : '#FFFFFF');
       base.borderWidth = isHighContrast ? 2.5 : 1.5;
-      base.borderColor = isHighContrast ? '#000000' : BrandColors.primary;
-      if (pressed) base.backgroundColor = '#F1F5F9';
+      base.borderColor = isHighContrast
+        ? (isDark ? '#FFFFFF' : '#000000')
+        : (isDark ? '#38BDF8' : BrandColors.primary);
+      if (pressed) base.backgroundColor = isDark ? '#334155' : '#F1F5F9';
     } else if (variant === 'guest') {
-      base.backgroundColor = '#FFFFFF';
+      base.backgroundColor = isHighContrast
+        ? (isDark ? '#000000' : '#FFFFFF')
+        : (isDark ? '#1E293B' : '#FFFFFF');
       base.borderWidth = isHighContrast ? 2.5 : 1.5;
-      base.borderColor = isHighContrast ? '#005A4E' : BrandColors.accentTeal;
-      if (pressed) base.backgroundColor = '#E6F5F3';
+      base.borderColor = isHighContrast
+        ? (isDark ? '#5EEAD4' : '#005A4E')
+        : (isDark ? '#2DD4BF' : BrandColors.accentTeal);
+      if (pressed) base.backgroundColor = isDark ? '#334155' : '#E6F5F3';
     } else if (variant === 'danger') {
       base.backgroundColor = BrandColors.danger;
       if (isHighContrast) {
         base.borderWidth = 3;
-        base.borderColor = '#000000';
+        base.borderColor = '#FFFFFF';
       }
       if (pressed) base.opacity = 0.85;
     }
@@ -82,10 +92,19 @@ export function AccessibleButton({
   };
 
   const getTextColor = (): string => {
-    if (variant === 'primary' || variant === 'danger') return '#FFFFFF';
-    if (variant === 'secondary') return isHighContrast ? '#000000' : BrandColors.primary;
-    if (variant === 'guest') return isHighContrast ? '#005A4E' : BrandColors.accentTeal;
-    return '#000000';
+    if (variant === 'primary') return isHighContrast && isDark ? '#000000' : '#FFFFFF';
+    if (variant === 'danger') return '#FFFFFF';
+    if (variant === 'secondary') {
+      return isHighContrast
+        ? (isDark ? '#FFFFFF' : '#000000')
+        : (isDark ? '#38BDF8' : BrandColors.primary);
+    }
+    if (variant === 'guest') {
+      return isHighContrast
+        ? (isDark ? '#5EEAD4' : '#005A4E')
+        : (isDark ? '#2DD4BF' : BrandColors.accentTeal);
+    }
+    return isDark ? '#F8FAFC' : '#000000';
   };
 
   const textColor = getTextColor();

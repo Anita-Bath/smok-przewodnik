@@ -1,13 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { BrandColors, Spacing } from '@/constants/theme';
+import { BrandColors } from '@/constants/theme';
 import { KrakowPlace } from '@/services/krakowData';
 import { useAccessibility } from '@/context/AccessibilityContext';
+import { calculateDistanceMeters, formatDistance } from '@/services/routingService';
 import { AccessibleButton } from './AccessibleButton';
 
 interface PlaceBottomSheetProps {
   place: KrakowPlace;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
+  onClose?: () => void;
   onNavigateToRoute: (place: KrakowPlace) => void;
   onViewDetails: (place: KrakowPlace) => void;
   onAddReport: (place: KrakowPlace) => void;
@@ -15,228 +19,376 @@ interface PlaceBottomSheetProps {
 
 export function PlaceBottomSheet({
   place,
+  isExpanded = true,
+  onToggleExpand,
+  onClose,
   onNavigateToRoute,
   onViewDetails,
   onAddReport,
 }: PlaceBottomSheetProps) {
-  const { isHighContrast, isGuest, savedPlaceIds, toggleSavePlace } = useAccessibility();
+  const { isHighContrast, isDark, isGuest, savedPlaceIds, toggleSavePlace, userLocation } = useAccessibility();
   const isSaved = savedPlaceIds.includes(place.id);
+
+  const realDistanceMeters = userLocation
+    ? calculateDistanceMeters(userLocation, place.coordinates)
+    : place.distanceFromUserMeters;
+  const distanceText = formatDistance(realDistanceMeters);
+
+  const handleToggle = () => {
+    if (onToggleExpand) {
+      onToggleExpand();
+    }
+  };
 
   return (
     <View
       style={[
         styles.sheetContainer,
         {
-          backgroundColor: '#FFFFFF',
-          borderColor: isHighContrast ? '#000000' : '#E2E8F0',
+          backgroundColor: isHighContrast
+            ? (isDark ? '#000000' : '#FFFFFF')
+            : (isDark ? '#1E293B' : '#FFFFFF'),
+          borderColor: isHighContrast
+            ? (isDark ? '#FFFFFF' : '#000000')
+            : (isDark ? '#334155' : '#E2E8F0'),
           borderWidth: isHighContrast ? 3 : 1,
         },
       ]}
       accessible
       accessibilityRole="summary"
-      accessibilityLabel={`Wybrane miejsce: ${place.name}`}>
-      {/* Handle */}
-      <View style={styles.handleContainer}>
+      accessibilityLabel={`Informacje o miejscu: ${place.name}, ${isExpanded ? 'rozwinięte' : 'zwinięte'}`}>
+      
+      {/* Interactive Handle Bar - Generous touch target */}
+      <Pressable
+        onPress={handleToggle}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={isExpanded ? 'Zwiń kartę miejsca' : 'Rozwiń szczegóły miejsca'}
+        style={({ pressed }) => [
+          styles.handleContainer,
+          {
+            opacity: pressed ? 0.6 : 1,
+            cursor: 'pointer' as any,
+          },
+        ]}>
         <View
+          pointerEvents="none"
           style={[
             styles.handle,
-            { backgroundColor: isHighContrast ? '#000000' : '#CBD5E1' },
+            { backgroundColor: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#64748B' : '#94A3B8') },
           ]}
         />
-      </View>
+      </Pressable>
 
-      {/* Header: Title + Bookmark */}
+      {/* Header Row: Place Title, Distance, and Window Controls */}
       <View style={styles.headerRow}>
-        <View style={styles.titleArea}>
+        <Pressable
+          onPress={handleToggle}
+          style={({ pressed }) => [
+            styles.titleArea,
+            {
+              cursor: 'pointer' as any,
+              opacity: pressed ? 0.8 : 1,
+            },
+          ]}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={`Miejsce ${place.name}, kliknij aby ${isExpanded ? 'zwinąć' : 'rozwinąć'}`}>
           <Text
+            numberOfLines={1}
             style={[
               styles.placeTitle,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontWeight: isHighContrast ? '900' : '800',
               },
             ]}>
             {place.name}
           </Text>
           <Text
+            numberOfLines={1}
             style={[
               styles.placeSubtitle,
               {
-                color: isHighContrast ? '#1E293B' : '#64748B',
+                color: isHighContrast ? (isDark ? '#E2E8F0' : '#1E293B') : (isDark ? '#94A3B8' : '#64748B'),
                 fontWeight: isHighContrast ? '600' : '400',
               },
             ]}>
-            {place.distanceFromUserMeters} m stąd · {place.address}
-          </Text>
-        </View>
-
-        <Pressable
-          onPress={() => toggleSavePlace(place.id)}
-          accessible
-          accessibilityRole="button"
-          accessibilityLabel={isSaved ? 'Usuń z zapisanych' : 'Zapisz miejsce'}
-          style={[
-            styles.saveButton,
-            {
-              borderColor: isHighContrast ? '#000000' : BrandColors.primary,
-              borderWidth: isHighContrast ? 2 : 1.5,
-              backgroundColor: isSaved
-                ? (isHighContrast ? '#000000' : BrandColors.primaryLight)
-                : '#FFFFFF',
-            },
-          ]}>
-          <MaterialCommunityIcons
-            name={isSaved ? 'bookmark' : 'bookmark-outline'}
-            size={22}
-            color={
-              isSaved && isHighContrast
-                ? '#FFFFFF'
-                : isHighContrast
-                ? '#000000'
-                : BrandColors.primary
-            }
-          />
-          <Text
-            style={[
-              styles.saveText,
-              {
-                color:
-                  isSaved && isHighContrast
-                    ? '#FFFFFF'
-                    : isHighContrast
-                    ? '#000000'
-                    : BrandColors.primary,
-                fontWeight: isHighContrast ? '800' : '700',
-              },
-            ]}>
-            {isSaved ? 'Zapisano' : 'Zapisz'}
+            {distanceText} stąd · {place.address}
           </Text>
         </Pressable>
-      </View>
 
-      {/* Confidence status banner */}
-      <View
-        style={[
-          styles.statusBanner,
-          {
-            backgroundColor: isHighContrast ? '#E2F1EE' : '#E6F5F3',
-            borderColor: isHighContrast ? '#005A4E' : '#B2DFDB',
-            borderWidth: isHighContrast ? 2 : 1,
-          },
-        ]}>
-        <MaterialCommunityIcons
-          name="account-group-outline"
-          size={18}
-          color={BrandColors.accentTeal}
-        />
-        <Text
-          style={[
-            styles.statusText,
-            {
-              color: isHighContrast ? '#004D40' : '#00796B',
-              fontWeight: isHighContrast ? '800' : '700',
-            },
-          ]}>
-          {place.confidenceLabel}
-        </Text>
-      </View>
-
-      {/* Facts check list */}
-      <View style={styles.factsGrid}>
-        {place.facts.map((fact) => (
-          <View key={fact.id} style={styles.factRow}>
+        {/* Action icons / Controls */}
+        <View style={styles.controlsRow}>
+          <Pressable
+            onPress={() => toggleSavePlace(place.id)}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel={isSaved ? 'Usuń z zapisanych' : 'Zapisz miejsce'}
+            style={({ pressed }) => [
+              styles.iconControlBtn,
+              {
+                borderColor: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#475569' : '#CBD5E1'),
+                borderWidth: isHighContrast ? 2 : 1,
+                backgroundColor: isSaved
+                  ? (isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#0369A1' : BrandColors.primaryLight))
+                  : (isDark ? '#334155' : '#FFFFFF'),
+                cursor: 'pointer' as any,
+                opacity: pressed ? 0.7 : 1,
+              },
+            ]}>
             <MaterialCommunityIcons
-              name={
-                fact.status === 'verified'
-                  ? 'check-circle-outline'
-                  : fact.status === 'to_check'
-                  ? 'radiobox-blank'
-                  : 'help-circle-outline'
-              }
-              size={18}
+              name={isSaved ? 'bookmark' : 'bookmark-outline'}
+              size={20}
               color={
-                isHighContrast
-                  ? '#000000'
-                  : fact.status === 'verified'
-                  ? BrandColors.success
-                  : BrandColors.accentTeal
+                isSaved && isHighContrast
+                  ? (isDark ? '#000000' : '#FFFFFF')
+                  : isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isSaved && isDark ? '#FFFFFF' : isDark ? '#94A3B8' : BrandColors.primary)
               }
             />
-            <Text
-              style={[
-                styles.factLabel,
+          </Pressable>
+
+          {/* Toggle Expand / Collapse Chevron */}
+          <Pressable
+            onPress={handleToggle}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel={isExpanded ? 'Zwiń kartę' : 'Rozwiń kartę'}
+            style={({ pressed }) => [
+              styles.iconControlBtn,
+              {
+                borderColor: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#475569' : '#CBD5E1'),
+                borderWidth: isHighContrast ? 2 : 1,
+                backgroundColor: isDark ? '#334155' : '#F1F5F9',
+                cursor: 'pointer' as any,
+                opacity: pressed ? 0.7 : 1,
+              },
+            ]}>
+            <MaterialCommunityIcons
+              name={isExpanded ? 'chevron-down' : 'chevron-up'}
+              size={24}
+              color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : '#1E293B')}
+            />
+          </Pressable>
+
+          {/* Close / Dismiss Button */}
+          {onClose && (
+            <Pressable
+              onPress={onClose}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel="Zamknij kartę miejsca"
+              style={({ pressed }) => [
+                styles.iconControlBtn,
                 {
-                  color: isHighContrast ? '#000000' : '#1E293B',
-                  fontWeight: isHighContrast ? '700' : '500',
+                  borderColor: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#475569' : '#CBD5E1'),
+                  borderWidth: isHighContrast ? 2 : 1,
+                  backgroundColor: isDark ? '#334155' : '#F1F5F9',
+                  cursor: 'pointer' as any,
+                  opacity: pressed ? 0.7 : 1,
                 },
               ]}>
-              {fact.label}
-            </Text>
-          </View>
-        ))}
+              <MaterialCommunityIcons
+                name="close"
+                size={20}
+                color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : '#0F172A')}
+              />
+            </Pressable>
+          )}
+        </View>
       </View>
 
-      {/* General disclaimer */}
-      <Text
-        style={[
-          styles.disclaimerText,
-          {
-            color: isHighContrast ? '#111827' : '#64748B',
-            fontWeight: isHighContrast ? '600' : '400',
-          },
-        ]}>
-        {place.generalNote ||
-          'Dostępność może się zmieniać. Przed wizytą sprawdź informacje u miejsca.'}
-      </Text>
-
-      {/* Action buttons: Trasa & Szczegóły */}
-      <View style={styles.buttonsRow}>
-        <View style={styles.buttonFlex}>
+      {/* COMPACT PEEK STATE: Quick Navigation Button */}
+      {!isExpanded && (
+        <View style={styles.compactActionsRow}>
           <AccessibleButton
             label="Trasa"
             icon="navigation-variant"
             variant="primary"
             onPress={() => onNavigateToRoute(place)}
+            style={styles.compactBtn}
           />
-        </View>
-        <View style={styles.buttonFlex}>
           <AccessibleButton
-            label="Szczegóły"
+            label="Rozwiń szczegóły"
             variant="secondary"
-            onPress={() => onViewDetails(place)}
+            onPress={handleToggle}
+            style={styles.compactBtn}
           />
         </View>
-      </View>
+      )}
 
-      {/* Community update action */}
-      <Pressable
-        onPress={() => onAddReport(place)}
-        accessible
-        accessibilityRole="button"
-        accessibilityLabel={
-          isGuest
-            ? 'Zaloguj się, aby dodać aktualizację dostępności'
-            : 'Dodaj aktualizację dostępności'
-        }
-        style={styles.addUpdateRow}>
-        <MaterialCommunityIcons
-          name="pencil-outline"
-          size={18}
-          color={isHighContrast ? '#000000' : BrandColors.accentTeal}
-        />
-        <Text
-          style={[
-            styles.addUpdateText,
-            {
-              color: isHighContrast ? '#000000' : BrandColors.accentTeal,
-              fontWeight: isHighContrast ? '800' : '700',
-            },
-          ]}>
-          {isGuest
-            ? 'Zaloguj się, aby dodać aktualizację dostępności'
-            : 'Dodaj aktualizację dostępności'}
-        </Text>
-      </Pressable>
+      {/* EXPANDED CONTENT: Full scorecard, checklist & details */}
+      {isExpanded && (
+        <View style={styles.expandedContent}>
+          {/* Confidence status banner */}
+          <View
+            style={[
+              styles.statusBanner,
+              {
+                backgroundColor: isHighContrast
+                  ? (isDark ? '#064E3B' : '#E2F1EE')
+                  : (isDark ? '#064E3B' : '#E6F5F3'),
+                borderColor: isHighContrast
+                  ? (isDark ? '#5EEAD4' : '#005A4E')
+                  : (isDark ? '#059669' : '#B2DFDB'),
+                borderWidth: isHighContrast ? 2 : 1,
+              },
+            ]}>
+            <MaterialCommunityIcons
+              name="account-group-outline"
+              size={18}
+              color={isDark ? '#2DD4BF' : BrandColors.accentTeal}
+            />
+            <Text
+              style={[
+                styles.statusText,
+                {
+                  color: isHighContrast
+                    ? (isDark ? '#FFFFFF' : '#004D40')
+                    : (isDark ? '#6EE7B7' : '#00796B'),
+                  fontWeight: isHighContrast ? '800' : '700',
+                },
+              ]}>
+              {place.confidenceLabel}
+            </Text>
+          </View>
+
+          {/* Facts check list */}
+          <View style={styles.factsGrid}>
+            {place.facts.map((fact) => (
+              <View key={fact.id} style={styles.factRow}>
+                <MaterialCommunityIcons
+                  name={
+                    fact.status === 'verified'
+                      ? 'check-circle-outline'
+                      : fact.status === 'to_check'
+                      ? 'radiobox-blank'
+                      : 'help-circle-outline'
+                  }
+                  size={18}
+                  color={
+                    isHighContrast
+                      ? (isDark ? '#FFFFFF' : '#000000')
+                      : fact.status === 'verified'
+                      ? (isDark ? '#4ADE80' : BrandColors.success)
+                      : (isDark ? '#2DD4BF' : BrandColors.accentTeal)
+                  }
+                />
+                <Text
+                  style={[
+                    styles.factLabel,
+                    {
+                      color: isHighContrast
+                        ? (isDark ? '#FFFFFF' : '#000000')
+                        : (isDark ? '#F1F5F9' : '#1E293B'),
+                      fontWeight: isHighContrast ? '700' : '500',
+                    },
+                  ]}>
+                  {fact.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          {/* General disclaimer */}
+          <Text
+            style={[
+              styles.disclaimerText,
+              {
+                color: isHighContrast
+                  ? (isDark ? '#CBD5E1' : '#111827')
+                  : (isDark ? '#94A3B8' : '#64748B'),
+                fontWeight: isHighContrast ? '600' : '400',
+              },
+            ]}>
+            {place.generalNote ||
+              'Dostępność może się zmieniać. Przed wizytą sprawdź informacje u miejsca.'}
+          </Text>
+
+          {/* External Contact & Info Details */}
+          {(place.openingHours || place.phone || place.email || place.website) && (
+            <View style={[styles.apiDetailsContainer, { borderColor: isDark ? '#334155' : '#E2E8F0' }]}>
+              {place.openingHours && (
+                <View style={styles.apiDetailRow}>
+                  <MaterialCommunityIcons name="clock-outline" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+                  <Text style={[styles.apiDetailText, { color: isDark ? '#E2E8F0' : '#334155' }]}>{place.openingHours}</Text>
+                </View>
+              )}
+              {place.phone && (
+                <View style={styles.apiDetailRow}>
+                  <MaterialCommunityIcons name="phone-outline" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+                  <Text style={[styles.apiDetailText, { color: isDark ? '#E2E8F0' : '#334155' }]}>{place.phone}</Text>
+                </View>
+              )}
+              {place.email && (
+                <View style={styles.apiDetailRow}>
+                  <MaterialCommunityIcons name="email-outline" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+                  <Text style={[styles.apiDetailText, { color: isDark ? '#E2E8F0' : '#334155' }]}>{place.email}</Text>
+                </View>
+              )}
+              {place.website && (
+                <View style={styles.apiDetailRow}>
+                  <MaterialCommunityIcons name="web" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+                  <Text style={[styles.apiDetailText, { color: isDark ? '#E2E8F0' : '#334155' }]}>{place.website}</Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Action buttons: Trasa & Szczegóły */}
+          <View style={styles.buttonsRow}>
+            <View style={styles.buttonFlex}>
+              <AccessibleButton
+                label="Trasa"
+                icon="navigation-variant"
+                variant="primary"
+                onPress={() => onNavigateToRoute(place)}
+              />
+            </View>
+            <View style={styles.buttonFlex}>
+              <AccessibleButton
+                label="Szczegóły"
+                variant="secondary"
+                onPress={() => onViewDetails(place)}
+              />
+            </View>
+          </View>
+
+          {/* Community update action */}
+          <Pressable
+            onPress={() => onAddReport(place)}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel={
+              isGuest
+                ? 'Zaloguj się, aby dodać aktualizację dostępności'
+                : 'Dodaj aktualizację dostępności'
+            }
+            style={styles.addUpdateRow}>
+            <MaterialCommunityIcons
+              name="pencil-outline"
+              size={18}
+              color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#2DD4BF' : BrandColors.accentTeal)}
+            />
+            <Text
+              style={[
+                styles.addUpdateText,
+                {
+                  color: isHighContrast
+                    ? (isDark ? '#FFFFFF' : '#000000')
+                    : (isDark ? '#2DD4BF' : BrandColors.accentTeal),
+                  fontWeight: isHighContrast ? '800' : '700',
+                },
+              ]}>
+              {isGuest
+                ? 'Zaloguj się, aby dodać aktualizację dostępności'
+                : 'Dodaj aktualizację dostępności'}
+            </Text>
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 }
@@ -246,53 +398,70 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 20,
-    paddingBottom: 24,
-    paddingTop: 10,
+    paddingBottom: 20,
+    paddingTop: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 12,
   },
   handleContainer: {
     alignItems: 'center',
-    paddingVertical: 4,
+    justifyContent: 'center',
+    width: '100%',
+    paddingVertical: 14,
+    cursor: 'pointer' as any,
   },
   handle: {
-    width: 44,
-    height: 5,
+    width: 54,
+    height: 6,
     borderRadius: 3,
-    marginBottom: 8,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 10,
+    alignItems: 'center',
+    marginBottom: 6,
   },
   titleArea: {
     flex: 1,
-    marginRight: 12,
+    marginRight: 8,
+    cursor: 'pointer' as any,
   },
   placeTitle: {
-    fontSize: 24,
+    fontSize: 22,
     letterSpacing: -0.3,
   },
   placeSubtitle: {
-    fontSize: 14,
+    fontSize: 13,
     marginTop: 2,
   },
-  saveButton: {
+  controlsRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    minWidth: 64,
+    gap: 8,
   },
-  saveText: {
-    fontSize: 11,
-    marginTop: 2,
+  iconControlBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    cursor: 'pointer' as any,
+  },
+  compactActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
+  },
+  compactBtn: {
+    flex: 1,
+    minHeight: 44,
+    paddingVertical: 8,
+  },
+  expandedContent: {
+    marginTop: 4,
   },
   statusBanner: {
     flexDirection: 'row',
@@ -326,7 +495,23 @@ const styles = StyleSheet.create({
   disclaimerText: {
     fontSize: 12,
     lineHeight: 16,
-    marginVertical: 10,
+    marginVertical: 8,
+  },
+  apiDetailsContainer: {
+    marginTop: 12,
+    marginBottom: 4,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    gap: 8,
+  },
+  apiDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  apiDetailText: {
+    fontSize: 14,
+    flex: 1,
   },
   buttonsRow: {
     flexDirection: 'row',
@@ -341,8 +526,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 10,
-    marginTop: 4,
+    paddingVertical: 8,
+    marginTop: 2,
   },
   addUpdateText: {
     fontSize: 14,

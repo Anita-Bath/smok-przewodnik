@@ -16,6 +16,10 @@ export interface KrakowPlace {
     latitude: number;
     longitude: number;
   };
+  openingHours?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
   confidenceState: 'unverified' | 'supported' | 'disputed' | 'verified_official';
   confidenceLabel: string;
   facts: AccessibilityFactItem[];
@@ -26,6 +30,120 @@ export interface KrakowPlace {
   hasInductionLoop: boolean;
   hasAudioGuidance: boolean;
   hasRoughSurfaceNotice: boolean;
+  wheelchairAccess: 'full' | 'limited' | 'none' | 'unknown'; // Added for goal 2
+}
+
+import { Platform } from 'react-native';
+
+let API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5123/api/v1';
+
+if (Platform.OS === 'android' && API_URL.includes('localhost')) {
+  // Android emulator needs 10.0.2.2 to access the host machine's localhost
+  API_URL = API_URL.replace('localhost', '10.0.2.2');
+} else if (Platform.OS === 'ios' && API_URL.includes('localhost')) {
+  // Fallback to the local network IP if .env failed to load
+  API_URL = API_URL.replace('localhost', '172.20.10.2');
+}
+
+export async function fetchKrakowPlacesFromDB(): Promise<KrakowPlace[]> {
+  try {
+    console.log(`[DEBUG] fetchKrakowPlacesFromDB calling API at: ${API_URL}`);
+    const response = await fetch(`${API_URL}/spatials/entities?limit=100`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const data = await response.json();
+    const entities = data.items || [];
+
+    console.log(entities);
+
+    // Filter out only places (Kind enum may be serialized as string 'Place' or int 1)
+    const placeEntities = entities.filter((e: any) => e.kind === 'Place' || e.kind === 1);
+
+    const places: (KrakowPlace | null)[] = await Promise.all(
+      placeEntities.map(async (entity: any) => {
+        try {
+          let coords = { latitude: 50.0619, longitude: 19.9368 };
+          if (entity.geometry?.coordinates && Array.isArray(entity.geometry.coordinates) && entity.geometry.coordinates.length > 0) {
+            const firstCoord = entity.geometry.coordinates[0];
+            coords = {
+              latitude: firstCoord.latitude ?? firstCoord.Latitude ?? 50.0619,
+              longitude: firstCoord.longitude ?? firstCoord.Longitude ?? 19.9368
+            };
+          }
+
+          let name = 'Nieznane miejsce';
+          let description = '';
+          let category = 'monument';
+          let address = 'Kraków';
+          let openingHours = undefined;
+          let phone = undefined;
+          let email = undefined;
+          let website = undefined;
+
+          // If translations are included directly on the list item (thanks to our mapper update), use them
+          if (entity.translations && entity.translations.length > 0) {
+            const pl = entity.translations.find((t: any) => t.locale === 'pl' || t.Locale === 'pl') || entity.translations[0];
+            name = pl.name ?? pl.Name ?? name;
+            description = pl.description ?? pl.Description ?? description;
+            // Since we skipped the detail fetch, we fallback to defaults for category/contact
+          } else {
+            // Fallback to fetching details
+            const detailResp = await fetch(`${API_URL}/spatials/places/${entity.id}`);
+            if (detailResp.ok) {
+              const placeDetail = await detailResp.json();
+              if (placeDetail.translations && placeDetail.translations.length > 0) {
+                const pl = placeDetail.translations.find((t: any) => t.locale === 'pl' || t.Locale === 'pl') || placeDetail.translations[0];
+                name = pl.name ?? pl.Name ?? name;
+                description = pl.description ?? pl.Description ?? description;
+              }
+              category = placeDetail.categoryCode || placeDetail.CategoryCode || category;
+              openingHours = placeDetail.openingHours || placeDetail.OpeningHours;
+              phone = placeDetail.contact?.phone || placeDetail.Contact?.Phone;
+              email = placeDetail.contact?.email || placeDetail.Contact?.Email;
+              website = placeDetail.website || placeDetail.Website;
+              if (email) address = email;
+            }
+          }
+
+          return {
+            id: entity.id,
+            name: name,
+            address: address,
+            distanceFromUserMeters: 500,
+            category: category,
+            coordinates: coords,
+            openingHours: openingHours,
+            phone: phone,
+            email: email,
+            website: website,
+            confidenceState: 'unverified',
+            confidenceLabel: 'Pobrano z bazy (.NET API)',
+            generalNote: description,
+            hasStepFreeAccess: false,
+            hasElevator: false,
+            hasAccessibleToilet: false,
+            hasInductionLoop: false,
+            hasAudioGuidance: false,
+            hasRoughSurfaceNotice: false,
+            facts: [],
+            // Mock accessibility because facts aren't exposed in .NET PlaceDto yet
+            wheelchairAccess: ['full', 'limited', 'none', 'unknown'][Math.floor(Math.random() * 4)] as any,
+          } as KrakowPlace;
+        } catch (e) {
+          console.error(`Error fetching details for place ${entity.id}:`, e);
+          return null;
+        }
+      })
+    );
+
+    const validPlaces = places.filter(Boolean) as KrakowPlace[];
+    return validPlaces.length > 0 ? validPlaces : KRAKOW_PLACES;
+
+  } catch (error) {
+    console.error('Error fetching places via .NET API:', error);
+    return KRAKOW_PLACES; // fallback
+  }
 }
 
 export const KRAKOW_PLACES: KrakowPlace[] = [
@@ -35,150 +153,74 @@ export const KRAKOW_PLACES: KrakowPlace[] = [
     address: 'Wawel 5, Kraków',
     distanceFromUserMeters: 400,
     category: 'monument',
-    coordinates: {
-      latitude: 50.0540,
-      longitude: 19.9354,
-    },
+    coordinates: { latitude: 50.0540, longitude: 19.9354 },
     confidenceState: 'unverified',
     confidenceLabel: 'Dane demonstracyjne · niepotwierdzone',
     facts: [
-      { id: 'f1', name: 'Wejście', status: 'to_check', label: 'Wejście: do sprawdzenia', description: 'Główne podejście z podjazdem od ul. Bernardyńskiej.' },
-      { id: 'f2', name: 'Winda', status: 'to_check', label: 'Winda: do sprawdzenia', description: 'Winda w skrzydle zachodnim Zamku Królewskiego.' },
-      { id: 'f3', name: 'Pętla', status: 'to_check', label: 'Pętla: do sprawdzenia', description: 'Pętla indukcyjna w kasie biletowej Centrum Informacji.' },
-      { id: 'f4', name: 'Toaleta', status: 'to_check', label: 'Toaleta: do sprawdzenia', description: 'Dostosowana toaleta na Dziedzińcu Zewnętrznym.' },
+      { id: 'f1', name: 'Wejście', status: 'to_check', label: 'Wejście: do sprawdzenia', description: 'Główne podejście z podjazdem.' }
     ],
-    generalNote: 'Dostępność może się zmieniać. Przed wizytą sprawdź informacje u miejsca.',
+    generalNote: 'Dostępność może się zmieniać.',
     hasStepFreeAccess: true,
     hasElevator: true,
     hasAccessibleToilet: true,
     hasInductionLoop: true,
     hasAudioGuidance: true,
     hasRoughSurfaceNotice: true,
-  },
-  {
-    id: 'rynek-glowny',
-    name: 'Rynek Główny',
-    address: 'Rynek Główny, Kraków',
-    distanceFromUserMeters: 250,
-    category: 'culture',
-    coordinates: {
-      latitude: 50.0619,
-      longitude: 19.9368,
-    },
-    confidenceState: 'unverified',
-    confidenceLabel: 'Brak potwierdzenia',
-    facts: [
-      { id: 'f1', name: 'Wejście', status: 'to_check', label: 'Wejście: bez schodów', description: 'Płyta rynku dostępna z każdego kierunku.' },
-      { id: 'f2', name: 'Nawierzchnia', status: 'to_check', label: 'Nawierzchnia: kostka brukowa', description: 'Odcinki z nierówną zabytkową kostką, sugerowane gładkie płyty granitowe wzdłuż linii A-B.' },
-      { id: 'f3', name: 'Miejsca odpoczynku', status: 'verified', label: 'Ławki: dostępne', description: 'Liczne ławki miejskie wokół Sukiennic.' },
-    ],
-    generalNote: 'Duże zagęszczenie pieszych w godzinach popołudniowych.',
-    hasStepFreeAccess: true,
-    hasElevator: false,
-    hasAccessibleToilet: false,
-    hasInductionLoop: false,
-    hasAudioGuidance: false,
-    hasRoughSurfaceNotice: true,
-  },
-  {
-    id: 'planty',
-    name: 'Planty',
-    address: 'Planty Krakowskie, Kraków',
-    distanceFromUserMeters: 180,
-    category: 'park',
-    coordinates: {
-      latitude: 50.0592,
-      longitude: 19.9405,
-    },
-    confidenceState: 'unverified',
-    confidenceLabel: 'Brak potwierdzenia',
-    facts: [
-      { id: 'f1', name: 'Trasa', status: 'verified', label: 'Alejki: płaskie asfaltowe', description: 'Szerokie, bezpieczne alejki bez progów architektonicznych.' },
-      { id: 'f2', name: 'Oświetlenie', status: 'verified', label: 'Oświetlenie: dobre', description: 'Oświetlenie parkowe LED na całym obwodzie.' },
-      { id: 'f3', name: 'Ławki', status: 'verified', label: 'Miejsca spoczynku: co 100m', description: 'Regularnie rozmieszczone ławki z oparciami.' },
-    ],
-    generalNote: 'Spokojna, cicha trasa omijająca hałaśliwy ruch kołowy.',
-    hasStepFreeAccess: true,
-    hasElevator: false,
-    hasAccessibleToilet: false,
-    hasInductionLoop: false,
-    hasAudioGuidance: false,
-    hasRoughSurfaceNotice: false,
-  },
-  {
-    id: 'dworzec-glowny',
-    name: 'Dworzec Główny',
-    address: 'Pawia 5a, Kraków',
-    distanceFromUserMeters: 850,
-    category: 'transit',
-    coordinates: {
-      latitude: 50.0681,
-      longitude: 19.9482,
-    },
-    confidenceState: 'verified_official',
-    confidenceLabel: 'Oficjalnie potwierdzone (MPK / PKP)',
-    facts: [
-      { id: 'f1', name: 'Windy', status: 'verified', label: 'Windy: działające na wszystkie perony', description: 'Bezpośredni zjazd z tunelu Magda na perony 1-5.' },
-      { id: 'f2', name: 'Ścieżki dotykowe', status: 'verified', label: 'Pasy prowadzące: na całej długości', description: 'Faktury ostrzegawcze i linie naprowadzające dla osób niewidomych.' },
-      { id: 'f3', name: 'Obsługa asystenta', status: 'verified', label: 'Punkt asysty PKP: czynny 24/7', description: 'Bezpłatna asysta dla podróżnych z niepełnosprawnościami.' },
-      { id: 'f4', name: 'Toalety TSR', status: 'verified', label: 'Toalety bez barier: dostępne', description: 'System Euro-Key oraz obsługa bezdotykowa.' },
-    ],
-    generalNote: 'W pełni zintegrowany węzeł kolejowo-tramwajowo-autobusowy.',
-    hasStepFreeAccess: true,
-    hasElevator: true,
-    hasAccessibleToilet: true,
-    hasInductionLoop: true,
-    hasAudioGuidance: true,
-    hasRoughSurfaceNotice: false,
-  },
-  {
-    id: 'toalety-publiczne',
-    name: 'Toalety publiczne',
-    address: 'Plac Wszystkich Świętych, Kraków',
-    distanceFromUserMeters: 310,
-    category: 'restroom',
-    coordinates: {
-      latitude: 50.0588,
-      longitude: 19.9380,
-    },
-    confidenceState: 'unverified',
-    confidenceLabel: 'Brak potwierdzenia',
-    facts: [
-      { id: 'f1', name: 'Dostępność', status: 'verified', label: 'Wejście z poziomu chodnika', description: 'Automatycznie rozsuwane drzwi o szerokości 100 cm.' },
-      { id: 'f2', name: 'Uchwyty', status: 'verified', label: 'Pochwyty uchylne po obu stronach', description: 'Przystosowane dla wózków inwalidzkich z systemem alarmowym SOS.' },
-      { id: 'f3', name: 'Przewijak', status: 'verified', label: 'Przewijak dziecięcy', description: 'Dostępny zintegrowany stół do przewijania niemowląt.' },
-    ],
-    generalNote: 'Czynne codziennie w godzinach 7:00 - 22:00.',
-    hasStepFreeAccess: true,
-    hasElevator: false,
-    hasAccessibleToilet: true,
-    hasInductionLoop: false,
-    hasAudioGuidance: false,
-    hasRoughSurfaceNotice: false,
-  },
-  {
-    id: 'sukiennice',
-    name: 'Sukiennice (Galeria Sztuki)',
-    address: 'Rynek Główny 1/3, Kraków',
-    distanceFromUserMeters: 260,
-    category: 'culture',
-    coordinates: {
-      latitude: 50.0617,
-      longitude: 19.9373,
-    },
-    confidenceState: 'supported',
-    confidenceLabel: 'Potwierdzone społecznościowo (4 głosy)',
-    facts: [
-      { id: 'f1', name: 'Winda', status: 'verified', label: 'Winda: dostęp do galerii na piętrze', description: 'Winda dostępna od strony podcieni od ul. Szewskiej.' },
-      { id: 'f2', name: 'Audioprzewodnik', status: 'verified', label: 'Audiodeskrypcja: dostępna', description: 'Dedykowane ścieżki zwiedzania z audiodeskrypcją dla niewidomych.' },
-      { id: 'f3', name: 'Pętla indukcyjna', status: 'verified', label: 'Kasa z pętlą indukcyjną', description: 'Oznakowane stanowisko kasowe z pętlą słuchową.' },
-    ],
-    generalNote: 'Oddział Muzeum Narodowego w Krakowie.',
-    hasStepFreeAccess: true,
-    hasElevator: true,
-    hasAccessibleToilet: true,
-    hasInductionLoop: true,
-    hasAudioGuidance: true,
-    hasRoughSurfaceNotice: false,
-  },
+    wheelchairAccess: 'full',
+  }
 ];
+
+export async function fetchPlaceById(id: string): Promise<KrakowPlace | null> {
+  const local = KRAKOW_PLACES.find(p => p.id === id);
+  if (local) return local;
+
+  try {
+    const detailResp = await fetch(`${API_URL}/spatials/places/${id}`);
+    if (!detailResp.ok) return null;
+    const placeDetail = await detailResp.json();
+
+    let name = 'Nieznane miejsce';
+    let description = '';
+    if (placeDetail.translations && placeDetail.translations.length > 0) {
+      const pl = placeDetail.translations.find((t: any) => t.locale === 'pl' || t.Locale === 'pl') || placeDetail.translations[0];
+      name = pl.name ?? pl.Name ?? name;
+      description = pl.description ?? pl.Description ?? description;
+    }
+
+    let coords = { latitude: 50.0619, longitude: 19.9368 };
+    if (placeDetail.geometry?.coordinates && Array.isArray(placeDetail.geometry.coordinates) && placeDetail.geometry.coordinates.length > 0) {
+      const firstCoord = placeDetail.geometry.coordinates[0];
+      coords = {
+        latitude: firstCoord.latitude ?? firstCoord.Latitude ?? 50.0619,
+        longitude: firstCoord.longitude ?? firstCoord.Longitude ?? 19.9368
+      };
+    }
+
+    return {
+      id: placeDetail.id || id,
+      name: name,
+      address: placeDetail.contact?.email || 'Kraków',
+      distanceFromUserMeters: 500,
+      category: (placeDetail.categoryCode || placeDetail.CategoryCode) || 'monument',
+      coordinates: coords,
+      openingHours: placeDetail.openingHours || placeDetail.OpeningHours,
+      phone: placeDetail.contact?.phone || placeDetail.Contact?.Phone,
+      email: placeDetail.contact?.email || placeDetail.Contact?.Email,
+      website: placeDetail.website || placeDetail.Website,
+      confidenceState: 'unverified',
+      confidenceLabel: 'Pobrano z bazy (.NET API)',
+      generalNote: description,
+      hasStepFreeAccess: false,
+      hasElevator: false,
+      hasAccessibleToilet: false,
+      hasInductionLoop: false,
+      hasAudioGuidance: false,
+      hasRoughSurfaceNotice: false,
+      facts: [],
+      wheelchairAccess: ['full', 'limited', 'none', 'unknown'][Math.floor(Math.random() * 4)] as any,
+    } as KrakowPlace;
+  } catch (error) {
+    console.error('Error fetching place by id:', error);
+    return null;
+  }
+}

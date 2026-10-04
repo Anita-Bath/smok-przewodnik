@@ -12,7 +12,7 @@ import { useAccessibility } from '@/context/AccessibilityContext';
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { isHighContrast, login, loginAsGuest } = useAccessibility();
+  const { isDark, isHighContrast, login, loginAsGuest } = useAccessibility();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -30,7 +30,11 @@ export default function RegisterScreen() {
     <SafeAreaView
       style={[
         styles.safeArea,
-        { backgroundColor: isHighContrast ? '#FFFFFF' : '#F8FAFC' },
+        {
+          backgroundColor: isHighContrast
+            ? (isDark ? '#000000' : '#FFFFFF')
+            : (isDark ? '#0F172A' : '#F8FAFC'),
+        },
       ]}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -46,7 +50,9 @@ export default function RegisterScreen() {
             style={[
               styles.title,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontWeight: isHighContrast ? '900' : '800',
               },
             ]}>
@@ -57,7 +63,9 @@ export default function RegisterScreen() {
             style={[
               styles.subtitle,
               {
-                color: isHighContrast ? '#1E293B' : '#475569',
+                color: isHighContrast
+                  ? (isDark ? '#CBD5E1' : '#1E293B')
+                  : (isDark ? '#94A3B8' : '#475569'),
                 fontWeight: isHighContrast ? '600' : '400',
               },
             ]}>
@@ -92,22 +100,32 @@ export default function RegisterScreen() {
               style={[
                 styles.privacyBox,
                 {
-                  backgroundColor: isHighContrast ? '#E8F5E9' : '#E6F5F3',
-                  borderColor: isHighContrast ? '#000000' : '#B2DFDB',
+                  backgroundColor: isHighContrast
+                    ? (isDark ? '#064E3B' : '#E8F5E9')
+                    : (isDark ? '#1E293B' : '#E6F5F3'),
+                  borderColor: isHighContrast
+                    ? (isDark ? '#34D399' : '#000000')
+                    : (isDark ? '#334155' : '#B2DFDB'),
                   borderWidth: isHighContrast ? 2 : 1,
                 },
               ]}>
               <MaterialCommunityIcons
                 name="shield-check-outline"
                 size={24}
-                color={isHighContrast ? '#000000' : BrandColors.accentTeal}
+                color={
+                  isHighContrast
+                    ? (isDark ? '#34D399' : '#000000')
+                    : (isDark ? '#2DD4BF' : BrandColors.accentTeal)
+                }
               />
               <View style={styles.privacyContent}>
                 <Text
                   style={[
                     styles.privacyTitle,
                     {
-                      color: isHighContrast ? '#000000' : '#0F172A',
+                      color: isHighContrast
+                        ? (isDark ? '#FFFFFF' : '#000000')
+                        : (isDark ? '#F8FAFC' : '#0F172A'),
                       fontWeight: isHighContrast ? '800' : '700',
                     },
                   ]}>
@@ -117,7 +135,9 @@ export default function RegisterScreen() {
                   style={[
                     styles.privacyText,
                     {
-                      color: isHighContrast ? '#111827' : '#475569',
+                      color: isHighContrast
+                        ? (isDark ? '#CBD5E1' : '#111827')
+                        : (isDark ? '#94A3B8' : '#475569'),
                       fontWeight: isHighContrast ? '600' : '400',
                     },
                   ]}>
@@ -130,7 +150,11 @@ export default function RegisterScreen() {
             <Text
               style={[
                 styles.termsText,
-                { color: isHighContrast ? '#1E293B' : '#64748B' },
+                {
+                  color: isHighContrast
+                    ? (isDark ? '#CBD5E1' : '#1E293B')
+                    : (isDark ? '#94A3B8' : '#64748B'),
+                },
               ]}>
               Tworząc konto, akceptujesz nasze{' '}
               <Text style={styles.termsLink}>warunki korzystania</Text> oraz{' '}
@@ -150,7 +174,11 @@ export default function RegisterScreen() {
               <Text
                 style={[
                   styles.haveAccountText,
-                  { color: isHighContrast ? '#000000' : '#64748B' },
+                  {
+                    color: isHighContrast
+                      ? (isDark ? '#FFFFFF' : '#000000')
+                      : (isDark ? '#94A3B8' : '#64748B'),
+                  },
                 ]}>
                 Masz już konto?{' '}
               </Text>
@@ -162,7 +190,11 @@ export default function RegisterScreen() {
                 <Text
                   style={[
                     styles.loginLink,
-                    { color: isHighContrast ? '#003366' : BrandColors.accentTeal },
+                    {
+                      color: isHighContrast
+                        ? (isDark ? '#38BDF8' : '#003366')
+                        : (isDark ? '#2DD4BF' : BrandColors.accentTeal),
+                    },
                   ]}>
                   Zaloguj się
                 </Text>
@@ -181,7 +213,11 @@ export default function RegisterScreen() {
             <Text
               style={[
                 styles.guestHint,
-                { color: isHighContrast ? '#1E293B' : '#64748B' },
+                {
+                  color: isHighContrast
+                    ? (isDark ? '#CBD5E1' : '#1E293B')
+                    : (isDark ? '#94A3B8' : '#64748B'),
+                },
               ]}>
               Konto możesz utworzyć w dowolnym momencie.
             </Text>

@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Platform, useColorScheme } from 'react-native';
+import * as Location from 'expo-location';
+import { Colors, ThemeColors } from '@/constants/theme';
 
 export type ConstraintLevel = 'allowed' | 'prefer_avoid' | 'must_avoid';
 
@@ -114,6 +117,10 @@ export const ACCESSIBILITY_PRESETS: Preset[] = [
 interface AccessibilityContextType {
   isHighContrast: boolean;
   toggleHighContrast: () => void;
+  isDark: boolean;
+  toggleDarkTheme: () => void;
+  setDarkTheme: (enabled: boolean) => void;
+  theme: ThemeColors;
   fontScale: FontScale;
   setFontScale: (scale: FontScale) => void;
   isGuest: boolean;
@@ -127,6 +134,8 @@ interface AccessibilityContextType {
   applyPreset: (presetId: string) => void;
   setConstraint: (code: string, level: ConstraintLevel) => void;
   toggleTravelMode: (mode: TravelMode) => void;
+  userLocation: { latitude: number; longitude: number } | null;
+  setUserLocation: (loc: { latitude: number; longitude: number } | null) => void;
   toggleFeedbackChannel: (channel: FeedbackChannel) => void;
   toggleSavePlace: (placeId: string) => void;
   loginAsGuest: () => void;
@@ -148,8 +157,18 @@ const defaultConstraints: Record<string, ConstraintLevel> = {
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
 
 export function AccessibilityProvider({ children }: { children: ReactNode }) {
+  const systemColorScheme = useColorScheme();
   const [isHighContrast, setIsHighContrast] = useState(false);
+  const [isDark, setIsDark] = useState<boolean>(() => systemColorScheme === 'dark');
   const [fontScale, setFontScale] = useState<FontScale>('default');
+
+  const toggleHighContrast = () => setIsHighContrast((prev) => !prev);
+  const toggleDarkTheme = () => setIsDark((prev) => !prev);
+  const setDarkTheme = (enabled: boolean) => setIsDark(enabled);
+
+  const theme = isHighContrast
+    ? (isDark ? Colors.highContrastDark : Colors.highContrastLight)
+    : (isDark ? Colors.dark : Colors.light);
   const [isGuest, setIsGuest] = useState(true);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [points, setPoints] = useState(120); // initial demo points
@@ -166,8 +185,77 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     'haptic',
   ]);
   const [savedPlaceIds, setSavedPlaceIds] = useState<string[]>(['wawel', 'rynek-glowny']);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>({
+    latitude: 50.0617,
+    longitude: 19.9373,
+  });
 
-  const toggleHighContrast = () => setIsHighContrast((prev) => !prev);
+  // Automatically acquire real user GPS localization on app startup
+  useEffect(() => {
+    let isMounted = true;
+    let locationSubscription: { remove: () => void } | null = null;
+
+    async function autoAcquireLocation() {
+      try {
+        if (Platform.OS === 'web') {
+          if (typeof navigator !== 'undefined' && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                if (isMounted) {
+                  setUserLocation({
+                    latitude: pos.coords.latitude,
+                    longitude: pos.coords.longitude,
+                  });
+                }
+              },
+              () => {},
+              { timeout: 8000, enableHighAccuracy: true }
+            );
+          }
+        } else {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status === 'granted') {
+            const initialPos = await Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.Balanced,
+            });
+            if (isMounted) {
+              setUserLocation({
+                latitude: initialPos.coords.latitude,
+                longitude: initialPos.coords.longitude,
+              });
+            }
+
+            locationSubscription = await Location.watchPositionAsync(
+              {
+                accuracy: Location.Accuracy.Balanced,
+                distanceInterval: 15,
+                timeInterval: 8000,
+              },
+              (location) => {
+                if (isMounted) {
+                  setUserLocation({
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude,
+                  });
+                }
+              }
+            );
+          }
+        }
+      } catch (err) {
+        // Fallback silently kept at Kraków center
+      }
+    }
+
+    autoAcquireLocation();
+
+    return () => {
+      isMounted = false;
+      if (locationSubscription) {
+        locationSubscription.remove();
+      }
+    };
+  }, []);
 
   const applyPreset = (presetId: string) => {
     const found = ACCESSIBILITY_PRESETS.find((p) => p.id === presetId);
@@ -232,6 +320,10 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
       value={{
         isHighContrast,
         toggleHighContrast,
+        isDark,
+        toggleDarkTheme,
+        setDarkTheme,
+        theme,
         fontScale,
         setFontScale,
         isGuest,
@@ -245,6 +337,8 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
         applyPreset,
         setConstraint,
         toggleTravelMode,
+        userLocation,
+        setUserLocation,
         toggleFeedbackChannel,
         toggleSavePlace,
         loginAsGuest,
