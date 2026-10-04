@@ -23,7 +23,6 @@ internal static class SpatialDtoMapper
                     coordinate.Latitude,
                     coordinate.Longitude))
                 .ToArray()),
-        ToTranslations(entity),
         entity.CreatedAt,
         entity.UpdatedAt);
 
