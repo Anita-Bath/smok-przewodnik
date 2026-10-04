@@ -94,7 +94,7 @@ Zalecamy uruchomienie bazy danych przez lokalny stos Supabase oraz silnika nawig
 supabase start --workdir sb
 
 # Uruchomienie lokalnego silnika tras (Valhalla - upewnij się, że pobrano paczki kafelków)
-docker start smok-valhalla
+docker run -dt --name valhalla -p 8002:8002 -v $PWD/custom_files:/custom_files -e tile_urls=https://download.geofabrik.de/europe/andorra-latest.osm.pbf ghcr.io/valhalla/valhalla-scripted:latest
 ```
 
 ### 2. Backend (API)
