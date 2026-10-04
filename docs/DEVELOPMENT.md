@@ -1,4 +1,4 @@
-# Uruchamianie projektu lokalnie
+# Uruchamianie i weryfikacja projektu lokalnie
 
 Ten dokument opisuje uruchomienie backendu ASP.NET Core oraz aplikacji mobilnej
 Expo. Polecenia należy wykonywać z katalogu głównego repozytorium, chyba że
@@ -71,8 +71,7 @@ Z panelu Supabase potrzebne są:
 - klucz `anon`/publishable dla aplikacji mobilnej;
 - connection string PostgreSQL dla API.
 
-Nie używaj klucza `service_role` w aplikacji mobilnej. Nie umieszczaj haseł bazy
-ani prywatnych kluczy w commitowanych plikach.
+Nie używaj klucza `service_role` w aplikacji mobilnej.
 
 ### Wariant B: lokalny Supabase
 
@@ -107,7 +106,7 @@ pokazuje konfigurację lokalnego Supabase; dla wersji hosted należy podstawić 
 i connection string otrzymane z panelu projektu:
 
 ```bash
-export ConnectionStrings__Default='<set-via-environment>'
+export ConnectionStrings__Default='Host=<db-host>;Port=<db-port>;Database=<db-name>;Username=<db-user>;Password=<db-password>'
 export Supabase__Url='http://127.0.0.1:54321'
 export Supabase__Audience='authenticated'
 export Supabase__ClaimRole='authenticated'
@@ -188,7 +187,7 @@ curl http://localhost:5123/v1/health
 Swagger w środowisku `Development` jest dostępny pod adresem:
 
 ```text
-http://localhost:5123/swagger
+http://localhost:5123/v1/swagger
 ```
 
 Publiczny prefiks endpointów to `/v1`, np.
@@ -309,6 +308,9 @@ npx expo-doctor
 
 Zaktualizuj narzędzie do wersji 10.0.12 poleceniem z sekcji zależności. Wersja
 major narzędzia musi odpowiadać używanemu EF Core.
+
+Jeżeli narzędzie nie może utworzyć `DbContext`, sprawdź, czy w bieżącym
+terminalu ustawiono `ConnectionStrings__Default`.
 
 ### Planowanie trasy zwraca `503`
 

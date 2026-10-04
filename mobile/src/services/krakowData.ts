@@ -35,7 +35,7 @@ export interface KrakowPlace {
 
 import { Platform } from 'react-native';
 
-export let API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5123/api/v1';
+export let API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5123/v1';
 
 if (Platform.OS === 'android' && API_URL.includes('localhost')) {
   // Android emulator needs 10.0.2.2 to access the host machine's localhost
@@ -211,7 +211,7 @@ export async function fetchPlaceById(id: string): Promise<KrakowPlace | null> {
     const hasInductionLoop = false;
     const hasAudioGuidance = false;
     const wheelchairAccess = getDeterministicWheelchairAccess(id);
-    
+
     const facts: AccessibilityFactItem[] = (placeDetail.accessibilityFacts ?? []).map((fact: any) => ({
       id: fact.id,
       name: accessibilityFactName(fact.attributeCode),
