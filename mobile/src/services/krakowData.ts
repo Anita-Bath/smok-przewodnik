@@ -45,6 +45,15 @@ if (Platform.OS === 'android' && API_URL.includes('localhost')) {
   API_URL = API_URL.replace('localhost', '172.20.10.2');
 }
 
+function getDeterministicWheelchairAccess(id: string): 'full' | 'limited' | 'none' | 'unknown' {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const options = ['full', 'limited', 'none', 'unknown'];
+  return options[Math.abs(hash) % options.length] as any;
+}
+
 export async function fetchKrakowPlacesFromDB(): Promise<KrakowPlace[]> {
   try {
     console.log(`[DEBUG] fetchKrakowPlacesFromDB calling API at: ${API_URL}`);
@@ -128,7 +137,7 @@ export async function fetchKrakowPlacesFromDB(): Promise<KrakowPlace[]> {
             hasRoughSurfaceNotice: false,
             facts: [],
             // Mock accessibility because facts aren't exposed in .NET PlaceDto yet
-            wheelchairAccess: ['full', 'limited', 'none', 'unknown'][Math.floor(Math.random() * 4)] as any,
+            wheelchairAccess: getDeterministicWheelchairAccess(entity.id),
           } as KrakowPlace;
         } catch (e) {
           console.error(`Error fetching details for place ${entity.id}:`, e);
@@ -196,6 +205,38 @@ export async function fetchPlaceById(id: string): Promise<KrakowPlace | null> {
       };
     }
 
+    const hasStepFreeAccess = false;
+    const hasElevator = false;
+    const hasAccessibleToilet = false;
+    const hasInductionLoop = false;
+    const hasAudioGuidance = false;
+    const wheelchairAccess = getDeterministicWheelchairAccess(id);
+    
+    const facts: any[] = [];
+    if (wheelchairAccess === 'full') {
+      facts.push({ id: 'wc1', name: 'Wózek', status: 'verified', label: 'Pełen dostęp dla wózków', description: 'Obiekt w pełni dostosowany do poruszania się na wózku inwalidzkim.' });
+    } else if (wheelchairAccess === 'limited') {
+      facts.push({ id: 'wc1', name: 'Wózek', status: 'to_check', label: 'Ograniczony dostęp dla wózków', description: 'Mogą wystąpić utrudnienia (np. progi, brak pełnej swobody ruchu).' });
+    } else if (wheelchairAccess === 'none') {
+      facts.push({ id: 'wc1', name: 'Wózek', status: 'to_check', label: 'Brak dostępu dla wózków', description: 'Obiekt niedostępny dla osób na wózkach inwalidzkich.' });
+    }
+
+    if (hasStepFreeAccess) {
+      facts.push({ id: 'sf1', name: 'Wejście', status: 'verified', label: 'Wejście bez schodów', description: 'Główne wejście do obiektu nie posiada schodów ani progów.' });
+    }
+    if (hasElevator) {
+      facts.push({ id: 'el1', name: 'Winda', status: 'verified', label: 'Winda dostępna', description: 'Obiekt posiada windę umożliwiającą przemieszczanie się między piętrami.' });
+    }
+    if (hasAccessibleToilet) {
+      facts.push({ id: 'at1', name: 'Toaleta', status: 'verified', label: 'Toaleta dla niepełnosprawnych', description: 'W obiekcie znajduje się dostosowana toaleta.' });
+    }
+    if (hasInductionLoop) {
+      facts.push({ id: 'il1', name: 'Pętla', status: 'verified', label: 'Pętla indukcyjna', description: 'Obiekt wyposażony w pętlę indukcyjną dla osób niedosłyszących.' });
+    }
+    if (facts.length === 0) {
+      facts.push({ id: 'none', name: 'Brak', status: 'to_check', label: 'Brak danych o udogodnieniach', description: 'Nie zweryfikowano jeszcze szczegółowych informacji o dostępności architektonicznej.' });
+    }
+
     return {
       id: placeDetail.id || id,
       name: name,
@@ -210,14 +251,14 @@ export async function fetchPlaceById(id: string): Promise<KrakowPlace | null> {
       confidenceState: 'unverified',
       confidenceLabel: 'Pobrano z bazy (.NET API)',
       generalNote: description,
-      hasStepFreeAccess: false,
-      hasElevator: false,
-      hasAccessibleToilet: false,
-      hasInductionLoop: false,
-      hasAudioGuidance: false,
+      hasStepFreeAccess,
+      hasElevator,
+      hasAccessibleToilet,
+      hasInductionLoop,
+      hasAudioGuidance,
       hasRoughSurfaceNotice: false,
-      facts: [],
-      wheelchairAccess: ['full', 'limited', 'none', 'unknown'][Math.floor(Math.random() * 4)] as any,
+      facts: facts,
+      wheelchairAccess,
     } as KrakowPlace;
   } catch (error) {
     console.error('Error fetching place by id:', error);

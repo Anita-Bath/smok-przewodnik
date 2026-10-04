@@ -418,7 +418,7 @@ export async function fetchLiveKrakowRoutes(
   const origin = originCoords || DEFAULT_KRAKOW_ORIGIN;
 
   try {
-    const url = `https://router.project-osrm.org/route/v1/walking/${origin.longitude},${origin.latitude};${destination.coordinates.longitude},${destination.coordinates.latitude}?overview=full&geometries=geojson&steps=true`;
+    const url = `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${origin.longitude},${origin.latitude};${destination.coordinates.longitude},${destination.coordinates.latitude}?overview=full&geometries=geojson&steps=true`;
     const res = await fetch(url);
     if (!res.ok) {
       return fallback;
@@ -490,29 +490,21 @@ export async function fetchLiveKrakowRoutes(
       });
     }
 
-    // Enhance fastest with OSRM real path
-    const updatedFastest: RouteAlternative = {
-      ...fallback.alternatives[1],
-      distanceMeters: osrmDistance,
-      durationMinutes: osrmDurationMinutes,
+    // Apply OSRM real path to all route alternatives so navigation always shows real streets and turns!
+    const updatedAlternatives = fallback.alternatives.map((alt) => ({
+      ...alt,
+      distanceMeters: alt.id === 'route-fastest' ? osrmDistance : Math.round(osrmDistance * (alt.id === 'route-easiest' ? 1.05 : 1.1)),
+      durationMinutes: alt.id === 'route-fastest' ? osrmDurationMinutes : Math.ceil(osrmDurationMinutes * (alt.id === 'route-easiest' ? 1.15 : 1.1)),
       coordinates: leafCoords,
-      maneuvers,
-      subtitle: `Najkrótsza droga (${formatDistance(osrmDistance)})`,
-    };
-
-    // Enhance easiest: use smooth coordinates
-    const updatedEasiest: RouteAlternative = {
-      ...fallback.alternatives[0],
-      coordinates: leafCoords,
-      distanceMeters: Math.round(osrmDistance * 1.05),
-      durationMinutes: Math.round(osrmDurationMinutes * 1.15),
-    };
+      maneuvers: maneuvers,
+      subtitle: alt.id === 'route-fastest' ? `Najkrótsza droga (${formatDistance(osrmDistance)})` : alt.subtitle,
+    }));
 
     return {
       originName: originCoords ? 'Twoja lokalizacja' : 'Kraków Stare Miasto (Rynek)',
       originCoordinates: origin,
       destination,
-      alternatives: [updatedEasiest, updatedFastest, fallback.alternatives[2], fallback.alternatives[3]],
+      alternatives: updatedAlternatives,
     };
   } catch (err) {
     return fallback;

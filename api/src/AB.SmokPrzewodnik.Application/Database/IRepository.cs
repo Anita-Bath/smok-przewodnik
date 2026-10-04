@@ -15,4 +15,8 @@ public interface IRepository<TEntity, TId, in TCriteria>
         TCriteria criteria,
         CursorPageRequest page,
         CancellationToken cancellationToken);
+
+    Task UpdateAsync(
+        TAggregate aggregate,
+        CancellationToken cancellationToken);
 }

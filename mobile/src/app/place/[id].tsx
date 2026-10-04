@@ -197,6 +197,28 @@ export default function PlaceDetailScreen() {
               </Text>
             </View>
 
+            {/* Additional Contact / Info */}
+            <View style={{ marginVertical: 12, gap: 8 }}>
+              {place.openingHours && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <MaterialCommunityIcons name="clock-outline" size={18} color={isDark ? '#94A3B8' : '#64748B'} />
+                  <Text style={{ color: isDark ? '#CBD5E1' : '#334155', fontSize: 14 }}>{place.openingHours}</Text>
+                </View>
+              )}
+              {place.phone && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <MaterialCommunityIcons name="phone-outline" size={18} color={isDark ? '#94A3B8' : '#64748B'} />
+                  <Text style={{ color: isDark ? '#CBD5E1' : '#334155', fontSize: 14 }}>{place.phone}</Text>
+                </View>
+              )}
+              {place.website && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <MaterialCommunityIcons name="web" size={18} color={isDark ? '#94A3B8' : '#64748B'} />
+                  <Text style={{ color: isDark ? '#38BDF8' : BrandColors.primary, fontSize: 14 }}>{place.website}</Text>
+                </View>
+              )}
+            </View>
+
             {/* Quick action buttons */}
             <View style={styles.actionButtonsRow}>
               <AccessibleButton

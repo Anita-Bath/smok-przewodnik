@@ -150,7 +150,7 @@ export default function ExploreScreen() {
 
   const handleSelectSuggestion = (item: AddressSearchResult) => {
     Keyboard.dismiss();
-    setSearchQuery(item.title);
+    setSearchQuery(`${item.title}${item.subtitle ? ` / ${item.subtitle}` : ''}`);
     setSuggestions([]);
 
     let targetPlace: KrakowPlace;
