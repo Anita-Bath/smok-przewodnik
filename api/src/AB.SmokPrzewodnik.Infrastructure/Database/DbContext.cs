@@ -1,6 +1,7 @@
 using AB.SmokPrzewodnik.Domain.Navigation;
 using AB.SmokPrzewodnik.Domain.Planning;
 using AB.SmokPrzewodnik.Domain.Profiles;
+using AB.SmokPrzewodnik.Domain.Routing;
 using AB.SmokPrzewodnik.Domain.Spatial;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -26,6 +27,8 @@ internal sealed class DbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<DataSource> DataSources => Set<DataSource>();
 
     public DbSet<NavigationSession> NavigationSessions => Set<NavigationSession>();
+    public DbSet<NavigationEvent> NavigationEvents => Set<NavigationEvent>();
+    public DbSet<RoutePlan> RoutePlans => Set<RoutePlan>();
 
     private readonly IConfiguration _configuration;
 

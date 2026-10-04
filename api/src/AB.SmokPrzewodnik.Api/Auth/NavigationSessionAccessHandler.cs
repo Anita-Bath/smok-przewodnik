@@ -11,10 +11,15 @@ internal sealed class NavigationSessionAccessHandler(INavigationTokenService nav
           AuthorizationHandlerContext context,
           NavigationSessionAccessRequirement requirement)
     {
-        if (context.Resource is not HttpContext httpContext ||
-            !Guid.TryParse(
-                httpContext.Request.RouteValues["sessionId"]?.ToString(),
-                out var requestedSessionId))
+        var httpContext = context.Resource as HttpContext;
+        var requestedSessionId = context.Resource switch
+        {
+            Guid id => id,
+            HttpContext value when Guid.TryParse(
+                value.Request.RouteValues["sessionId"]?.ToString(), out var id) => id,
+            _ => Guid.Empty
+        };
+        if (requestedSessionId == Guid.Empty)
         {
             return;
         }
@@ -37,7 +42,7 @@ internal sealed class NavigationSessionAccessHandler(INavigationTokenService nav
         if (await navTokenService.IsActiveAndOwnedByAsync(
             requestedSessionId,
             accountId,
-            httpContext.RequestAborted))
+            httpContext?.RequestAborted ?? CancellationToken.None))
         {
             context.Succeed(requirement);
         }
