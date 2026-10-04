@@ -24,6 +24,9 @@ public static class AuthExtension
             {
                 builder.Authority = authority;
                 builder.Audience = audience;
+                builder.RequireHttpsMetadata = false;
+
+                builder.MapInboundClaims = false;
 
                 builder.MapInboundClaims = false;
 

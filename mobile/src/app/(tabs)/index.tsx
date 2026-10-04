@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,66 +6,276 @@ import {
   TextInput,
   ScrollView,
   Pressable,
+  ActivityIndicator,
+  LayoutAnimation,
+  Platform,
+  Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AccessibilityToggle } from '@/components/AccessibilityToggle';
 import { FilterChip } from '@/components/FilterChip';
 import { MapViewer } from '@/components/MapViewer';
 import { PlaceBottomSheet } from '@/components/PlaceBottomSheet';
-import { BrandColors, Spacing } from '@/constants/theme';
+import { BrandColors } from '@/constants/theme';
 import { KRAKOW_PLACES, KrakowPlace } from '@/services/krakowData';
+import { searchKrakowAddresses, AddressSearchResult } from '@/services/geocodingService';
 import { useAccessibility } from '@/context/AccessibilityContext';
+import {
+  calculateDistanceMeters,
+  formatDistance,
+  calculateKrakowRoutes,
+  fetchLiveKrakowRoutes,
+  RoutePlanResult,
+} from '@/services/routingService';
 
 export default function ExploreScreen() {
   const router = useRouter();
-  const { isHighContrast, isGuest, user } = useAccessibility();
+  const {
+    isHighContrast,
+    isDark,
+    isGuest,
+    user,
+    userLocation,
+    constraints,
+    transportCapabilities,
+  } = useAccessibility();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<string>('no_stairs');
-  const [selectedPlace, setSelectedPlace] = useState<KrakowPlace>(KRAKOW_PLACES[0]); // default to Wawel
+  const [suggestions, setSuggestions] = useState<AddressSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<string>('all');
+
+  // Bottom Sheet state: starts hidden until user selects a place or searches!
+  const [selectedPlace, setSelectedPlace] = useState<KrakowPlace | null>(null);
+  const [isSheetVisible, setIsSheetVisible] = useState(false);
+  const [isSheetExpanded, setIsSheetExpanded] = useState(false);
+
+  // Route preview state directly on map
+  const [routePlan, setRoutePlan] = useState<RoutePlanResult | null>(null);
+  const [selectedRouteAltId, setSelectedRouteAltId] = useState<string>('route-easiest');
+
+  const activeRouteAlternative = useMemo(() => {
+    if (!routePlan) return null;
+    return (
+      routePlan.alternatives.find((a) => a.id === selectedRouteAltId) ||
+      routePlan.alternatives[0]
+    );
+  }, [routePlan, selectedRouteAltId]);
+
+  const activeRoute = useMemo(() => {
+    if (!activeRouteAlternative) return null;
+    return {
+      coordinates: activeRouteAlternative.coordinates,
+      profileType: activeRouteAlternative.profileType,
+    };
+  }, [activeRouteAlternative]);
+
   const [filteredPlaces, setFilteredPlaces] = useState<KrakowPlace[]>(KRAKOW_PLACES);
+  const [allPlaces, setAllPlaces] = useState<KrakowPlace[]>(KRAKOW_PLACES);
+  const [mapScanCenter, setMapScanCenter] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [showScanButton, setShowScanButton] = useState(false);
+  const [currentMapCenter, setCurrentMapCenter] = useState<{ latitude: number; longitude: number } | null>(null);
+
+  useEffect(() => {
+    import('@/services/krakowData').then(({ fetchKrakowPlacesFromDB }) => {
+      fetchKrakowPlacesFromDB().then((places) => {
+        if (places && places.length > 0) {
+          setAllPlaces(places);
+        }
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!mapScanCenter) {
+      if (userLocation) {
+        setMapScanCenter(userLocation);
+      } else {
+        setMapScanCenter({ latitude: 50.0614, longitude: 19.9383 });
+      }
+    }
+  }, [userLocation, mapScanCenter]);
+
+  useEffect(() => {
+    let filtered = allPlaces;
+
+    if (activeFilter === 'no_stairs') {
+      filtered = filtered.filter((p) => p.hasStepFreeAccess);
+    } else if (activeFilter === 'toilets') {
+      filtered = filtered.filter((p) => p.hasAccessibleToilet);
+    } else if (activeFilter === 'loop') {
+      filtered = filtered.filter((p) => p.hasInductionLoop);
+    } else if (activeFilter === 'elevators') {
+      filtered = filtered.filter((p) => p.hasElevator);
+    }
+
+    setFilteredPlaces(filtered);
+  }, [allPlaces, activeFilter]);
   const [locatedNotice, setLocatedNotice] = useState<string | null>(null);
+  const [searchPin, setSearchPin] = useState<{ coords: { latitude: number; longitude: number }; label: string } | null>(null);
+
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Address search with debounce
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    searchDebounceRef.current = setTimeout(async () => {
+      try {
+        const results = await searchKrakowAddresses(searchQuery);
+        setSuggestions(results);
+      } catch (err) {
+        setSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 250);
+
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  const handleSelectSuggestion = (item: AddressSearchResult) => {
+    Keyboard.dismiss();
+    setSearchQuery(item.title);
+    setSuggestions([]);
+
+    let targetPlace: KrakowPlace;
+
+    if (item.placeData) {
+      targetPlace = item.placeData;
+    } else {
+      // Create synthetic place for searched OpenStreetMap address
+      targetPlace = {
+        id: item.id,
+        name: item.title,
+        address: item.subtitle,
+        distanceFromUserMeters: 450,
+        category: 'cafe',
+        coordinates: item.coordinates,
+        confidenceState: 'unverified',
+        confidenceLabel: 'Wyszukany adres · OpenStreetMap',
+        facts: [
+          {
+            id: 'f1',
+            name: 'Wejście',
+            status: 'to_check',
+            label: 'Wejście: do sprawdzenia w terenie',
+            description: 'Brak zweryfikowanych danych o schodach.',
+          },
+          {
+            id: 'f2',
+            name: 'Nawierzchnia',
+            status: 'to_check',
+            label: 'Nawierzchnia: miejska',
+            description: 'Ulica w centrum Krakowa.',
+          },
+        ],
+        generalNote: 'Adres z bazy OpenStreetMap. Sprawdź dostępność na miejscu.',
+        hasStepFreeAccess: true,
+        hasElevator: false,
+        hasAccessibleToilet: false,
+        hasInductionLoop: false,
+        hasAudioGuidance: false,
+        hasRoughSurfaceNotice: false,
+      };
+    }
+
+    setSelectedPlace(targetPlace);
+    setSearchPin({ coords: item.coordinates, label: item.title });
+
+    // Open sheet in compact mode
+    if (Platform.OS !== 'web') {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    }
+    setIsSheetVisible(true);
+    setIsSheetExpanded(false);
+  };
+
+  const handleSearchSubmit = async () => {
+    Keyboard.dismiss();
+    if (suggestions.length > 0) {
+      handleSelectSuggestion(suggestions[0]);
+    } else if (searchQuery.trim().length >= 2) {
+      setIsSearching(true);
+      try {
+        const results = await searchKrakowAddresses(searchQuery);
+        if (results.length > 0) {
+          handleSelectSuggestion(results[0]);
+        }
+      } catch (err) {
+      } finally {
+        setIsSearching(false);
+      }
+    }
+  };
 
   const handleFilterToggle = (filterKey: string) => {
     const next = activeFilter === filterKey ? '' : filterKey;
     setActiveFilter(next);
+  };
 
-    if (next === 'no_stairs') {
-      setFilteredPlaces(KRAKOW_PLACES.filter((p) => p.hasStepFreeAccess));
-    } else if (next === 'toilets') {
-      setFilteredPlaces(KRAKOW_PLACES.filter((p) => p.hasAccessibleToilet));
-    } else if (next === 'loop') {
-      setFilteredPlaces(KRAKOW_PLACES.filter((p) => p.hasInductionLoop));
-    } else if (next === 'elevators') {
-      setFilteredPlaces(KRAKOW_PLACES.filter((p) => p.hasElevator));
-    } else {
-      setFilteredPlaces(KRAKOW_PLACES);
+  const handleMapMove = (center: { latitude: number; longitude: number }) => {
+    setCurrentMapCenter(center);
+    if (mapScanCenter) {
+      const dist = calculateDistanceMeters(
+        mapScanCenter.latitude, mapScanCenter.longitude,
+        center.latitude, center.longitude
+      );
+      if (dist > 1000) {
+        setShowScanButton(true);
+      } else {
+        setShowScanButton(false);
+      }
     }
   };
 
-  const handleSearch = (text: string) => {
-    setSearchQuery(text);
-    if (!text.trim()) {
-      setFilteredPlaces(KRAKOW_PLACES);
-      return;
+  const handleSelectPlaceFromMap = (place: KrakowPlace) => {
+    setSelectedPlace(place);
+    if (Platform.OS !== 'web') {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     }
-    const filtered = KRAKOW_PLACES.filter(
-      (p) =>
-        p.name.toLowerCase().includes(text.toLowerCase()) ||
-        p.address.toLowerCase().includes(text.toLowerCase())
-    );
-    setFilteredPlaces(filtered);
-    if (filtered.length > 0) {
-      setSelectedPlace(filtered[0]);
+    setIsSheetVisible(true);
+    setIsSheetExpanded(true); // Open expanded on marker tap
+  };
+
+  const handleMapBackgroundClick = () => {
+    // When clicking empty map space, dismiss/hide bottom sheet and clear selection
+    if (Platform.OS !== 'web') {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     }
+    setIsSheetExpanded(false);
+    setIsSheetVisible(false);
+    setSelectedPlace(null);
+    setSearchPin(null);
+    setRoutePlan(null);
+    setSuggestions([]);
   };
 
   const handleNavigateToRoute = (place: KrakowPlace) => {
+    setIsSheetVisible(false);
     router.push({
       pathname: '/route-planner',
-      params: { placeId: place.id },
+      params: {
+        placeId: place.id,
+        name: place.name,
+        address: place.address,
+        lat: String(place.coordinates.latitude),
+        lon: String(place.coordinates.longitude),
+      },
     });
   };
 
@@ -92,53 +302,143 @@ export default function ExploreScreen() {
       edges={['top']}
       style={[
         styles.safeArea,
-        { backgroundColor: isHighContrast ? '#FFFFFF' : '#F8FAFC' },
+        {
+          backgroundColor: isHighContrast
+            ? (isDark ? '#000000' : '#FFFFFF')
+            : (isDark ? '#0F172A' : '#F8FAFC'),
+        },
       ]}>
-      {/* Top Search Bar */}
+      {/* Top Search & Filter Container */}
       <View style={styles.topContainer}>
         <View
           style={[
             styles.searchBar,
             {
-              backgroundColor: '#FFFFFF',
-              borderColor: isHighContrast ? '#000000' : '#E2E8F0',
+              backgroundColor: isHighContrast
+                ? (isDark ? '#000000' : '#FFFFFF')
+                : (isDark ? '#1E293B' : '#FFFFFF'),
+              borderColor: isHighContrast
+                ? (isDark ? '#FFFFFF' : '#000000')
+                : (isDark ? '#334155' : '#E2E8F0'),
               borderWidth: isHighContrast ? 2.5 : 1,
             },
           ]}>
           <MaterialCommunityIcons
             name="magnify"
             size={22}
-            color={isHighContrast ? '#000000' : '#64748B'}
+            color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#94A3B8' : '#64748B')}
           />
           <TextInput
-            placeholder="Szukaj miejsc i adresów"
-            placeholderTextColor="#94A3B8"
+            placeholder="Szukaj adresu w Krakowie (np. Floriańska, Grodzka)"
+            placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
             value={searchQuery}
-            onChangeText={handleSearch}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearchSubmit}
+            returnKeyType="search"
             accessible
-            accessibilityLabel="Pole wyszukiwania miejsc i adresów w Krakowie"
+            accessibilityLabel="Wyszukiwarka adresów i obiektów w Krakowie"
             style={[
               styles.searchInput,
               {
-                color: isHighContrast ? '#000000' : '#0F172A',
+                color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : '#0F172A'),
                 fontWeight: isHighContrast ? '700' : '500',
               },
             ]}
           />
-          {searchQuery.length > 0 && (
+          {isSearching && (
+            <ActivityIndicator
+              size="small"
+              color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.primary)}
+              style={{ marginRight: 6 }}
+            />
+          )}
+          {searchQuery.length > 0 && !isSearching && (
             <Pressable
-              onPress={() => handleSearch('')}
+              onPress={() => {
+                setSearchQuery('');
+                setSuggestions([]);
+              }}
               accessible
               accessibilityRole="button"
               accessibilityLabel="Wyczyść wyszukiwanie">
               <MaterialCommunityIcons
                 name="close-circle"
                 size={18}
-                color="#94A3B8"
+                color={isDark ? '#64748B' : '#94A3B8'}
               />
             </Pressable>
           )}
         </View>
+
+        {/* Address Autocomplete Dropdown */}
+        {suggestions.length > 0 && (
+          <View
+            style={[
+              styles.suggestionsCard,
+              {
+                backgroundColor: isHighContrast
+                  ? (isDark ? '#000000' : '#FFFFFF')
+                  : (isDark ? '#1E293B' : '#FFFFFF'),
+                borderColor: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#334155' : '#CBD5E1'),
+                borderWidth: isHighContrast ? 2.5 : 1.5,
+              },
+            ]}>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              style={{ maxHeight: 240 }}>
+              {suggestions.map((item, idx) => (
+                <Pressable
+                  key={item.id}
+                  onPress={() => handleSelectSuggestion(item)}
+                  accessible
+                  accessibilityRole="button"
+                  accessibilityLabel={`Wynik wyszukiwania: ${item.title}, ${item.subtitle}`}
+                  style={[
+                    styles.suggestionRow,
+                    idx < suggestions.length - 1 && styles.suggestionBorder,
+                    {
+                      borderBottomColor: isDark ? '#334155' : '#F1F5F9',
+                    },
+                  ]}>
+                  <MaterialCommunityIcons
+                    name={item.isPoi ? 'castle' : 'map-marker'}
+                    size={20}
+                    color={
+                      isHighContrast
+                        ? (isDark ? '#FFFFFF' : '#000000')
+                        : item.isPoi
+                        ? (isDark ? '#38BDF8' : BrandColors.primary)
+                        : (isDark ? '#2DD4BF' : BrandColors.accentTeal)
+                    }
+                  />
+                  <View style={styles.suggestionTextWrap}>
+                    <Text
+                      style={[
+                        styles.suggestionTitle,
+                        {
+                          color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : '#0F172A'),
+                          fontWeight: isHighContrast ? '800' : '600',
+                        },
+                      ]}>
+                      {item.title}
+                    </Text>
+                    <Text
+                      numberOfLines={1}
+                      style={[
+                        styles.suggestionSubtitle,
+                        { color: isHighContrast ? (isDark ? '#CBD5E1' : '#1E293B') : (isDark ? '#94A3B8' : '#64748B') },
+                      ]}>
+                      {userLocation ? `${formatDistance(calculateDistanceMeters(userLocation, item.coordinates))} · ` : ''}
+                      {item.subtitle}
+                    </Text>
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {/* Filter Pills */}
         <ScrollView
@@ -179,20 +479,28 @@ export default function ExploreScreen() {
             style={[
               styles.userBadge,
               {
-                backgroundColor: isHighContrast ? '#E2F1EE' : '#E6F5F3',
-                borderColor: isHighContrast ? '#005A4E' : '#B2DFDB',
+                backgroundColor: isDark
+                  ? '#1E293B'
+                  : (isHighContrast ? '#E2F1EE' : '#E6F5F3'),
+                borderColor: isDark
+                  ? '#334155'
+                  : (isHighContrast ? '#005A4E' : '#B2DFDB'),
                 borderWidth: isHighContrast ? 2 : 1,
               },
             ]}>
             <MaterialCommunityIcons
               name="account-outline"
               size={16}
-              color={BrandColors.accentTeal}
+              color={isDark ? '#2DD4BF' : BrandColors.accentTeal}
             />
             <Text
               style={[
                 styles.userBadgeText,
-                { color: isHighContrast ? '#004D40' : '#00796B' },
+                {
+                  color: isDark
+                    ? '#2DD4BF'
+                    : (isHighContrast ? '#004D40' : '#00796B'),
+                },
               ]}>
               {isGuest ? 'Tryb gościa' : (user?.name || 'Zalogowany')}
             </Text>
@@ -204,17 +512,29 @@ export default function ExploreScreen() {
             style={[
               styles.locatedBanner,
               {
-                backgroundColor: isHighContrast ? '#E8F5E9' : '#DCFCE7',
-                borderColor: isHighContrast ? '#000000' : '#86EFAC',
+                backgroundColor: isDark
+                  ? '#064E3B'
+                  : (isHighContrast ? '#E8F5E9' : '#DCFCE7'),
+                borderColor: isDark
+                  ? '#059669'
+                  : (isHighContrast ? '#000000' : '#86EFAC'),
                 borderWidth: isHighContrast ? 2 : 1,
               },
             ]}>
-            <MaterialCommunityIcons name="crosshairs-gps" size={16} color="#15803D" />
-            <Text style={styles.locatedNoticeText}>{locatedNotice}</Text>
+            <MaterialCommunityIcons
+              name="crosshairs-gps"
+              size={16}
+              color={isDark ? '#4ADE80' : '#15803D'}
+            />
+            <Text
+              style={[
+                styles.locatedNoticeText,
+                { color: isDark ? '#6EE7B7' : '#15803D' },
+              ]}>
+              {locatedNotice}
+            </Text>
           </View>
         )}
-
-        <AccessibilityToggle />
       </View>
 
       {/* Main Map Viewer with Leaflet & OpenStreetMap */}
@@ -222,23 +542,86 @@ export default function ExploreScreen() {
         <MapViewer
           places={filteredPlaces}
           selectedPlace={selectedPlace}
-          onSelectPlace={(p) => setSelectedPlace(p)}
+          searchPin={searchPin}
+          activeRoute={activeRoute}
+          onSelectPlace={handleSelectPlaceFromMap}
+          onMapClick={handleMapBackgroundClick}
+          onMapMove={handleMapMove}
           onLocateMe={() => {
             setLocatedNotice('Zlokalizowano pozycję GPS w Krakowie');
             setTimeout(() => setLocatedNotice(null), 3500);
           }}
         />
-      </View>
 
-      {/* Bottom Place Card */}
-      {selectedPlace && (
-        <PlaceBottomSheet
-          place={selectedPlace}
-          onNavigateToRoute={handleNavigateToRoute}
-          onViewDetails={handleViewDetails}
-          onAddReport={handleAddReport}
-        />
-      )}
+
+
+        {/* Floating pill to restore sheet if user dismissed it */}
+        {selectedPlace && !isSheetVisible && (
+          <Pressable
+            onPress={() => {
+              if (Platform.OS !== 'web') {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+              }
+              setIsSheetVisible(true);
+              setIsSheetExpanded(false);
+            }}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel={`Pokaż szczegóły dla ${selectedPlace.name}`}
+            style={[
+              styles.restoreSheetPill,
+              {
+                backgroundColor: isHighContrast
+                  ? (isDark ? '#000000' : '#FFFFFF')
+                  : (isDark ? '#1E293B' : '#FFFFFF'),
+                borderColor: isHighContrast
+                  ? (isDark ? '#FFFFFF' : '#000000')
+                  : (isDark ? '#38BDF8' : BrandColors.primary),
+                borderWidth: isHighContrast ? 2.5 : 1.5,
+              },
+            ]}>
+            <MaterialCommunityIcons
+              name="map-marker"
+              size={20}
+              color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.primary)}
+            />
+            <Text
+              style={[
+                styles.restoreSheetText,
+                {
+                  color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#F8FAFC' : BrandColors.primary),
+                  fontWeight: isHighContrast ? '900' : '700',
+                },
+              ]}>
+              Pokaż: {selectedPlace.name}
+            </Text>
+            <MaterialCommunityIcons
+              name="chevron-up"
+              size={20}
+              color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.primary)}
+            />
+          </Pressable>
+        )}
+
+        {/* Interactive Bottom Sheet Floating Overlay */}
+        {selectedPlace && isSheetVisible && (
+          <View style={styles.bottomSheetOverlay}>
+            <PlaceBottomSheet
+              place={selectedPlace}
+              isExpanded={isSheetExpanded}
+              onToggleExpand={() => {
+                setIsSheetExpanded((prev) => !prev);
+              }}
+              onClose={() => {
+                setIsSheetVisible(false);
+              }}
+              onNavigateToRoute={handleNavigateToRoute}
+              onViewDetails={handleViewDetails}
+              onAddReport={handleAddReport}
+            />
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -251,6 +634,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 4,
+    position: 'relative',
+    zIndex: 50,
   },
   searchBar: {
     flexDirection: 'row',
@@ -269,6 +654,41 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     padding: 0,
+  },
+  suggestionsCard: {
+    position: 'absolute',
+    top: 58,
+    left: 16,
+    right: 16,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 20,
+    zIndex: 9999,
+    overflow: 'hidden',
+  },
+  suggestionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  suggestionBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  suggestionTextWrap: {
+    flex: 1,
+  },
+  suggestionTitle: {
+    fontSize: 15,
+  },
+  suggestionSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
   },
   filtersScroll: {
     flexDirection: 'row',
@@ -309,5 +729,131 @@ const styles = StyleSheet.create({
   mapFlex: {
     flex: 1,
     minHeight: 220,
+    position: 'relative',
+  },
+  scanButtonContainer: {
+    position: 'absolute',
+    top: 16,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 100,
+    pointerEvents: 'box-none',
+  },
+  scanButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 24,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  scanButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  bottomSheetOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+  },
+  restoreSheetPill: {
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 6,
+    zIndex: 90,
+    cursor: 'pointer' as any,
+  },
+  restoreSheetText: {
+    fontSize: 14,
+  },
+  routePreviewCard: {
+    position: 'absolute',
+    top: 12,
+    left: 14,
+    right: 14,
+    borderRadius: 20,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 12,
+    zIndex: 110,
+  },
+  routePreviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  routePreviewTitleCol: {
+    flex: 1,
+    marginRight: 8,
+  },
+  routeHeaderBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 3,
+  },
+  routeHeaderBadgeText: {
+    fontSize: 15,
+  },
+  routePreviewMetrics: {
+    fontSize: 14,
+  },
+  closeRouteBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  routeChipsScroll: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  routeAltChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 16,
+    marginRight: 8,
+  },
+  routeAltChipText: {
+    fontSize: 12,
+  },
+  navStartBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  navStartBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
   },
 });

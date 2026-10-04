@@ -14,7 +14,36 @@ interface FilterChipProps {
 }
 
 export function FilterChip({ label, selected = false, onPress, icon }: FilterChipProps) {
-  const { isHighContrast } = useAccessibility();
+  const { isHighContrast, isDark } = useAccessibility();
+
+  const getBgColor = () => {
+    if (selected) {
+      if (isHighContrast) return isDark ? '#FFFFFF' : '#000000';
+      return isDark ? '#0369A1' : BrandColors.primaryLight;
+    }
+    if (isHighContrast) return isDark ? '#000000' : '#FFFFFF';
+    return isDark ? '#1E293B' : '#FFFFFF';
+  };
+
+  const getBorderColor = () => {
+    if (selected) {
+      if (isHighContrast) return isDark ? '#FFFFFF' : '#000000';
+      return isDark ? '#38BDF8' : BrandColors.primary;
+    }
+    if (isHighContrast) return isDark ? '#FFFFFF' : '#333333';
+    return isDark ? '#334155' : '#CBD5E1';
+  };
+
+  const getTextColor = () => {
+    if (selected) {
+      if (isHighContrast) return isDark ? '#000000' : '#FFFFFF';
+      return isDark ? '#FFFFFF' : BrandColors.primary;
+    }
+    if (isHighContrast) return isDark ? '#FFFFFF' : '#000000';
+    return isDark ? '#E2E8F0' : '#334155';
+  };
+
+  const textColor = getTextColor();
 
   return (
     <Pressable
@@ -26,12 +55,8 @@ export function FilterChip({ label, selected = false, onPress, icon }: FilterChi
       style={({ pressed }) => [
         styles.chip,
         {
-          backgroundColor: selected
-            ? (isHighContrast ? '#000000' : BrandColors.primaryLight)
-            : '#FFFFFF',
-          borderColor: selected
-            ? (isHighContrast ? '#000000' : BrandColors.primary)
-            : (isHighContrast ? '#333333' : '#CBD5E1'),
+          backgroundColor: getBgColor(),
+          borderColor: getBorderColor(),
           borderWidth: isHighContrast ? 2.5 : 1.5,
           opacity: pressed ? 0.75 : 1,
         },
@@ -40,14 +65,14 @@ export function FilterChip({ label, selected = false, onPress, icon }: FilterChi
         <MaterialCommunityIcons
           name="check"
           size={18}
-          color={isHighContrast ? '#FFFFFF' : BrandColors.primary}
+          color={textColor}
         />
       ) : (
         icon && (
           <MaterialCommunityIcons
             name={icon}
             size={18}
-            color={isHighContrast ? '#000000' : '#475569'}
+            color={textColor}
           />
         )
       )}
@@ -55,9 +80,7 @@ export function FilterChip({ label, selected = false, onPress, icon }: FilterChi
         style={[
           styles.text,
           {
-            color: selected
-              ? (isHighContrast ? '#FFFFFF' : BrandColors.primary)
-              : (isHighContrast ? '#000000' : '#334155'),
+            color: textColor,
             fontWeight: selected || isHighContrast ? '700' : '600',
           },
         ]}>
