@@ -33,13 +33,13 @@ export default function ProfileScreen() {
   } = useAccessibility();
 
   const constraintItems = [
-    { key: 'stairs', label: 'Schody i stopnie' },
-    { key: 'curb', label: 'Wysokie krawężniki' },
-    { key: 'rough_surface', label: 'Nierówny bruk / kocie łby' },
-    { key: 'steep_slope', label: 'Strome podjazdy (>6%)' },
-    { key: 'elevator_unavailable', label: 'Brak windy na peronach' },
-    { key: 'crowding', label: 'Zatłoczone przejścia' },
-    { key: 'missing_audio_signal', label: 'Brak sygnalizacji dźwiękowej' },
+    { key: 'stairs', label: 'Schody i strome stopnie' },
+    { key: 'curb', label: 'Wysokie krawężniki i progi' },
+    { key: 'rough_surface', label: 'Nierówny bruk (np. kocie łby)' },
+    { key: 'steep_slope', label: 'Strome podjazdy (nachylenie >6%)' },
+    { key: 'elevator_unavailable', label: 'Stacje przesiadkowe bez wind' },
+    { key: 'crowding', label: 'Wąskie, zatłoczone przejścia' },
+    { key: 'missing_audio_signal', label: 'Przejścia bez sygnalizacji dźwiękowej' },
   ];
 
   const cycleConstraint = (key: string) => {

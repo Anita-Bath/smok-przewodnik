@@ -528,7 +528,7 @@ export function generateLeafletHtml(
         clearRoute();
       } else if (data.type === 'FOCUS_MANEUVER') {
         if (data.location) {
-          map.flyTo([data.location[0], data.location[1]], 17, { animate: true, duration: 0.6 });
+          map.setView([data.location[0], data.location[1]], 17, { animate: true, duration: 0.5 });
         }
       }
     }
