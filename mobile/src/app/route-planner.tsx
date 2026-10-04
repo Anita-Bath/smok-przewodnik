@@ -35,21 +35,31 @@ export default function RoutePlannerScreen() {
     userLocation,
   } = useAccessibility();
 
-  const destination = React.useMemo(() => {
-    const found = KRAKOW_PLACES.find((p) => p.id === placeId);
-    if (found) return found;
-    if (lat && lon) {
-      return {
-        id: placeId || 'custom-destination',
+  const [destination, setDestination] = useState<KrakowPlace>(KRAKOW_PLACES.find((p) => p.id === placeId) || KRAKOW_PLACES[0]);
+
+  useEffect(() => {
+    if (placeId) {
+      const found = KRAKOW_PLACES.find((p) => p.id === placeId);
+      if (found) {
+        setDestination(found);
+      } else {
+        import('@/services/krakowData').then(({ fetchPlaceById }) => {
+          fetchPlaceById(placeId).then((data) => {
+            if (data) {
+              setDestination(data);
+            }
+          });
+        });
+      }
+    } else if (lat && lon) {
+      setDestination({
+        id: 'custom-destination',
         name: name || 'Wybrany punkt w Krakowie',
         address: address || 'Kraków',
         distanceFromUserMeters: 500,
-        category: 'cafe' as const,
-        coordinates: {
-          latitude: parseFloat(lat),
-          longitude: parseFloat(lon),
-        },
-        confidenceState: 'unverified' as const,
+        category: 'cafe',
+        coordinates: { latitude: parseFloat(lat), longitude: parseFloat(lon) },
+        confidenceState: 'unverified',
         confidenceLabel: 'Punkt z mapy',
         facts: [],
         generalNote: 'Nawigacja do wybranego punktu.',
@@ -59,10 +69,9 @@ export default function RoutePlannerScreen() {
         hasInductionLoop: false,
         hasAudioGuidance: false,
         hasRoughSurfaceNotice: false,
-      };
+      } as any);
     }
-    return KRAKOW_PLACES[0];
-  }, [placeId, name, address, lat, lon]);
+  }, [placeId, lat, lon, name, address]);
 
   const [planResult, setPlanResult] = useState<RoutePlanResult>(() =>
     calculateKrakowRoutes(destination, constraints, transportCapabilities, userLocation)
