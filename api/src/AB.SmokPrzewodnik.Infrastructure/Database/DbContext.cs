@@ -1,3 +1,4 @@
+using AB.SmokPrzewodnik.Domain.Navigation;
 using AB.SmokPrzewodnik.Domain.Planning;
 using AB.SmokPrzewodnik.Domain.Profiles;
 using AB.SmokPrzewodnik.Domain.Spatial;
@@ -23,6 +24,8 @@ internal sealed class DbContext : Microsoft.EntityFrameworkCore.DbContext
 
     public DbSet<City> Cities => Set<City>();
     public DbSet<DataSource> DataSources => Set<DataSource>();
+
+    public DbSet<NavigationSession> NavigationSessions => Set<NavigationSession>();
 
     private readonly IConfiguration _configuration;
 

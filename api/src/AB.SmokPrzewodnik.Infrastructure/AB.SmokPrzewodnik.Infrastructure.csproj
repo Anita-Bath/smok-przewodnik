@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../AB.SmokPrzewodnik.Application/AB.SmokPrzewodnik.Application.csproj" />
+    <ProjectReference Include="../AB.SmokPrzewodnik.Common/AB.SmokPrzewodnik.Common.csproj" />
     <ProjectReference Include="../AB.SmokPrzewodnik.Domain/AB.SmokPrzewodnik.Domain.csproj" />
   </ItemGroup>
 </Project>

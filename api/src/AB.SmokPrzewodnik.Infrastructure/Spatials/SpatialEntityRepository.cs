@@ -80,14 +80,20 @@ internal sealed class SpatialEntityRepository : ISpatialEntityRepository
                 entity.Id.CompareTo(cursor.LastId) > 0);
         }
 
-        var rows = await query
+        query = query
             .OrderBy(entity => entity.UpdatedAt ?? entity.CreatedAt)
-            .ThenBy(entity => entity.Id)
-            .Take(page.Limit + 1)
+            .ThenBy(entity => entity.Id);
+
+        if (page.Limit.HasValue)
+        {
+            query = query.Take(page.Limit.Value + 1);
+        }
+
+        var rows = await query
             .ToListAsync(cancellationToken);
 
         var hasNextPage = rows.Count > page.Limit;
-        var items = rows.Take(page.Limit).ToArray();
+        var items = (page.Limit.HasValue ? rows.Take(page.Limit.Value) : rows).ToArray();
         var nextCursor = hasNextPage
             ? CreateCursor(items[^1], effectiveCriteria, cursorScope, filterHash)
             : null;
