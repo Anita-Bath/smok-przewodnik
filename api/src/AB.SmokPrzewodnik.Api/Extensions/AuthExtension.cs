@@ -1,5 +1,9 @@
+using System.Security.Claims;
+using AB.SmokPrzewodnik.Api.Auth;
+using AB.SmokPrzewodnik.Api.Auth.NavigationToken;
 using AB.SmokPrzewodnik.Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AB.SmokPrzewodnik.Api.Extensions;
@@ -21,6 +25,8 @@ public static class AuthExtension
                 builder.Authority = authority;
                 builder.Audience = audience;
 
+                builder.MapInboundClaims = false;
+
                 builder.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -28,9 +34,11 @@ public static class AuthExtension
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     NameClaimType = "sub",
+                    RoleClaimType = "role",
                     ClockSkew = TimeSpan.FromSeconds(30)
                 };
-            });
+            })
+            .AddNavigationToken();
 
         services.AddAuthorization(options =>
         {
@@ -39,7 +47,22 @@ public static class AuthExtension
                 policy.RequireAuthenticatedUser();
                 policy.RequireClaim("role", claimRole);
             });
+
+            options.AddPolicy(AppConsts.NavigationAuthPolicyName, policy =>
+            {
+                policy.AddAuthenticationSchemes(
+                    JwtBearerDefaults.AuthenticationScheme,
+                    NavigationTokenDefaults.AuthenticationScheme);
+
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(
+                    new NavigationSessionAccessRequirement(claimRole));
+            });
         });
+
+        services.AddScoped<
+            IAuthorizationHandler,
+            NavigationSessionAccessHandler>();
 
         return services;
     }
