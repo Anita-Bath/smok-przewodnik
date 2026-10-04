@@ -9,5 +9,6 @@ public sealed record SpatialEntityListItemDto(
     LifecycleState State,
     ConfidenceSummaryDto Confidence,
     GeometryDto Geometry,
+    IReadOnlyList<TranslationDto> Translations,
     DateTimeOffset CreatedAt,
     DateTimeOffset? UpdatedAt);

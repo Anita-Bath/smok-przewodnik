@@ -6,16 +6,41 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AccessibilityToggle } from '@/components/AccessibilityToggle';
 import { AccessibleButton } from '@/components/AccessibleButton';
 import { BrandColors, Spacing, MaxContentWidth } from '@/constants/theme';
-import { KRAKOW_PLACES } from '@/services/krakowData';
+import { KRAKOW_PLACES, KrakowPlace, fetchPlaceById } from '@/services/krakowData';
 import { useAccessibility } from '@/context/AccessibilityContext';
 import { calculateDistanceMeters, formatDistance } from '@/services/routingService';
+
+import { useEffect, useState } from 'react';
 
 export default function PlaceDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isDark, isHighContrast, savedPlaceIds, toggleSavePlace, isGuest, userLocation } = useAccessibility();
 
-  const place = KRAKOW_PLACES.find((p) => p.id === id) || KRAKOW_PLACES[0];
+  const [place, setPlace] = useState<KrakowPlace | null>(
+    KRAKOW_PLACES.find((p) => p.id === id) || null
+  );
+
+  useEffect(() => {
+    if (!place && id) {
+      fetchPlaceById(id as string).then((data) => {
+        if (data) {
+          setPlace(data);
+        } else {
+          setPlace(KRAKOW_PLACES[0]); // fallback
+        }
+      });
+    }
+  }, [id]);
+
+  if (!place) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Ładowanie...</Text>
+      </View>
+    );
+  }
+
   const isSaved = savedPlaceIds.includes(place.id);
   const distanceMeters = userLocation
     ? calculateDistanceMeters(userLocation, place.coordinates)

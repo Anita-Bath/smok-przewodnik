@@ -44,7 +44,7 @@ export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<AddressSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<string>('no_stairs');
+  const [activeFilter, setActiveFilter] = useState<string>('all');
 
   // Bottom Sheet state: starts hidden until user selects a place or searches!
   const [selectedPlace, setSelectedPlace] = useState<KrakowPlace | null>(null);
@@ -110,20 +110,8 @@ export default function ExploreScreen() {
       filtered = filtered.filter((p) => p.hasElevator);
     }
 
-    if (mapScanCenter) {
-      filtered = filtered.filter((p) => {
-        const dist = calculateDistanceMeters(
-          mapScanCenter.latitude,
-          mapScanCenter.longitude,
-          p.coordinates.latitude,
-          p.coordinates.longitude
-        );
-        return dist <= 2000; // 2km radius
-      });
-    }
-
     setFilteredPlaces(filtered);
-  }, [allPlaces, activeFilter, mapScanCenter]);
+  }, [allPlaces, activeFilter]);
   const [locatedNotice, setLocatedNotice] = useState<string | null>(null);
   const [searchPin, setSearchPin] = useState<{ coords: { latitude: number; longitude: number }; label: string } | null>(null);
 
@@ -265,17 +253,15 @@ export default function ExploreScreen() {
   };
 
   const handleMapBackgroundClick = () => {
-    // When clicking empty map space, dismiss/hide bottom sheet
-    if (isSheetVisible) {
-      if (Platform.OS !== 'web') {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      }
-      if (isSheetExpanded) {
-        setIsSheetExpanded(false); // First collapse to peek
-      } else {
-        setIsSheetVisible(false); // Then hide
-      }
+    // When clicking empty map space, dismiss/hide bottom sheet and clear selection
+    if (Platform.OS !== 'web') {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     }
+    setIsSheetExpanded(false);
+    setIsSheetVisible(false);
+    setSelectedPlace(null);
+    setSearchPin(null);
+    setRoutePlan(null);
     setSuggestions([]);
   };
 
@@ -553,42 +539,6 @@ export default function ExploreScreen() {
 
       {/* Main Map Viewer with Leaflet & OpenStreetMap */}
       <View style={styles.mapFlex}>
-        {showScanButton && (
-          <View style={styles.scanButtonContainer}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.scanButton,
-                {
-                  backgroundColor: isHighContrast ? (isDark ? '#000000' : '#FFFFFF') : (isDark ? '#1E293B' : '#FFFFFF'),
-                  borderColor: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.primary),
-                  borderWidth: isHighContrast ? 3 : 2,
-                  opacity: pressed ? 0.8 : 1,
-                  cursor: 'pointer' as any,
-                },
-              ]}
-              onPress={() => {
-                if (currentMapCenter) {
-                  setMapScanCenter(currentMapCenter);
-                  setShowScanButton(false);
-                }
-              }}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel="Skanuj ten obszar">
-              <MaterialCommunityIcons 
-                name="refresh" 
-                size={20} 
-                color={isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.primary)} 
-              />
-              <Text style={[
-                styles.scanButtonText,
-                { color: isHighContrast ? (isDark ? '#FFFFFF' : '#000000') : (isDark ? '#38BDF8' : BrandColors.primary) }
-              ]}>
-                Szukaj w tym obszarze
-              </Text>
-            </Pressable>
-          </View>
-        )}
         <MapViewer
           places={filteredPlaces}
           selectedPlace={selectedPlace}
