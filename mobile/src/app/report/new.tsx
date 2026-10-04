@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-nati
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { AccessibilityToggle } from '@/components/AccessibilityToggle';
 import { AccessibleInput } from '@/components/AccessibleInput';
 import { AccessibleButton } from '@/components/AccessibleButton';
@@ -29,7 +30,7 @@ export default function NewReportScreen() {
     { key: 'elevator_broken', label: 'Awaria windy', icon: 'elevator-down' },
     { key: 'stairs_blocked', label: 'Schody bez podjazdu', icon: 'stairs' },
     { key: 'sidewalk_blocked', label: 'Zastawiony chodnik / koperta', icon: 'car-off' },
-    { key: 'rough_surface', label: 'Remont nawierzchni / dziury', icon: 'alert-triangle' },
+    { key: 'rough_surface', label: 'Remont nawierzchni / dziury', icon: 'alert' },
     { key: 'sound_missing', label: 'Awaria sygnalizacji dźwiękowej', icon: 'volume-off' },
   ];
 
@@ -62,6 +63,29 @@ export default function NewReportScreen() {
     } catch (e) {
       console.error(e);
       alert('Wystąpił błąd podczas wysyłania zgłoszenia.');
+    }
+  };
+
+  const handlePickPhoto = async () => {
+    if (hasPhoto) {
+      setHasPhoto(false);
+      return;
+    }
+    
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        setHasPhoto(true);
+      }
+    } catch (e) {
+      console.error('Błąd podczas wybierania zdjęcia:', e);
+      Alert.alert('Błąd', 'Nie udało się otworzyć galerii.');
     }
   };
 
@@ -278,7 +302,7 @@ export default function NewReportScreen() {
 
               {/* Photo Simulation */}
               <Pressable
-                onPress={() => setHasPhoto(!hasPhoto)}
+                onPress={handlePickPhoto}
                 accessible
                 accessibilityRole="button"
                 accessibilityLabel="Dołącz zdjęcie przeszkody"
