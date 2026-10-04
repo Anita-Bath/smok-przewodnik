@@ -1,5 +1,11 @@
 # Nazwa drużyny: Anita Bath
 ## Nazwa zadania: Kraków bez barier
+
+## Uruchomienie projektu
+
+Pełna instrukcja przygotowania zależności oraz uruchomienia API i aplikacji
+mobilnej znajduje się w [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
 ### Uczestnicy: 
 - Michał Dudnik
 - Jakub Wójtowicz
