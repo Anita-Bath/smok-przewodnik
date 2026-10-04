@@ -20,10 +20,7 @@ public static class AuthExtension
             {
                 builder.Authority = authority;
                 builder.Audience = audience;
-<<<<<<< HEAD
                 builder.RequireHttpsMetadata = false;
-=======
->>>>>>> origin/master
 
                 builder.TokenValidationParameters = new TokenValidationParameters
                 {
