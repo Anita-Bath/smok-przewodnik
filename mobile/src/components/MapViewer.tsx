@@ -35,6 +35,7 @@ export function MapViewer({
 }: MapViewerProps) {
   const { isHighContrast, isDark, userLocation, setUserLocation, activePresetId } = useAccessibility();
   const webViewRef = useRef<WebView>(null);
+  const shouldFollowUserRef = useRef(true);
   const [isLocating, setIsLocating] = useState(false);
 
   // Generate initial HTML ONCE with useMemo
@@ -61,6 +62,10 @@ export function MapViewer({
         if (onMapMove) {
           onMapMove({ latitude: data.lat, longitude: data.lng });
         }
+      } else if (data.type === 'MAP_INTERACTION') {
+        if (!isAutoFollowing) {
+          shouldFollowUserRef.current = false;
+        }
       } else if (data.type === 'MAP_READY') {
         if (webViewRef.current) {
           const jsDark = `window.postMessage(JSON.stringify({ type: 'SET_DARK_MODE', enabled: ${isDark} }), '*'); true;`;
@@ -69,7 +74,9 @@ export function MapViewer({
           webViewRef.current.injectJavaScript(jsHc);
 
           if (userLocation) {
-            const pan = isAutoFollowing || (!selectedPlace && !searchPin && !activeRoute);
+            const pan = isAutoFollowing || (
+              shouldFollowUserRef.current && !selectedPlace && !searchPin && !activeRoute
+            );
             const jsLoc = `window.postMessage(JSON.stringify({ type: 'SET_USER_LOCATION', coords: ${JSON.stringify(userLocation)}, panToUser: ${pan} }), '*'); true;`;
             webViewRef.current.injectJavaScript(jsLoc);
           }
@@ -101,7 +108,9 @@ export function MapViewer({
   // Sync userLocation changes to WebView
   useEffect(() => {
     if (webViewRef.current && userLocation) {
-      const pan = isAutoFollowing || (!selectedPlace && !searchPin && !activeRoute);
+      const pan = isAutoFollowing || (
+        shouldFollowUserRef.current && !selectedPlace && !searchPin && !activeRoute
+      );
       const js = `window.postMessage(JSON.stringify({ type: 'SET_USER_LOCATION', coords: ${JSON.stringify(userLocation)}, panToUser: ${pan} }), '*'); true;`;
       webViewRef.current.injectJavaScript(js);
     }
@@ -168,6 +177,7 @@ export function MapViewer({
 
   // Handle "Lokalizuj mnie" with actual GPS geolocation
   const handleLocateMe = async () => {
+    shouldFollowUserRef.current = true;
     setIsLocating(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();

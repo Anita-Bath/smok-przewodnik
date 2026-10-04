@@ -28,10 +28,10 @@ internal sealed class SpatialEntityRepository : ISpatialEntityRepository
         Guid id,
         CancellationToken cancellationToken) =>
         _dbContext.SpatialEntities
-            .AsNoTracking()
             .AsSplitQuery()
             .Include(entity => entity.Details)
             .Include(entity => entity.Translations)
+            .Include(entity => entity.AccessibilityFacts)
             .SingleOrDefaultAsync(entity => entity.Id == id, cancellationToken);
 
     public async Task<CursorPage<SpatialEntity>> FindAsync(
@@ -103,7 +103,6 @@ internal sealed class SpatialEntityRepository : ISpatialEntityRepository
 
     public async Task UpdateAsync(SpatialEntity aggregate, CancellationToken cancellationToken)
     {
-        _dbContext.SpatialEntities.Update(aggregate);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 

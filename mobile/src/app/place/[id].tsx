@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AccessibilityToggle } from '@/components/AccessibilityToggle';
@@ -9,8 +9,6 @@ import { BrandColors, Spacing, MaxContentWidth } from '@/constants/theme';
 import { KRAKOW_PLACES, KrakowPlace, fetchPlaceById } from '@/services/krakowData';
 import { useAccessibility } from '@/context/AccessibilityContext';
 import { calculateDistanceMeters, formatDistance } from '@/services/routingService';
-
-import { useEffect, useState } from 'react';
 
 export default function PlaceDetailScreen() {
   const router = useRouter();
@@ -21,17 +19,22 @@ export default function PlaceDetailScreen() {
     KRAKOW_PLACES.find((p) => p.id === id) || null
   );
 
-  useEffect(() => {
-    if (!place && id) {
-      fetchPlaceById(id as string).then((data) => {
-        if (data) {
-          setPlace(data);
-        } else {
-          setPlace(KRAKOW_PLACES[0]); // fallback
-        }
-      });
-    }
-  }, [id]);
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+
+      if (id) {
+        fetchPlaceById(id).then((data) => {
+          if (!active) return;
+          setPlace((current) => data ?? current ?? KRAKOW_PLACES[0]);
+        });
+      }
+
+      return () => {
+        active = false;
+      };
+    }, [id]),
+  );
 
   if (!place) {
     return (

@@ -116,5 +116,8 @@ public sealed class GetSpatialEntitiesQueryHandlerTests
             CancellationToken = cancellationToken;
             return Task.FromResult(_result);
         }
+
+        public Task UpdateAsync(SpatialEntity aggregate, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 }

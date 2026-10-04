@@ -32,6 +32,12 @@ public sealed class PlaceAndEventQueryHandlerTests
         Assert.Equal("pl-PL", translation.Locale);
         Assert.Equal("Toaleta", translation.Name);
         Assert.Equal("Dostepna toaleta", translation.Description);
+        var fact = Assert.Single(result.AccessibilityFacts);
+        Assert.Equal("elevator_broken", fact.AttributeCode);
+        Assert.Equal("boolean", fact.Value.Kind);
+        Assert.True(fact.Value.BooleanValue);
+        Assert.Equal(DateTimeOffset.Parse("2026-10-03T10:00:00Z"), fact.ObservedAt);
+        Assert.Equal(0.5m, fact.ConfidenceWeight);
     }
 
     [Fact]
@@ -122,6 +128,16 @@ public sealed class PlaceAndEventQueryHandlerTests
             new Uri("https://example.test/place")), at);
         entity.UpsertTranslation(new EntityTranslation(
             Guid.NewGuid(), entity.Id, "pl-PL", "Toaleta", "Dostepna toaleta"), at);
+        entity.AddAccessibilityFact(new AccessibilityFact(
+            Guid.NewGuid(),
+            new AccessibilityFactTarget.SpatialEntity(entity.Id),
+            new Code("elevator_broken"),
+            new AccessibilityValue.Boolean(true),
+            new EvidenceReference.Observation(Guid.NewGuid()),
+            at,
+            at,
+            null,
+            0.5m), at);
         return entity;
     }
 
@@ -183,5 +199,8 @@ public sealed class PlaceAndEventQueryHandlerTests
             Page = page;
             return Task.FromResult(_page);
         }
+
+        public Task UpdateAsync(SpatialEntity aggregate, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 }

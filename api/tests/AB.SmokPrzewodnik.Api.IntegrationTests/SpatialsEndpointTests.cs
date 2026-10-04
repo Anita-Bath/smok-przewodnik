@@ -295,6 +295,9 @@ public sealed class SpatialsEndpointTests
 
             return Task.FromResult(_page);
         }
+
+        public Task UpdateAsync(SpatialEntity aggregate, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 
     private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider

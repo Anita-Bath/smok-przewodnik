@@ -320,6 +320,19 @@ export function generateLeafletHtml(
       sendToParent(JSON.stringify({ type: 'MAP_MOVED', lat: c.lat, lng: c.lng }));
     });
 
+    function reportMapInteraction() {
+      sendToParent(JSON.stringify({ type: 'MAP_INTERACTION' }));
+    }
+
+    var mapContainer = map.getContainer();
+    if (window.PointerEvent) {
+      mapContainer.addEventListener('pointerdown', reportMapInteraction, { passive: true });
+    } else {
+      mapContainer.addEventListener('touchstart', reportMapInteraction, { passive: true });
+      mapContainer.addEventListener('mousedown', reportMapInteraction, { passive: true });
+    }
+    mapContainer.addEventListener('wheel', reportMapInteraction, { passive: true });
+
     function getIconGlyph(cat) {
       if (cat === 'monument') return '🏰';
       if (cat === 'transit') return '🚆';

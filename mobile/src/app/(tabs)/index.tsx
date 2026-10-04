@@ -191,6 +191,7 @@ export default function ExploreScreen() {
         hasInductionLoop: false,
         hasAudioGuidance: false,
         hasRoughSurfaceNotice: false,
+        wheelchairAccess: 'unknown',
       };
     }
 
@@ -232,8 +233,8 @@ export default function ExploreScreen() {
     setCurrentMapCenter(center);
     if (mapScanCenter) {
       const dist = calculateDistanceMeters(
-        mapScanCenter.latitude, mapScanCenter.longitude,
-        center.latitude, center.longitude
+        mapScanCenter,
+        center,
       );
       if (dist > 1000) {
         setShowScanButton(true);

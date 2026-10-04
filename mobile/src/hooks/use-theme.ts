@@ -4,15 +4,11 @@ import { useAccessibility } from '@/context/AccessibilityContext';
 
 export function useTheme() {
   const scheme = useColorScheme();
+  const { isHighContrast } = useAccessibility();
   const baseTheme = scheme === 'dark' ? 'dark' : 'light';
-  
-  try {
-    const { isHighContrast } = useAccessibility();
-    if (isHighContrast) {
-      return baseTheme === 'dark' ? Colors.highContrastDark : Colors.highContrastLight;
-    }
-  } catch {
-    // In case hook is called outside provider during early bootstrap
+
+  if (isHighContrast) {
+    return baseTheme === 'dark' ? Colors.highContrastDark : Colors.highContrastLight;
   }
 
   return Colors[baseTheme];

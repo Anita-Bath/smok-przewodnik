@@ -16,6 +16,7 @@ interface MapViewerProps {
   searchPin?: { coords: { latitude: number; longitude: number }; label: string } | null;
   activeRoute?: { coordinates: [number, number][]; profileType?: string } | null;
   focusedManeuver?: [number, number] | null;
+  isAutoFollowing?: boolean;
 }
 
 export function MapViewer({
@@ -27,9 +28,11 @@ export function MapViewer({
   searchPin,
   activeRoute,
   focusedManeuver,
+  isAutoFollowing = false,
 }: MapViewerProps) {
   const { isHighContrast, isDark, userLocation, setUserLocation } = useAccessibility();
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const shouldFollowUserRef = useRef(true);
   const [isLocating, setIsLocating] = useState(false);
   const isMapReadyRef = useRef(false);
 
@@ -61,6 +64,10 @@ export function MapViewer({
           if (onMapClick) {
             onMapClick();
           }
+        } else if (data.type === 'MAP_INTERACTION') {
+          if (!isAutoFollowing) {
+            shouldFollowUserRef.current = false;
+          }
         } else if (data.type === 'MAP_READY') {
           isMapReadyRef.current = true;
           // Sync current states
@@ -70,7 +77,9 @@ export function MapViewer({
             sendMessageToIframe({
               type: 'SET_USER_LOCATION',
               coords: userLocation,
-              panToUser: !selectedPlace && !searchPin && !activeRoute,
+              panToUser: isAutoFollowing || (
+                shouldFollowUserRef.current && !selectedPlace && !searchPin && !activeRoute
+              ),
             });
           }
           if (selectedPlace) {
@@ -92,7 +101,7 @@ export function MapViewer({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [places, onSelectPlace, onMapClick, selectedPlace, searchPin, userLocation, activeRoute, isDark, isHighContrast]);
+  }, [places, onSelectPlace, onMapClick, selectedPlace, searchPin, userLocation, activeRoute, isDark, isHighContrast, isAutoFollowing]);
 
   // Sync dark mode updates to iframe
   useEffect(() => {
@@ -116,7 +125,9 @@ export function MapViewer({
       sendMessageToIframe({
         type: 'SET_USER_LOCATION',
         coords: userLocation,
-        panToUser: !selectedPlace && !searchPin && !activeRoute,
+        panToUser: isAutoFollowing || (
+          shouldFollowUserRef.current && !selectedPlace && !searchPin && !activeRoute
+        ),
       });
     }
   }, [userLocation?.latitude, userLocation?.longitude]);
@@ -185,6 +196,7 @@ export function MapViewer({
 
   // Handle "Lokalizuj mnie" with actual geolocation
   const handleLocateMe = async () => {
+    shouldFollowUserRef.current = true;
     setIsLocating(true);
     try {
       let coords = { latitude: 50.0617, longitude: 19.9373 }; // Kraków Rynek default

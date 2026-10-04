@@ -35,7 +35,7 @@ export interface KrakowPlace {
 
 import { Platform } from 'react-native';
 
-let API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5123/api/v1';
+export let API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5123/api/v1';
 
 if (Platform.OS === 'android' && API_URL.includes('localhost')) {
   // Android emulator needs 10.0.2.2 to access the host machine's localhost
@@ -98,7 +98,7 @@ export async function fetchKrakowPlacesFromDB(): Promise<KrakowPlace[]> {
             // Since we skipped the detail fetch, we fallback to defaults for category/contact
           } else {
             // Fallback to fetching details
-            const detailResp = await fetch(`${API_URL}/spatials/places/${entity.id}`);
+            const detailResp = await fetch(`${API_URL}/places/${entity.id}`);
             if (detailResp.ok) {
               const placeDetail = await detailResp.json();
               if (placeDetail.translations && placeDetail.translations.length > 0) {
@@ -184,7 +184,7 @@ export async function fetchPlaceById(id: string): Promise<KrakowPlace | null> {
   if (local) return local;
 
   try {
-    const detailResp = await fetch(`${API_URL}/spatials/places/${id}`);
+    const detailResp = await fetch(`${API_URL}/places/${id}`);
     if (!detailResp.ok) return null;
     const placeDetail = await detailResp.json();
 
@@ -212,12 +212,19 @@ export async function fetchPlaceById(id: string): Promise<KrakowPlace | null> {
     const hasAudioGuidance = false;
     const wheelchairAccess = getDeterministicWheelchairAccess(id);
     
-    const facts: any[] = [];
-    if (wheelchairAccess === 'full') {
+    const facts: AccessibilityFactItem[] = (placeDetail.accessibilityFacts ?? []).map((fact: any) => ({
+      id: fact.id,
+      name: accessibilityFactName(fact.attributeCode),
+      status: 'unverified',
+      label: accessibilityFactLabel(fact.attributeCode),
+      description: 'Zgłoszenie społeczności oczekujące na potwierdzenie.',
+    }));
+
+    if (facts.length === 0 && wheelchairAccess === 'full') {
       facts.push({ id: 'wc1', name: 'Wózek', status: 'verified', label: 'Pełen dostęp dla wózków', description: 'Obiekt w pełni dostosowany do poruszania się na wózku inwalidzkim.' });
-    } else if (wheelchairAccess === 'limited') {
+    } else if (facts.length === 0 && wheelchairAccess === 'limited') {
       facts.push({ id: 'wc1', name: 'Wózek', status: 'to_check', label: 'Ograniczony dostęp dla wózków', description: 'Mogą wystąpić utrudnienia (np. progi, brak pełnej swobody ruchu).' });
-    } else if (wheelchairAccess === 'none') {
+    } else if (facts.length === 0 && wheelchairAccess === 'none') {
       facts.push({ id: 'wc1', name: 'Wózek', status: 'to_check', label: 'Brak dostępu dla wózków', description: 'Obiekt niedostępny dla osób na wózkach inwalidzkich.' });
     }
 
@@ -264,4 +271,28 @@ export async function fetchPlaceById(id: string): Promise<KrakowPlace | null> {
     console.error('Error fetching place by id:', error);
     return null;
   }
+}
+
+function accessibilityFactName(attributeCode: string): string {
+  const names: Record<string, string> = {
+    elevator_broken: 'Winda',
+    stairs_blocked: 'Schody',
+    sidewalk_blocked: 'Chodnik',
+    rough_surface: 'Nawierzchnia',
+    sound_missing: 'Sygnalizacja dźwiękowa',
+  };
+
+  return names[attributeCode] ?? 'Dostępność';
+}
+
+function accessibilityFactLabel(attributeCode: string): string {
+  const labels: Record<string, string> = {
+    elevator_broken: 'Zgłoszona awaria windy',
+    stairs_blocked: 'Zgłoszone schody bez podjazdu',
+    sidewalk_blocked: 'Zgłoszony zastawiony chodnik',
+    rough_surface: 'Zgłoszone utrudnienia na nawierzchni',
+    sound_missing: 'Zgłoszona awaria sygnalizacji dźwiękowej',
+  };
+
+  return labels[attributeCode] ?? `Zgłoszenie: ${attributeCode}`;
 }

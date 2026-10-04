@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { AccessibilityToggle } from '@/components/AccessibilityToggle';
 import { AccessibleInput } from '@/components/AccessibleInput';
 import { AccessibleButton } from '@/components/AccessibleButton';
 import { BrandColors, Spacing, MaxContentWidth } from '@/constants/theme';
-import { KRAKOW_PLACES } from '@/services/krakowData';
+import { API_URL, KRAKOW_PLACES } from '@/services/krakowData';
 import { useAccessibility } from '@/context/AccessibilityContext';
 import { supabase } from '@/services/supabase';
 
@@ -23,7 +34,9 @@ export default function NewReportScreen() {
 
   const [selectedType, setSelectedType] = useState('elevator_broken');
   const [description, setDescription] = useState('');
-  const [hasPhoto, setHasPhoto] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [isPickingPhoto, setIsPickingPhoto] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const reportTypes = [
@@ -35,24 +48,33 @@ export default function NewReportScreen() {
   ];
 
   const handleSubmit = async () => {
+    if (!placeId) {
+      Alert.alert('Brak lokalizacji', 'Nie udało się ustalić miejsca zgłoszenia.');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        alert('Musisz być zalogowany aby dodać zgłoszenie');
+        Alert.alert('Wymagane logowanie', 'Musisz być zalogowany, aby dodać zgłoszenie.');
         return;
       }
-      if (placeId) {
-        await fetch(`${process.env.EXPO_PUBLIC_API_URL}/spatials/places/${placeId}/accessibility`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({
-            AttributeCode: selectedType,
-            Value: true
-          })
-        });
+
+      const response = await fetch(`${API_URL}/places/${encodeURIComponent(placeId)}/accessibility`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          attributeCode: selectedType,
+          value: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Report submission failed with status ${response.status}`);
       }
 
       addPoints(15);
@@ -62,30 +84,31 @@ export default function NewReportScreen() {
       }, 1800);
     } catch (e) {
       console.error(e);
-      alert('Wystąpił błąd podczas wysyłania zgłoszenia.');
+      Alert.alert('Błąd', 'Nie udało się wysłać zgłoszenia. Spróbuj ponownie.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handlePickPhoto = async () => {
-    if (hasPhoto) {
-      setHasPhoto(false);
-      return;
-    }
-    
+    if (isPickingPhoto) return;
+
+    setIsPickingPhoto(true);
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
+        allowsEditing: false,
+        selectionLimit: 1,
       });
 
       if (!result.canceled) {
-        setHasPhoto(true);
+        setSelectedPhoto(result.assets[0]);
       }
     } catch (e) {
       console.error('Błąd podczas wybierania zdjęcia:', e);
       Alert.alert('Błąd', 'Nie udało się otworzyć galerii.');
+    } finally {
+      setIsPickingPhoto(false);
     }
   };
 
@@ -151,7 +174,15 @@ export default function NewReportScreen() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardAvoidingView}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContainer}
+        automaticallyAdjustKeyboardInsets
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        keyboardShouldPersistTaps="handled">
         <View style={styles.content}>
           <AccessibilityToggle />
 
@@ -298,48 +329,77 @@ export default function NewReportScreen() {
                 numberOfLines={3}
                 value={description}
                 onChangeText={setDescription}
+                style={styles.descriptionInput}
               />
 
-              {/* Photo Simulation */}
+              {selectedPhoto && (
+                <View style={[styles.photoPreview, { borderColor: cardBorder }]}>
+                  <Image
+                    source={{ uri: selectedPhoto.uri }}
+                    style={styles.photoPreviewImage}
+                    contentFit="contain"
+                    accessibilityLabel="Wybrane zdjęcie przeszkody"
+                  />
+                  <Pressable
+                    onPress={() => setSelectedPhoto(null)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Usuń wybrane zdjęcie"
+                    style={styles.removePhotoButton}>
+                    <MaterialCommunityIcons name="delete-outline" size={22} color="#FFFFFF" />
+                  </Pressable>
+                </View>
+              )}
+
               <Pressable
                 onPress={handlePickPhoto}
+                disabled={isPickingPhoto}
                 accessible
                 accessibilityRole="button"
-                accessibilityLabel="Dołącz zdjęcie przeszkody"
+                accessibilityLabel={selectedPhoto ? 'Zmień zdjęcie przeszkody' : 'Dołącz zdjęcie przeszkody'}
+                accessibilityState={{ disabled: isPickingPhoto }}
                 style={[
                   styles.photoButton,
                   {
-                    backgroundColor: hasPhoto
+                    backgroundColor: selectedPhoto
                       ? (isDark ? '#064E3B' : '#E6F5F3')
                       : cardBg,
-                    borderColor: hasPhoto
+                    borderColor: selectedPhoto
                       ? (isDark ? '#34D399' : BrandColors.accentTeal)
                       : cardBorder,
                     borderWidth: isHighContrast ? 2 : 1.5,
+                    opacity: isPickingPhoto ? 0.65 : 1,
                   },
                 ]}>
-                <MaterialCommunityIcons
-                  name={hasPhoto ? 'camera' : 'camera-outline'}
-                  size={24}
-                  color={
-                    hasPhoto
-                      ? (isDark ? '#34D399' : BrandColors.accentTeal)
-                      : (isDark ? '#94A3B8' : '#64748B')
-                  }
-                />
+                {isPickingPhoto ? (
+                  <ActivityIndicator color={isDark ? '#34D399' : BrandColors.accentTeal} />
+                ) : (
+                  <MaterialCommunityIcons
+                    name={selectedPhoto ? 'camera' : 'camera-outline'}
+                    size={24}
+                    color={
+                      selectedPhoto
+                        ? (isDark ? '#34D399' : BrandColors.accentTeal)
+                        : (isDark ? '#94A3B8' : '#64748B')
+                    }
+                  />
+                )}
                 <Text
                   style={[
                     styles.photoText,
                     {
-                      color: hasPhoto
+                      color: selectedPhoto
                         ? (isDark ? '#86EFAC' : BrandColors.accentTeal)
                         : (isHighContrast
                             ? (isDark ? '#FFFFFF' : '#000000')
                             : (isDark ? '#CBD5E1' : '#475569')),
-                      fontWeight: hasPhoto || isHighContrast ? '700' : '500',
+                      fontWeight: selectedPhoto || isHighContrast ? '700' : '500',
                     },
                   ]}>
-                  {hasPhoto ? '✓ Zdjęcie dołączone (dowód)' : 'Dołącz zdjęcie (opcjonalnie)'}
+                  {isPickingPhoto
+                    ? 'Otwieranie galerii...'
+                    : selectedPhoto
+                      ? 'Zmień zdjęcie'
+                      : 'Dołącz zdjęcie (opcjonalnie)'}
                 </Text>
               </Pressable>
 
@@ -348,18 +408,27 @@ export default function NewReportScreen() {
                 label="Wyślij zgłoszenie (+15 pkt)"
                 variant="primary"
                 onPress={handleSubmit}
+                loading={isSubmitting}
+                disabled={isSubmitting}
                 style={styles.submitBtn}
               />
             </>
           )}
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
+    flex: 1,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  scrollView: {
     flex: 1,
   },
   header: {
@@ -377,6 +446,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: Spacing.three,
+    paddingBottom: Spacing.three * 3,
     alignItems: 'center',
   },
   content: {
@@ -428,6 +498,34 @@ const styles = StyleSheet.create({
   },
   photoText: {
     fontSize: 15,
+  },
+  descriptionInput: {
+    minHeight: 96,
+    textAlignVertical: 'top',
+  },
+  photoPreview: {
+    width: '100%',
+    aspectRatio: 4 / 3,
+    borderWidth: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginTop: 12,
+    backgroundColor: '#000000',
+  },
+  photoPreviewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  removePhotoButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.72)',
   },
   submitBtn: {
     marginTop: 8,

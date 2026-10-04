@@ -8,7 +8,7 @@ import { AccessibilityToggle } from '@/components/AccessibilityToggle';
 import { AccessibleButton } from '@/components/AccessibleButton';
 import { MapViewer } from '@/components/MapViewer';
 import { BrandColors, Spacing, MaxContentWidth } from '@/constants/theme';
-import { KRAKOW_PLACES } from '@/services/krakowData';
+import { KRAKOW_PLACES, KrakowPlace } from '@/services/krakowData';
 import {
   calculateKrakowRoutes,
   fetchLiveKrakowRoutes,

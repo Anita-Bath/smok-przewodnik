@@ -22,7 +22,7 @@ public sealed class SpatialsController : ControllerBase
         _timeProvider = timeProvider;
     }
 
-    [HttpGet("/entities")]
+    [HttpGet("entities")]
     [AllowAnonymous]
     [ProducesResponseType<CursorPageResponse<SpatialEntityListItemDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -245,4 +245,3 @@ public sealed class SpatialsController : ControllerBase
 }
 
 public sealed record AddAccessibilityRequest(string AttributeCode, bool Value);
-

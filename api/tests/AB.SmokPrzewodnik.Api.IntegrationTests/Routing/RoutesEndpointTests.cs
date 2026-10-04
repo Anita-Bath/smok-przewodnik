@@ -128,6 +128,7 @@ public sealed class RoutesEndpointTests
         public Task<SpatialEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<SpatialEntity?>(null);
         public Task<CursorPage<SpatialEntity>> FindAsync(SpatialEntityCriteria criteria, CursorPageRequest page, CancellationToken cancellationToken) =>
             Task.FromResult(new CursorPage<SpatialEntity>([], null));
+        public Task UpdateAsync(SpatialEntity aggregate, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider

@@ -40,6 +40,9 @@ internal static class SpatialDtoMapper
             ? null
             : new ContactDto(details.Contact.Phone, details.Contact.Email),
         details.Website,
+        entity.AccessibilityFacts
+            .Select(ToAccessibilityFact)
+            .ToArray(),
         entity.CreatedAt,
         entity.UpdatedAt);
 
@@ -99,4 +102,22 @@ internal static class SpatialDtoMapper
             .Select(category => category.Value)
             .Order(StringComparer.Ordinal)
             .ToArray();
+
+    private static AccessibilityFactDto ToAccessibilityFact(AccessibilityFact fact) => new(
+        fact.Id,
+        fact.AttributeCode.Value,
+        ToAccessibilityValue(fact.Value),
+        fact.ObservedAt,
+        fact.ValidFrom,
+        fact.ValidUntil,
+        fact.ConfidenceWeight);
+
+    private static AccessibilityValueDto ToAccessibilityValue(AccessibilityValue value) => value switch
+    {
+        AccessibilityValue.Boolean boolean => new("boolean", BooleanValue: boolean.Value),
+        AccessibilityValue.Number number => new("number", NumberValue: number.Value, UnitCode: number.UnitCode),
+        AccessibilityValue.Code code => new("code", CodeValue: code.Value.Value),
+        AccessibilityValue.Text text => new("text", TextValue: text.Value),
+        _ => throw new ArgumentOutOfRangeException(nameof(value))
+    };
 }

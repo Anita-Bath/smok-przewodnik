@@ -142,5 +142,8 @@ public sealed class InfrastructureQueryHandlerTests
             CancellationToken = cancellationToken;
             return Task.FromResult(_result);
         }
+
+        public Task UpdateAsync(SpatialEntity aggregate, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 }

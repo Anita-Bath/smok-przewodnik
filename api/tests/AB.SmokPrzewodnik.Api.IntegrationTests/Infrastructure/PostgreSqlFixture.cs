@@ -12,6 +12,7 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
     private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgis/postgis:17-3.5")
         .Build();
     private ServiceProvider? _services;
+    private Type? _contextType;
 
     public async Task InitializeAsync()
     {
@@ -27,6 +28,9 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
         var services = new ServiceCollection();
         services.AddSingleton<IConfiguration>(configuration);
         services.AddInfrastructure();
+        _contextType = services
+            .Select(descriptor => descriptor.ServiceType)
+            .Single(type => typeof(Microsoft.EntityFrameworkCore.DbContext).IsAssignableFrom(type));
         _services = services.BuildServiceProvider(validateScopes: true);
 
         await using var scope = _services.CreateAsyncScope();
@@ -38,6 +42,10 @@ public sealed class PostgreSqlFixture : IAsyncLifetime
     public IServiceScope CreateScope() =>
         (_services ?? throw new InvalidOperationException("The PostgreSQL fixture has not started."))
         .CreateScope();
+
+    public Microsoft.EntityFrameworkCore.DbContext GetDbContext(IServiceProvider serviceProvider) =>
+        (Microsoft.EntityFrameworkCore.DbContext)serviceProvider.GetRequiredService(
+            _contextType ?? throw new InvalidOperationException("The PostgreSQL fixture has not started."));
 
     public async Task DisposeAsync()
     {
