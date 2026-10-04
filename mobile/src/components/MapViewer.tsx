@@ -137,13 +137,19 @@ export function MapViewer({
     }
   }, [places, activePresetId]);
 
+  const lastRouteProfileRef = React.useRef<string | null>(null);
+
   // Sync activeRoute updates
   useEffect(() => {
     if (webViewRef.current) {
       if (activeRoute && activeRoute.coordinates && activeRoute.coordinates.length > 0) {
-        const js = `window.postMessage(JSON.stringify({ type: 'DRAW_ROUTE', coordinates: ${JSON.stringify(activeRoute.coordinates)}, profileType: '${activeRoute.profileType || 'easiest'}' }), '*'); true;`;
+        const pType = activeRoute.profileType || 'easiest';
+        const autoFit = lastRouteProfileRef.current !== pType;
+        lastRouteProfileRef.current = pType;
+        const js = `window.postMessage(JSON.stringify({ type: 'DRAW_ROUTE', coordinates: ${JSON.stringify(activeRoute.coordinates)}, profileType: '${pType}', autoFit: ${autoFit} }), '*'); true;`;
         webViewRef.current.injectJavaScript(js);
       } else {
+        lastRouteProfileRef.current = null;
         const js = `window.postMessage(JSON.stringify({ type: 'CLEAR_ROUTE' }), '*'); true;`;
         webViewRef.current.injectJavaScript(js);
       }

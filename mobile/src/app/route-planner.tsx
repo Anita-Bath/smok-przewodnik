@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import * as Speech from 'expo-speech';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -35,21 +36,31 @@ export default function RoutePlannerScreen() {
     userLocation,
   } = useAccessibility();
 
-  const destination = React.useMemo(() => {
-    const found = KRAKOW_PLACES.find((p) => p.id === placeId);
-    if (found) return found;
-    if (lat && lon) {
-      return {
-        id: placeId || 'custom-destination',
+  const [destination, setDestination] = useState<KrakowPlace>(KRAKOW_PLACES.find((p) => p.id === placeId) || KRAKOW_PLACES[0]);
+
+  useEffect(() => {
+    if (placeId) {
+      const found = KRAKOW_PLACES.find((p) => p.id === placeId);
+      if (found) {
+        setDestination(found);
+      } else {
+        import('@/services/krakowData').then(({ fetchPlaceById }) => {
+          fetchPlaceById(placeId).then((data) => {
+            if (data) {
+              setDestination(data);
+            }
+          });
+        });
+      }
+    } else if (lat && lon) {
+      setDestination({
+        id: 'custom-destination',
         name: name || 'Wybrany punkt w Krakowie',
         address: address || 'Kraków',
         distanceFromUserMeters: 500,
-        category: 'cafe' as const,
-        coordinates: {
-          latitude: parseFloat(lat),
-          longitude: parseFloat(lon),
-        },
-        confidenceState: 'unverified' as const,
+        category: 'cafe',
+        coordinates: { latitude: parseFloat(lat), longitude: parseFloat(lon) },
+        confidenceState: 'unverified',
         confidenceLabel: 'Punkt z mapy',
         facts: [],
         generalNote: 'Nawigacja do wybranego punktu.',
@@ -59,10 +70,9 @@ export default function RoutePlannerScreen() {
         hasInductionLoop: false,
         hasAudioGuidance: false,
         hasRoughSurfaceNotice: false,
-      };
+      } as any);
     }
-    return KRAKOW_PLACES[0];
-  }, [placeId, name, address, lat, lon]);
+  }, [placeId, lat, lon, name, address]);
 
   const [planResult, setPlanResult] = useState<RoutePlanResult>(() =>
     calculateKrakowRoutes(destination, constraints, transportCapabilities, userLocation)
@@ -98,6 +108,36 @@ export default function RoutePlannerScreen() {
     planResult.alternatives[0];
 
   const activeManeuver = selectedRoute.maneuvers[activeManeuverIndex] || selectedRoute.maneuvers[0];
+
+  useEffect(() => {
+    if (isNavigating && feedbackChannels.includes('audio') && activeManeuver) {
+      Speech.stop();
+      const textToSpeak = `${activeManeuver.instruction}. Następnie kontynuuj przez ${activeManeuver.distanceMeters} metrów.`;
+      Speech.speak(textToSpeak, { language: 'pl-PL' });
+    }
+  }, [activeManeuverIndex, isNavigating, feedbackChannels]);
+
+  // Auto-follow: Automatically advance to the next maneuver when the user approaches its location
+  useEffect(() => {
+    if (!isNavigating || !userLocation || !selectedRoute?.maneuvers) return;
+    
+    const nextIndex = activeManeuverIndex + 1;
+    if (nextIndex >= selectedRoute.maneuvers.length) return;
+
+    const nextManeuver = selectedRoute.maneuvers[nextIndex];
+    if (nextManeuver && nextManeuver.location) {
+      const maneuverCoords = {
+        latitude: nextManeuver.location[0],
+        longitude: nextManeuver.location[1]
+      };
+      const distanceToNext = calculateDistanceMeters(userLocation, maneuverCoords);
+      
+      // If user is within 15 meters of the next maneuver, advance automatically
+      if (distanceToNext <= 15) {
+        setActiveManeuverIndex(nextIndex);
+      }
+    }
+  }, [userLocation, isNavigating, activeManeuverIndex, selectedRoute]);
 
   return (
     <SafeAreaView

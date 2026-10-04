@@ -15,9 +15,18 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
-    login(email || 'jan.kowalski@krakow.pl', 'Jan Kowalski');
-    router.replace('/(tabs)');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      await login(email, password);
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      alert(err.message || 'Logowanie nie powiodło się');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGuestLogin = () => {
@@ -115,7 +124,7 @@ export default function LoginScreen() {
 
             {/* Submit Action */}
             <AccessibleButton
-              label="Logowanie"
+              label={loading ? 'Logowanie...' : 'Logowanie'}
               variant="primary"
               onPress={handleLogin}
               style={styles.actionBtn}

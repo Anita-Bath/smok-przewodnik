@@ -231,7 +231,7 @@ export function generateLeafletHtml(
     var lastRouteCoords = null;
     var lastRouteProfile = null;
 
-    function drawRoute(coords, profileType) {
+    function drawRoute(coords, profileType, autoFit = true) {
       clearRoute();
       if (!coords || !coords.length) return;
       lastRouteCoords = coords;
@@ -273,13 +273,15 @@ export function generateLeafletHtml(
       });
       routeOriginMarker = L.marker(startCoord, { icon: startIcon, zIndexOffset: 2500 }).addTo(map);
 
-      // Fit map view to encompass the entire route
-      try {
-        var bounds = routePolyline.getBounds();
-        if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [55, 55], animate: true, duration: 0.8 });
-        }
-      } catch (err) {}
+      // Fit map view to encompass the entire route only if autoFit is true
+      if (autoFit) {
+        try {
+          var bounds = routePolyline.getBounds();
+          if (bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [55, 55], animate: true, duration: 0.8 });
+          }
+        } catch (err) {}
+      }
     }
 
     function clearRoute() {
@@ -412,24 +414,25 @@ export function generateLeafletHtml(
 
     function updateUserMarker(coords, shouldPan) {
       if (!coords) return;
+      
       if (userMarker) {
-        map.removeLayer(userMarker);
+        userMarker.setLatLng([coords.latitude, coords.longitude]);
+      } else {
+        var userIcon = L.divIcon({
+          className: 'user-loc-icon',
+          html: '<div class="user-location-marker">' +
+            '<div class="user-location-pulse"></div>' +
+            '<div class="user-location-dot"></div>' +
+          '</div>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+
+        userMarker = L.marker([coords.latitude, coords.longitude], {
+          icon: userIcon,
+          zIndexOffset: 2000
+        }).addTo(map);
       }
-
-      var userIcon = L.divIcon({
-        className: 'user-loc-icon',
-        html: '<div class="user-location-marker">' +
-          '<div class="user-location-pulse"></div>' +
-          '<div class="user-location-dot"></div>' +
-        '</div>',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      });
-
-      userMarker = L.marker([coords.latitude, coords.longitude], {
-        icon: userIcon,
-        zIndexOffset: 2000
-      }).addTo(map);
 
       if (shouldPan) {
         map.flyTo([coords.latitude, coords.longitude], 16, { animate: true, duration: 1.0 });
@@ -521,12 +524,12 @@ export function generateLeafletHtml(
         places = data.places;
         renderPlaces(places, selectedId);
       } else if (data.type === 'DRAW_ROUTE') {
-        drawRoute(data.coordinates, data.profileType);
+        drawRoute(data.coordinates, data.profileType, data.autoFit !== false);
       } else if (data.type === 'CLEAR_ROUTE') {
         clearRoute();
       } else if (data.type === 'FOCUS_MANEUVER') {
         if (data.location) {
-          map.flyTo([data.location[0], data.location[1]], 17, { animate: true, duration: 0.6 });
+          map.setView([data.location[0], data.location[1]], 17, { animate: true, duration: 0.5 });
         }
       }
     }

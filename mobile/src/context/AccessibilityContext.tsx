@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Platform, useColorScheme } from 'react-native';
 import * as Location from 'expo-location';
+import { supabase } from '@/services/supabase';
 import { Colors, ThemeColors } from '@/constants/theme';
 
 export type ConstraintLevel = 'allowed' | 'prefer_avoid' | 'must_avoid';
@@ -139,8 +140,9 @@ interface AccessibilityContextType {
   toggleFeedbackChannel: (channel: FeedbackChannel) => void;
   toggleSavePlace: (placeId: string) => void;
   loginAsGuest: () => void;
-  login: (email: string, name?: string) => void;
-  logout: () => void;
+  login: (email: string, pass: string) => Promise<void>;
+  register: (email: string, pass: string, name: string) => Promise<void>;
+  logout: () => Promise<void>;
   addPoints: (amount: number) => void;
 }
 
@@ -227,9 +229,9 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
 
             locationSubscription = await Location.watchPositionAsync(
               {
-                accuracy: Location.Accuracy.Balanced,
-                distanceInterval: 15,
-                timeInterval: 8000,
+                accuracy: Location.Accuracy.High,
+                distanceInterval: 2,
+                timeInterval: 1000,
               },
               (location) => {
                 if (isMounted) {
@@ -297,16 +299,32 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
-  const login = (email: string, name = 'Użytkownik') => {
+  const login = async (email: string, pass: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
     setIsGuest(false);
     setUser({
-      id: 'usr-krakow-01',
-      email,
-      name,
+      id: data.user.id,
+      email: data.user.email || '',
+      name: data.user.user_metadata?.name || 'Użytkownik',
     });
   };
 
-  const logout = () => {
+  const register = async (email: string, pass: string, name: string) => {
+    const { data, error } = await supabase.auth.signUp({ email, password: pass, options: { data: { name } } });
+    if (error) throw error;
+    if (data.user) {
+      setIsGuest(false);
+      setUser({
+        id: data.user.id,
+        email: data.user.email || '',
+        name: data.user.user_metadata?.name || name,
+      });
+    }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
     setIsGuest(true);
     setUser(null);
   };
@@ -343,6 +361,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
         toggleSavePlace,
         loginAsGuest,
         login,
+        register,
         logout,
         addPoints,
       }}>
