@@ -1,5 +1,9 @@
+using System.Security.Claims;
+using AB.SmokPrzewodnik.Api.Auth;
+using AB.SmokPrzewodnik.Api.Auth.NavigationToken;
 using AB.SmokPrzewodnik.Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AB.SmokPrzewodnik.Api.Extensions;
@@ -22,6 +26,10 @@ public static class AuthExtension
                 builder.Audience = audience;
                 builder.RequireHttpsMetadata = false;
 
+                builder.MapInboundClaims = false;
+
+                builder.MapInboundClaims = false;
+
                 builder.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -29,9 +37,25 @@ public static class AuthExtension
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     NameClaimType = "sub",
+                    RoleClaimType = "role",
                     ClockSkew = TimeSpan.FromSeconds(30)
                 };
-            });
+
+                builder.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        if (context.Request.Path.StartsWithSegments("/hubs/navigation") &&
+                            context.Request.Query.TryGetValue("access_token", out var token))
+                        {
+                            context.Token = token.FirstOrDefault();
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
+            })
+            .AddNavigationToken();
 
         services.AddAuthorization(options =>
         {
@@ -40,7 +64,30 @@ public static class AuthExtension
                 policy.RequireAuthenticatedUser();
                 policy.RequireClaim("role", claimRole);
             });
+
+            options.AddPolicy(AppConsts.NavigationAuthPolicyName, policy =>
+            {
+                policy.AddAuthenticationSchemes(
+                    JwtBearerDefaults.AuthenticationScheme,
+                    NavigationTokenDefaults.AuthenticationScheme);
+
+                policy.RequireAuthenticatedUser();
+                policy.AddRequirements(
+                    new NavigationSessionAccessRequirement(claimRole));
+            });
+
+            options.AddPolicy(AppConsts.NavigationConnectionPolicyName, policy =>
+            {
+                policy.AddAuthenticationSchemes(
+                    JwtBearerDefaults.AuthenticationScheme,
+                    NavigationTokenDefaults.AuthenticationScheme);
+                policy.RequireAuthenticatedUser();
+            });
         });
+
+        services.AddScoped<
+            IAuthorizationHandler,
+            NavigationSessionAccessHandler>();
 
         return services;
     }

@@ -3,15 +3,15 @@ using AB.SmokPrzewodnik.Domain.Common;
 
 namespace AB.SmokPrzewodnik.Application.Database;
 
-public interface IRepository<TAggregate, TId, in TCriteria>
-      where TAggregate : AggregateRoot<TId>
+public interface IRepository<TEntity, TId, in TCriteria>
+      where TEntity : Entity<TId>
       where TId : notnull
 {
-    Task<TAggregate?> GetByIdAsync(
+    Task<TEntity?> GetByIdAsync(
         TId id,
         CancellationToken cancellationToken);
 
-    Task<CursorPage<TAggregate>> FindAsync(
+    Task<CursorPage<TEntity>> FindAsync(
         TCriteria criteria,
         CursorPageRequest page,
         CancellationToken cancellationToken);

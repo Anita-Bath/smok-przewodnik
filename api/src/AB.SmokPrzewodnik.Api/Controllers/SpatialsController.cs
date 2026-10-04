@@ -10,7 +10,7 @@ using System.Globalization;
 namespace AB.SmokPrzewodnik.Api.Controllers;
 
 [ApiController]
-[Route("spatials")]
+[Route("/spatials")]
 public sealed class SpatialsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -22,7 +22,7 @@ public sealed class SpatialsController : ControllerBase
         _timeProvider = timeProvider;
     }
 
-    [HttpGet("entities")]
+    [HttpGet("/entities")]
     [AllowAnonymous]
     [ProducesResponseType<CursorPageResponse<SpatialEntityListItemDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -51,7 +51,7 @@ public sealed class SpatialsController : ControllerBase
         return Ok(response);
     }
 
-    [HttpGet("places/{placeId:guid}")]
+    [HttpGet("/places/{placeId:guid}")]
     [AllowAnonymous]
     [ProducesResponseType<PlaceDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -66,7 +66,7 @@ public sealed class SpatialsController : ControllerBase
         return response is null ? NotFound() : Ok(response);
     }
 
-    [HttpGet("events/{eventId:guid}")]
+    [HttpGet("/events/{eventId:guid}")]
     [AllowAnonymous]
     [ProducesResponseType<EventDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -81,7 +81,7 @@ public sealed class SpatialsController : ControllerBase
         return response is null ? NotFound() : Ok(response);
     }
 
-    [HttpGet("events")]
+    [HttpGet("/events")]
     [AllowAnonymous]
     [ProducesResponseType<CursorPageResponse<EventDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -138,7 +138,7 @@ public sealed class SpatialsController : ControllerBase
         return Ok(response);
     }
 
-    [HttpGet("infrastructure")]
+    [HttpGet("/infrastructure")]
     [AllowAnonymous]
     [ProducesResponseType<CursorPageResponse<InfrastructureDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -221,7 +221,7 @@ public sealed class SpatialsController : ControllerBase
         }
     }
 
-    [HttpPost("places/{placeId:guid}/accessibility")]
+    [HttpPost("/places/{placeId:guid}/accessibility")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

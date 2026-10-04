@@ -8,7 +8,6 @@ using AB.SmokPrzewodnik.Domain.Enums;
 using AB.SmokPrzewodnik.Domain.Spatial;
 using AB.SmokPrzewodnik.Domain.Spatial.Details;
 using AB.SmokPrzewodnik.Domain.ValueObjects;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -146,7 +145,7 @@ public sealed class SpatialsEndpointTests
             "/v1/events?bbox=19.8,49.9,20.1,50.2&from=2026-10-03T10:00:00Z&to=2026-10-04T10:00:00Z&categories=Workshop,concert&cursor=page-one&limit=4");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var page = await response.Content.ReadFromJsonAsync<CursorPageResponse<EventListItemDto>>();
+        var page = await response.Content.ReadFromJsonAsync<CursorPageResponse<EventDto>>();
         Assert.NotNull(page);
         Assert.Single(page.Items);
         Assert.Equal("next-events", page.NextCursor);
