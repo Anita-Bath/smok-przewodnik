@@ -58,11 +58,20 @@ export async function searchKrakowAddresses(query: string): Promise<AddressSearc
 
           // Focus on Kraków and immediate vicinity
           const city = props.city || props.county || 'Kraków';
-          const street = props.street || props.name || trimmed;
+          const placeName = props.name;
+          const street = props.street || '';
           const house = props.housenumber ? ` ${props.housenumber}` : '';
-          const title = `${street}${house}`;
-          const district = props.district || props.suburb || 'Kraków';
-          const subtitle = `${district}, ${city}`;
+          
+          let title = '';
+          let subtitle = '';
+          
+          if (placeName && street) {
+            title = placeName;
+            subtitle = `${street}${house}, ${props.district || props.suburb || 'Kraków'}`;
+          } else {
+            title = placeName || `${street}${house}` || trimmed;
+            subtitle = `${props.district || props.suburb || 'Kraków'}, ${city}`;
+          }
 
           // Avoid duplicates
           const isDuplicate = results.some(

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import * as Speech from 'expo-speech';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -107,6 +108,14 @@ export default function RoutePlannerScreen() {
     planResult.alternatives[0];
 
   const activeManeuver = selectedRoute.maneuvers[activeManeuverIndex] || selectedRoute.maneuvers[0];
+
+  useEffect(() => {
+    if (isNavigating && feedbackChannels.includes('audio') && activeManeuver) {
+      Speech.stop();
+      const textToSpeak = `${activeManeuver.instruction}. Następnie kontynuuj przez ${activeManeuver.distanceMeters} metrów.`;
+      Speech.speak(textToSpeak, { language: 'pl-PL' });
+    }
+  }, [activeManeuverIndex, isNavigating, feedbackChannels]);
 
   return (
     <SafeAreaView
