@@ -414,24 +414,25 @@ export function generateLeafletHtml(
 
     function updateUserMarker(coords, shouldPan) {
       if (!coords) return;
+      
       if (userMarker) {
-        map.removeLayer(userMarker);
+        userMarker.setLatLng([coords.latitude, coords.longitude]);
+      } else {
+        var userIcon = L.divIcon({
+          className: 'user-loc-icon',
+          html: '<div class="user-location-marker">' +
+            '<div class="user-location-pulse"></div>' +
+            '<div class="user-location-dot"></div>' +
+          '</div>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+
+        userMarker = L.marker([coords.latitude, coords.longitude], {
+          icon: userIcon,
+          zIndexOffset: 2000
+        }).addTo(map);
       }
-
-      var userIcon = L.divIcon({
-        className: 'user-loc-icon',
-        html: '<div class="user-location-marker">' +
-          '<div class="user-location-pulse"></div>' +
-          '<div class="user-location-dot"></div>' +
-        '</div>',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      });
-
-      userMarker = L.marker([coords.latitude, coords.longitude], {
-        icon: userIcon,
-        zIndexOffset: 2000
-      }).addTo(map);
 
       if (shouldPan) {
         map.flyTo([coords.latitude, coords.longitude], 16, { animate: true, duration: 1.0 });

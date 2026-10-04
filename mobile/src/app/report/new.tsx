@@ -9,6 +9,7 @@ import { AccessibleButton } from '@/components/AccessibleButton';
 import { BrandColors, Spacing, MaxContentWidth } from '@/constants/theme';
 import { KRAKOW_PLACES } from '@/services/krakowData';
 import { useAccessibility } from '@/context/AccessibilityContext';
+import { supabase } from '@/services/supabase';
 
 type MaterialIconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -32,12 +33,36 @@ export default function NewReportScreen() {
     { key: 'sound_missing', label: 'Awaria sygnalizacji dźwiękowej', icon: 'volume-off' },
   ];
 
-  const handleSubmit = () => {
-    addPoints(15);
-    setSubmitted(true);
-    setTimeout(() => {
-      router.back();
-    }, 1800);
+  const handleSubmit = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Musisz być zalogowany aby dodać zgłoszenie');
+        return;
+      }
+      if (placeId) {
+        await fetch(`${process.env.EXPO_PUBLIC_API_URL}/spatials/places/${placeId}/accessibility`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            AttributeCode: selectedType,
+            Value: true
+          })
+        });
+      }
+
+      addPoints(15);
+      setSubmitted(true);
+      setTimeout(() => {
+        router.back();
+      }, 1800);
+    } catch (e) {
+      console.error(e);
+      alert('Wystąpił błąd podczas wysyłania zgłoszenia.');
+    }
   };
 
   const cardBg = isHighContrast

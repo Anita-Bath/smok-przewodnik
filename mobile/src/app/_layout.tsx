@@ -34,6 +34,8 @@ function RootNavigation() {
   );
 }
 
+import { AuthProvider } from '@/context/AuthContext';
+
 export default function RootLayout() {
   useEffect(() => {
     SplashScreen.hideAsync();
@@ -41,9 +43,11 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <AccessibilityProvider>
-        <RootNavigation />
-      </AccessibilityProvider>
+      <AuthProvider>
+        <AccessibilityProvider>
+          <RootNavigation />
+        </AccessibilityProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

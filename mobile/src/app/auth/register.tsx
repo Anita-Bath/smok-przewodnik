@@ -12,13 +12,22 @@ import { useAccessibility } from '@/context/AccessibilityContext';
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { isDark, isHighContrast, login, loginAsGuest } = useAccessibility();
+  const { isDark, isHighContrast, register, loginAsGuest } = useAccessibility();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = () => {
-    login(email || 'nowy.uzytkownik@krakow.pl', 'Nowy Użytkownik');
-    router.replace('/(tabs)');
+  const handleRegister = async () => {
+    try {
+      setLoading(true);
+      await register(email, password, name || 'Użytkownik');
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      alert(err.message || 'Rejestracja nie powiodła się');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGuest = () => {
@@ -77,6 +86,13 @@ export default function RegisterScreen() {
 
           {/* Form */}
           <View style={styles.form}>
+            <AccessibleInput
+              label="Imię"
+              placeholder="Jan Kowalski"
+              value={name}
+              onChangeText={setName}
+            />
+
             <AccessibleInput
               label="Adres e-mail"
               placeholder="mail@example.com"
@@ -163,7 +179,7 @@ export default function RegisterScreen() {
 
             {/* Create Account Action */}
             <AccessibleButton
-              label="Utwórz konto"
+              label={loading ? "Rejestracja..." : "Utwórz konto"}
               variant="primary"
               onPress={handleRegister}
               style={styles.actionBtn}

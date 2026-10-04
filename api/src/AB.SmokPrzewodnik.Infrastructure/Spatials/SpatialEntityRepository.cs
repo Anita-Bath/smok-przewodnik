@@ -95,6 +95,12 @@ internal sealed class SpatialEntityRepository : ISpatialEntityRepository
         return new CursorPage<SpatialEntity>(items, nextCursor);
     }
 
+    public async Task UpdateAsync(SpatialEntity aggregate, CancellationToken cancellationToken)
+    {
+        _dbContext.SpatialEntities.Update(aggregate);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     internal IQueryable<SpatialEntity> BuildQuery(SpatialEntityCriteria criteria)
     {
         ArgumentNullException.ThrowIfNull(criteria);
