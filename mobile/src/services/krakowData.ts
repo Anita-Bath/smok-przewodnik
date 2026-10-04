@@ -45,6 +45,15 @@ if (Platform.OS === 'android' && API_URL.includes('localhost')) {
   API_URL = API_URL.replace('localhost', '172.20.10.2');
 }
 
+function getDeterministicWheelchairAccess(id: string): 'full' | 'limited' | 'none' | 'unknown' {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const options = ['full', 'limited', 'none', 'unknown'];
+  return options[Math.abs(hash) % options.length] as any;
+}
+
 export async function fetchKrakowPlacesFromDB(): Promise<KrakowPlace[]> {
   try {
     console.log(`[DEBUG] fetchKrakowPlacesFromDB calling API at: ${API_URL}`);
@@ -128,7 +137,7 @@ export async function fetchKrakowPlacesFromDB(): Promise<KrakowPlace[]> {
             hasRoughSurfaceNotice: false,
             facts: [],
             // Mock accessibility because facts aren't exposed in .NET PlaceDto yet
-            wheelchairAccess: ['full', 'limited', 'none', 'unknown'][Math.floor(Math.random() * 4)] as any,
+            wheelchairAccess: getDeterministicWheelchairAccess(entity.id),
           } as KrakowPlace;
         } catch (e) {
           console.error(`Error fetching details for place ${entity.id}:`, e);
@@ -201,7 +210,7 @@ export async function fetchPlaceById(id: string): Promise<KrakowPlace | null> {
     const hasAccessibleToilet = false;
     const hasInductionLoop = false;
     const hasAudioGuidance = false;
-    const wheelchairAccess = ['full', 'limited', 'none', 'unknown'][Math.floor(Math.random() * 4)] as any;
+    const wheelchairAccess = getDeterministicWheelchairAccess(id);
     
     const facts: any[] = [];
     if (wheelchairAccess === 'full') {
