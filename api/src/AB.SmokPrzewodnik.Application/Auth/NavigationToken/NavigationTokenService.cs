@@ -32,14 +32,13 @@ internal sealed class NavigationTokenService : INavigationTokenService
         return NavigationSessionMapper.ToDto(session.Items.Single());
     }
 
-    public async Task<string> GetTokenAsync(Guid? accountId)
+    public IssuedNavigationToken IssueToken()
     {
         var tokenBytes = RandomNumberGenerator.GetBytes(32);
         var token = Base64UrlEncode(tokenBytes);
         var tokenHash = HashToken(token);
 
-        await _repository.InsertAsync(tokenHash, accountId);
-        return token;
+        return new IssuedNavigationToken(token, tokenHash);
     }
 
     public async Task<bool> IsActiveAndOwnedByAsync(Guid sessionId,

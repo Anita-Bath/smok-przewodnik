@@ -2,6 +2,8 @@ using AB.SmokPrzewodnik.Api.Extensions;
 using AB.SmokPrzewodnik.Api.Errors;
 using AB.SmokPrzewodnik.Application;
 using AB.SmokPrzewodnik.Infrastructure;
+using AB.SmokPrzewodnik.Application.Navigation;
+using AB.SmokPrzewodnik.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,13 +14,15 @@ builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<INavigationEventPublisher, SignalRNavigationEventPublisher>();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSupabaseAuthentication(builder.Configuration);
 builder.Services.AddSingleton(TimeProvider.System);
 
 var app = builder.Build();
 
-app.UsePathBase("/api/v1");
+app.UsePathBase("/v1");
 
 if (app.Environment.IsDevelopment())
 {
@@ -28,9 +32,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapHealthEndpoints();
 app.MapControllers();
+app.MapHub<NavigationHub>("/hubs/navigation");
 
 app.Run();
 
