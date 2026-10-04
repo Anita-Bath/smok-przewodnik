@@ -15,5 +15,6 @@
   <ItemGroup>
     <ProjectReference Include="../../src/AB.SmokPrzewodnik.Application/AB.SmokPrzewodnik.Application.csproj" />
     <ProjectReference Include="../../src/AB.SmokPrzewodnik.Domain/AB.SmokPrzewodnik.Domain.csproj" />
+    <ProjectReference Include="../../src/AB.SmokPrzewodnik.Infrastructure/AB.SmokPrzewodnik.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

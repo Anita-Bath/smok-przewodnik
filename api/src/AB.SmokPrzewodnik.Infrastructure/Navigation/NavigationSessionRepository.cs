@@ -6,6 +6,7 @@ using AB.SmokPrzewodnik.Application.Navigation;
 using AB.SmokPrzewodnik.Common;
 using AB.SmokPrzewodnik.Domain.Navigation;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace AB.SmokPrzewodnik.Infrastructure.Navigation;
 
@@ -26,7 +27,6 @@ internal sealed class NavigationSessionRepository : INavigationSessionRepository
         Guid id,
         CancellationToken cancellationToken) =>
         _dbContext.NavigationSessions
-            .AsNoTracking()
             .SingleOrDefaultAsync(entity => entity.Id == id, cancellationToken);
 
     public async Task<CursorPage<NavigationSession>> FindAsync(
@@ -72,16 +72,57 @@ internal sealed class NavigationSessionRepository : INavigationSessionRepository
         return new CursorPage<NavigationSession>(items, nextCursor);
     }
 
-    public async Task<NavigationSession> InsertAsync(string hash, Guid? accountId)
+    public async Task AddAsync(NavigationSession session, CancellationToken cancellationToken)
     {
-        var session = new NavigationSession(Guid.NewGuid(),
-            hash, DateTimeOffset.UtcNow.Add(AppConsts.NavigationTokenValidityDuration), accountId);
-
         _dbContext.NavigationSessions.Add(session);
-        await _dbContext.SaveChangesAsync();
-
-        return session;
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task UpdateAsync(
+        NavigationSession session,
+        IReadOnlyCollection<NavigationEvent> events,
+        CancellationToken cancellationToken)
+    {
+        _dbContext.NavigationEvents.AddRange(events);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            _dbContext.ChangeTracker.Clear();
+            throw new NavigationConcurrencyException(exception);
+        }
+        catch (DbUpdateException exception)
+            when (exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            _dbContext.ChangeTracker.Clear();
+            throw new NavigationConcurrencyException(exception);
+        }
+    }
+
+    public async Task<IReadOnlyList<NavigationEvent>> GetEventsAfterAsync(
+        Guid sessionId,
+        long afterSequence,
+        int limit,
+        CancellationToken cancellationToken) =>
+        await _dbContext.NavigationEvents
+            .AsNoTracking()
+            .Where(item => item.SessionId == sessionId && item.Sequence > afterSequence)
+            .OrderBy(item => item.Sequence)
+            .Take(limit)
+            .ToArrayAsync(cancellationToken);
+
+    public async Task DeleteAsync(NavigationSession session, CancellationToken cancellationToken)
+    {
+        _dbContext.NavigationSessions.Remove(session);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task<int> DeleteExpiredAsync(DateTimeOffset now, CancellationToken cancellationToken) =>
+        _dbContext.NavigationSessions
+            .Where(session => session.ExpiresAt <= now)
+            .ExecuteDeleteAsync(cancellationToken);
 
     internal IQueryable<NavigationSession> BuildQuery(NavigationSessionCriteria criteria)
     {

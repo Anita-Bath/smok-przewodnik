@@ -37,6 +37,20 @@ public static class AuthExtension
                     RoleClaimType = "role",
                     ClockSkew = TimeSpan.FromSeconds(30)
                 };
+
+                builder.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        if (context.Request.Path.StartsWithSegments("/hubs/navigation") &&
+                            context.Request.Query.TryGetValue("access_token", out var token))
+                        {
+                            context.Token = token.FirstOrDefault();
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
             })
             .AddNavigationToken();
 
@@ -57,6 +71,14 @@ public static class AuthExtension
                 policy.RequireAuthenticatedUser();
                 policy.AddRequirements(
                     new NavigationSessionAccessRequirement(claimRole));
+            });
+
+            options.AddPolicy(AppConsts.NavigationConnectionPolicyName, policy =>
+            {
+                policy.AddAuthenticationSchemes(
+                    JwtBearerDefaults.AuthenticationScheme,
+                    NavigationTokenDefaults.AuthenticationScheme);
+                policy.RequireAuthenticatedUser();
             });
         });
 
