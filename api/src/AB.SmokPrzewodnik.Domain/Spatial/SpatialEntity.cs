@@ -155,4 +155,16 @@ public sealed class SpatialEntity : AggregateRoot<Guid>
         Geometry = geometry ?? throw new ArgumentNullException(nameof(geometry));
         MarkUpdated(updatedAt);
     }
+
+    public void AddAccessibilityFact(AccessibilityFact fact, DateTimeOffset updatedAt)
+    {
+        ArgumentNullException.ThrowIfNull(fact);
+        if (fact.TargetKind == "spatial_entity" && fact.SpatialEntityId != Id)
+        {
+            throw new ArgumentException("Accessibility fact belongs to a different spatial entity.", nameof(fact));
+        }
+
+        _accessibilityFacts.Add(fact);
+        MarkUpdated(updatedAt);
+    }
 }
