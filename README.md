@@ -1,88 +1,126 @@
-# Nazwa drużyny: Anita Bath
-## Nazwa zadania: Kraków bez barier
+# Smok Przewodnik
 
-## Uruchomienie projektu
+**Smok Przewodnik** to innowacyjna nawigacja i mapa miejska, stworzona z myślą o osobach ze szczególnymi potrzebami. Projekt został przygotowany na hackathon w ramach zadania **„Kraków bez barier”**.
 
-Pełna instrukcja przygotowania zależności oraz uruchomienia API i aplikacji
-mobilnej znajduje się w [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+---
 
-### Uczestnicy: 
+## Problem i kontekst
+
+W Krakowie w 2023 r. ok. **51 tys.** osób posiadało orzeczenie o niepełnosprawności, co stanowi ponad 630 osób na każde 10 tysięcy mieszkańców. Co ważne, **35%** tych orzeczeń dotyczy dysfunkcji narządu ruchu. Szersza definicja (niepełnosprawność prawna lub biologiczna) obejmuje według NSP 2021 około **13,9% mieszkańców** Krakowa (ok. 1 na 7 osób).
+
+Kraków posiada liczne rozwiązania dostępnościowe (np. w 100% niskopodłogowe autobusy, systemy informacji głosowej), jednak głównym problemem pozostaje **integracja rozproszonych informacji**. Standardowe nawigacje podają czas i dystans, podczas gdy osoby ze szczególnymi potrzebami potrzebują innych danych:
+- *Czy na trasie znajdują się krawężniki i schody?*
+- *Czy w danym przejściu podziemnym działa winda?*
+- *Czy wejście do budynku głównego ma próg?*
+
+## Nasze rozwiązanie
+
+**Smok Przewodnik** to nawigacja, która dostosowuje sugerowaną trasę do konkretnego profilu użytkownika. Aplikacja przeznaczona jest dla:
+- osób na wózkach inwalidzkich i z ograniczoną mobilnością,
+- osób niewidomych i słabowidzących,
+- osób niesłyszących i niedosłyszących,
+- seniorów oraz rodziców z wózkami dziecięcymi.
+
+### Główne funkcjonalności
+
+**1. Tryb Gościa (bez logowania):**
+- Wybór jednorazowego zestawu udogodnień i profilu (np. wózek, brak wzroku).
+- Wyznaczanie spersonalizowanej trasy bez barier architektonicznych.
+
+**2. Tryb Użytkownika (zalogowany):**
+- Zapis preferencji i stałego zestawu potrzeb użytkownika.
+- **Raportowanie na żywo (Crowdsourcing):** Dodawanie alertów o niedziałających windach, remontach czy zamkniętych przejściach.
+- Aktualizowanie informacji o punktach docelowych (np. weryfikacja czy miejsce posiada rampę wjazdową).
+
+---
+
+## Architektura i technologie
+
+Aplikacja wykorzystuje nowoczesną, w pełni rozdzieloną architekturę mikroserwisową. Składa się z mobilnego interfejsu (Frontend) oraz silnika backendowego wspartego specjalistycznym silnikiem tras.
+
+### Aplikacja Mobilna (Frontend)
+- **Technologia:** React Native / Expo (SDK 57)
+- **Nawigacja:** Expo Router
+- **Style i Komponenty:** React Native Paper, React Native Reanimated
+- **Mapa:** Leaflet
+- **Język:** TypeScript
+
+### Backend (API)
+- **Technologia:** .NET 10 (ASP.NET Core) zorganizowany we wzorcu **Clean Architecture** (Api, Application, Domain, Infrastructure).
+- **Baza Danych:** PostgreSQL + **PostGIS** (obsługa danych przestrzennych).
+- **ORM:** Entity Framework Core 10.
+- **Autoryzacja:** Supabase Auth (weryfikacja tokenów JWT).
+
+### Usługi Nawigacyjne (Routing)
+- Zewnętrzny silnik **[Valhalla](https://github.com/valhalla/valhalla)** oparty na danych OpenStreetMap. Valhalla przelicza kafelki routingu dla Krakowa, pozwalając unikać przeszkód zgłoszonych przez użytkowników lub wynikających z mapy.
+
+---
+
+## Struktura Repozytorium
+
+```text
+smok-przewodnik/
+├── api/                   # Backend API (.NET 10)
+│   └── src/
+│       ├── AB.SmokPrzewodnik.Api/            # REST API (Prezentacja)
+│       ├── AB.SmokPrzewodnik.Application/    # Use Cases (CQRS)
+│       ├── AB.SmokPrzewodnik.Domain/         # Encje biznesowe
+│       └── AB.SmokPrzewodnik.Infrastructure/ # Integracja z bazą danych i zew. usługami
+├── mobile/                # Aplikacja Expo (React Native)
+│   ├── app/               # Ekrany (Expo Router)
+│   ├── components/        # Komponenty współdzielone UI
+│   └── services/          # Połączenia HTTP do API oraz Supabase
+├── sb/                    # Konfiguracja środowiska lokalnego Supabase (Docker)
+└── docs/                  # Dokumentacja szczegółowa (DEVELOPMENT.md)
+```
+
+---
+
+## Uruchomienie projektu (Szybki Start)
+
+Poniżej znajduje się skrócona instrukcja uruchomienia środowiska deweloperskiego. Kompletny przewodnik krok po kroku znajdziesz w pliku **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**.
+
+### Wymagania
+- .NET SDK 10.x, EF Core CLI (`dotnet-ef`)
+- Node.js (LTS), npm
+- Docker (wymagany do uruchomienia Valhalli oraz usług bazy danych)
+- Supabase CLI
+
+### 1. Zależności i infrastruktura
+Zalecamy uruchomienie bazy danych przez lokalny stos Supabase oraz silnika nawigacyjnego w izolowanym kontenerze:
+
+```bash
+# Uruchomienie usług bazodanowych (Supabase)
+supabase start --workdir sb
+
+# Uruchomienie lokalnego silnika tras (Valhalla - upewnij się, że pobrano paczki kafelków)
+docker start smok-valhalla
+```
+
+### 2. Backend (API)
+Wyeksportuj zmienne środowiskowe, zastosuj migracje bazy i wystartuj profil HTTP.
+```bash
+# Aktualizacja bazy
+dotnet ef database update --project api/src/AB.SmokPrzewodnik.Infrastructure/AB.SmokPrzewodnik.Infrastructure.csproj --startup-project api/src/AB.SmokPrzewodnik.Api/AB.SmokPrzewodnik.Api.csproj
+
+# Uruchomienie
+dotnet run --project api/src/AB.SmokPrzewodnik.Api/AB.SmokPrzewodnik.Api.csproj --launch-profile http
+```
+*(API domyślnie nasłuchuje na porcie 5123)*
+
+### 3. Aplikacja Mobilna (Mobile)
+Skonfiguruj plik `mobile/.env.local` wskazując własny wewnętrzny adres IP komputera (dla urządzeń fizycznych) m.in.: `EXPO_PUBLIC_API_URL=http://<TWOJE_IP>:5123/v1`
+```bash
+cd mobile
+npm ci
+npm start
+```
+Wciśnij `a` aby uruchomić emulator Androida, `i` aby uruchomić symulator iOS lub zeskanuj kod QR aplikacją **Expo Go** na swoim telefonie.
+
+---
+
+## Zespół (Drużyna: Anita Bath)
 - Michał Dudnik
 - Jakub Wójtowicz
 - Bartosz Lwowski
 - Marcin Mikuła
----
-### Problem
-Skala problemu
-
-W Krakowie w 2023 r. ok. **51 tys.** osób posiadało orzeczenie o niepełnosprawności lub stopniu niepełnosprawności — **632,2 osoby na 10 tys. mieszkańców.** Co istotne, **35%** orzeczeń dotyczyło dysfunkcji narządu ruchu, a osoby powyżej 65. roku życia stanowiły **51%** tej grupy.
-
-Jednocześnie szersza definicja — niepełnosprawność prawna lub biologiczna — obejmowała według NSP 2021 około **13,9% mieszkańców** Krakowa, czyli mniej więcej 1 na 7 mieszkańców.
-
-To ważne, bo użytkownikiem *Smoka Przewodnika* nie musi być **tylko** osoba poruszająca się na wózku
-
-Może nim być osoba:
-
-- z ograniczoną mobilnością,
-- niewidoma/słabowidząca,
-- niesłysząca/niedosłysząca,
-- z niepełnosprawnością intelektualną,
-- starsza,
-- czasowo ograniczona ruchowo,
-- rodzic z wózkiem dziecięcym.
-- Problem nie polega wyłącznie na braku udogodnień
-
-Kraków już posiada wiele rozwiązań dostępnościowych.
-
-Przykładowo:
-
-- 100% autobusów MPK jest niskopodłogowych,
-- ponad 90% tramwajów jest obecnie niskopodłogowych,
-- pojazdy mają miejsca dla wózków i platformy najazdowe,
-- transport wykorzystuje informacje głosowe,
-- przystanki mają rozwiązania dla osób niewidomych i słabowidzących.
-
-Problemem jest więc coraz częściej znalezienie właściwej informacji i połączenie jej w jedną trasę.
-
-Google Maps może powiedzieć: *Idź 7 minut do przystanku*.
-
-Ale przykladowo osoba na wózku potrzebuje wiedzieć:
-
-*Czy po drodze jest krawężnik?*
-*Czy przejście ma podjazd?*
-*Czy winda na przejściu działa?*
-*Czy przystanek obsługuje pojazdy niskopodłogowe?*
-*Czy na końcu trasy budynek ma wejście bez schodów?*
-
-To jest zasadnicza różnica między nawigacją, a **Smokiem Przewodnikiem.** 
-
----
-
-### Rozwiązanie
-
-**Smok Przewodnik** to dostępnościowa nawigacja i mapa dla Krakowa, która jest w pełni dostosowana do potrzeb osób ze wszystkimi typami niepełnosprawności i ich rodzin.
-
-Użytkownik wybiera zestaw udogonień np.:
-
-- Wózek / ograniczona mobilność,
-- Niewidomy / słabowidzący,
-- Niesłyszący / niedosłyszący,
-- Ograniczona sprawność.
-
-Aplikacja zaś sama ustala funkcjonalność dla danego *profilu użytkownika.*
-
-## Zasada działania: 
-
-Aplikacja posiada dwa tryby:
-- **Użytkownik niezarejestrowany (gość)** - dostęp do podstawowych funkcji aplikacji
-- **Użytkownik zarejestrowany (konto)** - pełny dostęp do funkcji aplikacji 
-> Omówienie poszczególnych funkcji poniżej
-
-**Użytkownik niezarejestrowany:** 
-- Wybór ww. zestawu udogodnień (na daną sesję)
-- Sugerowanie tras w oparciu o wybrany zestaw.
-
-**Użytkownik zarejestrowany:**
-- Wszystkie funkcje jak powyżej (z zapisem wybranego zestawu i możliwością jego zmiany/dodania kolejnych udogodnień)
-- Dodawanie zgłoszeń na mapie w czasie rzeczywistym (np. zamknięte przejście, niedziałająca winda etc.)
-- Dodawanie stałych informacji o danym punkcie (np. posiada/nie posiada dedykowaną obsługę osób niepełnosprawnych, posiada/nie posiada windę dla osób na wózku etc.)
