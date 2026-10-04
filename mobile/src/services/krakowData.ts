@@ -55,39 +55,68 @@ export async function fetchKrakowPlacesFromDB(): Promise<KrakowPlace[]> {
     const data = await response.json();
     const entities = data.items || [];
 
+    console.log(entities);
+
     // Filter out only places (Kind enum may be serialized as string 'Place' or int 1)
     const placeEntities = entities.filter((e: any) => e.kind === 'Place' || e.kind === 1);
 
     const places: (KrakowPlace | null)[] = await Promise.all(
       placeEntities.map(async (entity: any) => {
         try {
-          const detailResp = await fetch(`${API_URL}/spatials/places/${entity.id}`);
-          if (!detailResp.ok) {
-            return null;
+          let coords = { latitude: 50.0619, longitude: 19.9368 };
+          if (entity.geometry?.coordinates && Array.isArray(entity.geometry.coordinates) && entity.geometry.coordinates.length > 0) {
+            const firstCoord = entity.geometry.coordinates[0];
+            coords = {
+              latitude: firstCoord.latitude ?? firstCoord.Latitude ?? 50.0619,
+              longitude: firstCoord.longitude ?? firstCoord.Longitude ?? 19.9368
+            };
           }
-          const placeDetail = await detailResp.json();
-          
-          const coords = entity.geometry?.coordinates?.[0] || { latitude: 50.0619, longitude: 19.9368 };
-          
+
           let name = 'Nieznane miejsce';
           let description = '';
-          if (placeDetail.translations && placeDetail.translations.length > 0) {
-            const pl = placeDetail.translations.find((t: any) => t.locale === 'pl') || placeDetail.translations[0];
-            name = pl.name;
-            description = pl.description;
+          let category = 'monument';
+          let address = 'Kraków';
+          let openingHours = undefined;
+          let phone = undefined;
+          let email = undefined;
+          let website = undefined;
+
+          // If translations are included directly on the list item (thanks to our mapper update), use them
+          if (entity.translations && entity.translations.length > 0) {
+            const pl = entity.translations.find((t: any) => t.locale === 'pl' || t.Locale === 'pl') || entity.translations[0];
+            name = pl.name ?? pl.Name ?? name;
+            description = pl.description ?? pl.Description ?? description;
+            // Since we skipped the detail fetch, we fallback to defaults for category/contact
+          } else {
+            // Fallback to fetching details
+            const detailResp = await fetch(`${API_URL}/spatials/places/${entity.id}`);
+            if (detailResp.ok) {
+              const placeDetail = await detailResp.json();
+              if (placeDetail.translations && placeDetail.translations.length > 0) {
+                const pl = placeDetail.translations.find((t: any) => t.locale === 'pl' || t.Locale === 'pl') || placeDetail.translations[0];
+                name = pl.name ?? pl.Name ?? name;
+                description = pl.description ?? pl.Description ?? description;
+              }
+              category = placeDetail.categoryCode || placeDetail.CategoryCode || category;
+              openingHours = placeDetail.openingHours || placeDetail.OpeningHours;
+              phone = placeDetail.contact?.phone || placeDetail.Contact?.Phone;
+              email = placeDetail.contact?.email || placeDetail.Contact?.Email;
+              website = placeDetail.website || placeDetail.Website;
+              if (email) address = email;
+            }
           }
 
           return {
             id: entity.id,
             name: name,
-            address: placeDetail.contact?.email || 'Kraków',
+            address: address,
             distanceFromUserMeters: 500,
-            category: (placeDetail.categoryCode as any) || 'monument',
+            category: category,
             coordinates: coords,
-            openingHours: placeDetail.openingHours,
-            phone: placeDetail.contact?.phone,
-            email: placeDetail.contact?.email,
-            website: placeDetail.website,
+            openingHours: openingHours,
+            phone: phone,
+            email: email,
+            website: website,
             confidenceState: 'unverified',
             confidenceLabel: 'Pobrano z bazy (.NET API)',
             generalNote: description,
@@ -140,3 +169,58 @@ export const KRAKOW_PLACES: KrakowPlace[] = [
     wheelchairAccess: 'full',
   }
 ];
+
+export async function fetchPlaceById(id: string): Promise<KrakowPlace | null> {
+  const local = KRAKOW_PLACES.find(p => p.id === id);
+  if (local) return local;
+
+  try {
+    const detailResp = await fetch(`${API_URL}/spatials/places/${id}`);
+    if (!detailResp.ok) return null;
+    const placeDetail = await detailResp.json();
+
+    let name = 'Nieznane miejsce';
+    let description = '';
+    if (placeDetail.translations && placeDetail.translations.length > 0) {
+      const pl = placeDetail.translations.find((t: any) => t.locale === 'pl' || t.Locale === 'pl') || placeDetail.translations[0];
+      name = pl.name ?? pl.Name ?? name;
+      description = pl.description ?? pl.Description ?? description;
+    }
+
+    let coords = { latitude: 50.0619, longitude: 19.9368 };
+    if (placeDetail.geometry?.coordinates && Array.isArray(placeDetail.geometry.coordinates) && placeDetail.geometry.coordinates.length > 0) {
+      const firstCoord = placeDetail.geometry.coordinates[0];
+      coords = {
+        latitude: firstCoord.latitude ?? firstCoord.Latitude ?? 50.0619,
+        longitude: firstCoord.longitude ?? firstCoord.Longitude ?? 19.9368
+      };
+    }
+
+    return {
+      id: placeDetail.id || id,
+      name: name,
+      address: placeDetail.contact?.email || 'Kraków',
+      distanceFromUserMeters: 500,
+      category: (placeDetail.categoryCode || placeDetail.CategoryCode) || 'monument',
+      coordinates: coords,
+      openingHours: placeDetail.openingHours || placeDetail.OpeningHours,
+      phone: placeDetail.contact?.phone || placeDetail.Contact?.Phone,
+      email: placeDetail.contact?.email || placeDetail.Contact?.Email,
+      website: placeDetail.website || placeDetail.Website,
+      confidenceState: 'unverified',
+      confidenceLabel: 'Pobrano z bazy (.NET API)',
+      generalNote: description,
+      hasStepFreeAccess: false,
+      hasElevator: false,
+      hasAccessibleToilet: false,
+      hasInductionLoop: false,
+      hasAudioGuidance: false,
+      hasRoughSurfaceNotice: false,
+      facts: [],
+      wheelchairAccess: ['full', 'limited', 'none', 'unknown'][Math.floor(Math.random() * 4)] as any,
+    } as KrakowPlace;
+  } catch (error) {
+    console.error('Error fetching place by id:', error);
+    return null;
+  }
+}
