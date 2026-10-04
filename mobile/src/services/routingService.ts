@@ -418,7 +418,7 @@ export async function fetchLiveKrakowRoutes(
   const origin = originCoords || DEFAULT_KRAKOW_ORIGIN;
 
   try {
-    const url = `https://router.project-osrm.org/route/v1/walking/${origin.longitude},${origin.latitude};${destination.coordinates.longitude},${destination.coordinates.latitude}?overview=full&geometries=geojson&steps=true`;
+    const url = `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${origin.longitude},${origin.latitude};${destination.coordinates.longitude},${destination.coordinates.latitude}?overview=full&geometries=geojson&steps=true`;
     const res = await fetch(url);
     if (!res.ok) {
       return fallback;
