@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="pl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smok Przewodnik – Kraków bez barier | HackYeah 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        smok: {
+                            blue: '#004C97',
+                            teal: '#009692',
+                            olive: '#967D00',
+                            ochre: '#965E00',
+                            navy: '#162C41',
+                            dark: '#0D1B2A',
+                            card: '#1E364F'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0D1B2A;
+            color: #F8FAFC;
+            overflow-x: hidden;
+        }
+        .slide {
+            display: none;
+            min-height: calc(100vh - 76px);
+            animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .slide.active {
+            display: flex;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0D1B2A;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1E364F;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #009692;
+        }
+        /* Print All Mode */
+        body.print-mode {
+            overflow: visible !important;
+        }
+        body.print-mode .slide {
+            display: flex !important;
+            min-height: 100vh;
+            border-bottom: 2px dashed #1E364F;
+            padding-bottom: 3rem;
+            margin-bottom: 2rem;
+            page-break-after: always;
+        }
+        body.print-mode #bottom-nav {
+            display: none !important;
+        }
+        @media print {
+            .slide {
+                display: flex !important;
+                page-break-after: always;
+                min-height: 100vh;
+            }
+            #top-nav, #bottom-nav {
+                display: none !important;
+            }
+        }
+        .phone-mockup {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 8px #1E364F, 0 0 0 10px #004C97;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen selection:bg-smok-teal selection:text-white">
+
+    <!-- SVG LOGO DEFINITION FOR REUSE -->
+    <svg width="0" height="0" class="hidden">
+        <symbol id="smok-logo" viewBox="0 0 512 512">
+            <rect width="512" height="512" rx="145" fill="#004C97"/>
+            <path d="M 131 415 C 123 320 144 275 181 255 L 144 206 L 206 218 L 181 131 L 256 181 L 293 96 L 331 181 L 400 208 C 425 220 424 252 418 269 L 368 306 L 318 281 L 356 255 L 305 243 C 258 258 263 310 278 331 C 295 352 332 372 356 415 Z" fill="#FFFFFF"/>
+        </symbol>
+    </svg>
+
+    <!-- TOP HEADER / BRANDING BAR -->
+    <header id="top-nav" class="h-[76px] bg-smok-navy/95 backdrop-blur-md border-b border-white/10 px-6 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-3.5">
+            <svg class="w-11 h-11 drop-shadow-md flex-shrink-0"><use href="#smok-logo"></use></svg>
+            <div>
+                <div class="flex items-center gap-2.5">
+                    <span class="font-extrabold text-lg tracking-tight text-white">SMOK PRZEWODNIK</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-smok-teal/20 text-smok-teal border border-smok-teal/40">HackYeah 2026</span>
+                    <span class="hidden md:inline-block text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-smok-blue/30 text-blue-200 border border-blue-400/30">Kategoria: Kraków bez barier</span>
+                </div>
+                <p class="text-xs text-slate-400 hidden sm:block">Dedykowana, skalowalna platforma nawigacji i dostępności miejskiej dla Krakowa</p>
+            </div>
+        </div>
+
+        <!-- Palette Pill & Mode Controls -->
+        <div class="flex items-center gap-4">
+            <div class="hidden xl:flex items-center gap-1.5 bg-smok-dark/80 px-3 py-1.5 rounded-lg border border-white/10" title="Oficjalna paleta barw projektu">
+                <span class="text-[10px] text-slate-400 mr-1 uppercase font-semibold">Design System:</span>
+                <span class="w-4 h-4 rounded-sm bg-[#004C97] border border-white/20" title="#004C97"></span>
+                <span class="w-4 h-4 rounded-sm bg-[#009692] border border-white/20" title="#009692"></span>
+                <span class="w-4 h-4 rounded-sm bg-[#967D00] border border-white/20" title="#967D00"></span>
+                <span class="w-4 h-4 rounded-sm bg-[#965E00] border border-white/20" title="#965E00"></span>
+                <span class="w-4 h-4 rounded-sm bg-[#162C41] border border-white/20" title="#162C41"></span>
+            </div>
+
+            <a href="https://github.com/Anita-Bath/smok-przewodnik" target="_blank" class="hidden sm:flex items-center gap-1.5 text-xs font-medium bg-white/5 hover:bg-white/10 text-slate-200 px-3 py-2 rounded-lg border border-white/10 transition">
+                <i data-lucide="github" class="w-4 h-4 text-smok-teal"></i>
+                <span>Repozytorium</span>
+            </a>
+
+            <button onclick="togglePrintMode()" id="view-mode-btn" class="flex items-center gap-1.5 text-xs font-semibold bg-smok-blue hover:bg-smok-blue/80 text-white px-3.5 py-2 rounded-lg border border-blue-400/30 transition shadow-sm">
+                <i data-lucide="layers" class="w-4 h-4"></i>
+                <span id="view-mode-text">Widok wszystkich (PDF)</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN SLIDES CONTAINER -->
+    <main class="flex-1 flex flex-col justify-center relative">
+
+        <!-- ==========================================
+             SLAJD 1: TYTUŁOWY & EXECUTIVE SUMMARY
+             ========================================== -->
+        <section class="slide active flex-col justify-between p-6 md:p-12 max-w-7xl mx-auto w-full" data-slide="1">
+            <div class="my-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                <!-- Left Column: Description -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-smok-teal/15 border border-smok-teal/40 text-smok-teal text-xs font-bold uppercase tracking-widest">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i> Wyzwanie: Kraków bez barier • HackYeah 2026
+                    </div>
+
+                    <div class="flex items-center gap-5">
+                        <svg class="w-20 h-20 md:w-24 md:h-24 drop-shadow-2xl flex-shrink-0"><use href="#smok-logo"></use></svg>
+                        <div>
+                            <h1 class="text-4xl md:text-6xl font-black tracking-tight text-white leading-none">
+                                SMOK <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#009692] to-[#38bdf8]">PRZEWODNIK</span>
+                            </h1>
+                            <p class="text-lg md:text-xl text-blue-200 font-medium mt-2">
+                                Pierwsza spersonalizowana nawigacja i żywa mapa dostępności Krakowa
+                            </p>
+                        </div>
+                    </div>
+
+                    <p class="text-slate-300 text-base md:text-lg leading-relaxed bg-smok-navy/80 p-5 rounded-2xl border border-white/10 shadow-inner">
+                        <strong class="text-white">Smok Przewodnik</strong> to kompleksowa aplikacja i platforma nawigacyjno-informacyjna stworzona z myślą o osobach ze wszystkimi typami niepełnosprawności, seniorach, osobach czasowo kontuzjowanych oraz rodzicach z wózkami. Zamiast traktować wszystkich pieszych jednakowo, system <strong class="text-smok-teal">automatycznie dostosowuje trasy, interfejs oraz ostrzeżenia</strong> do wybranego profilu potrzeb użytkownika — łącząc otwarte dane przestrzenne (OSM), infrastrukturę MPK i zgłoszenia społeczności w czasie rzeczywistym.
+                    </p>
+
+                    <!-- Key Value Badges -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                        <div class="bg-smok-navy p-4 rounded-xl border border-smok-blue/40">
+                            <div class="text-smok-teal font-black text-xl">1 na 7</div>
+                            <div class="text-xs font-semibold text-white mt-0.5">Mieszkańców Krakowa</div>
+                            <div class="text-[11px] text-slate-400 mt-1">13,9% populacji objętej niepełnosprawnością (NSP)</div>
+                        </div>
+                        <div class="bg-smok-navy p-4 rounded-xl border border-smok-teal/40">
+                            <div class="text-smok-teal font-black text-xl">0 PLN</div>
+                            <div class="text-xs font-semibold text-white mt-0.5">Kosztów dla UMK</div>
+                            <div class="text-[11px] text-slate-400 mt-1">Brak obciążenia budżetu i urzędników Miasta</div>
+                        </div>
+                        <div class="bg-smok-navy p-4 rounded-xl border border-smok-olive/50">
+                            <div class="text-[#eab308] font-black text-xl">WCAG 2.2</div>
+                            <div class="text-xs font-semibold text-white mt-0.5">Standard AA / AAA</div>
+                            <div class="text-[11px] text-slate-400 mt-1">Tryb wysokiego kontrastu, lektor i haptyka</div>
+                        </div>
+                        <div class="bg-smok-navy p-4 rounded-xl border border-smok-ochre/50">
+                            <div class="text-amber-500 font-black text-xl">OSM + Live</div>
+                            <div class="text-xs font-semibold text-white mt-0.5">Dane Hybrydowe</div>
+                            <div class="text-[11px] text-slate-400 mt-1">Valhalla Routing, PostGIS & Crowdsourcing</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Visual App Preview & Palette Identity -->
+                <div class="lg:col-span-5 flex flex-col items-center">
+                    <div class="w-full max-w-[330px] bg-smok-navy rounded-[36px] p-5 phone-mockup border border-white/10">
+                        <!-- Top Phone Status -->
+                        <div class="flex justify-between items-center text-[11px] text-slate-400 mb-4 px-2">
+                            <span>08:32</span>
+                            <span class="px-2 py-0.5 rounded bg-smok-teal/20 text-smok-teal font-bold">5G • 77%</span>
+                        </div>
+                        <!-- App Screen Content Recreated from Screenshot 4 -->
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <svg class="w-10 h-10 rounded-xl"><use href="#smok-logo"></use></svg>
+                                <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-300">
+                                    <i data-lucide="settings" class="w-4 h-4"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Zrób mapę Krakowa dla siebie</h3>
+                                <p class="text-xs text-slate-300 mt-1 leading-relaxed">Zapisuj przydatne miejsca i udostępniaj informacje o dostępności bez zbędnych danych.</p>
+                            </div>
+                            <!-- High Contrast Toggle -->
+                            <div class="bg-white text-smok-navy p-3 rounded-xl flex items-center justify-between border-2 border-smok-teal">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-full bg-smok-teal/20 flex items-center justify-center text-smok-teal">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-bold">Tryb dla niedowidzących</div>
+                                        <div class="text-[10px] text-slate-600">Wysoki kontrast • WCAG AAA</div>
+                                    </div>
+                                </div>
+                                <div class="w-9 h-5 bg-slate-300 rounded-full relative p-0.5">
+                                    <div class="w-4 h-4 bg-white rounded-full shadow"></div>
+                                </div>
+                            </div>
+                            <!-- Privacy Box -->
+                            <div class="bg-smok-dark/70 p-3 rounded-xl border border-smok-teal/30 flex gap-2.5 items-start">
+                                <i data-lucide="shield-check" class="w-5 h-5 text-smok-teal flex-shrink-0 mt-0.5"></i>
+                                <div>
+                                    <div class="text-xs font-bold text-white">Twoje potrzeby są prywatne.</div>
+                                    <div class="text-[11px] text-slate-300 mt-0.5">Nie potrzebujemy danych medycznych. Ustawienia mapy możesz zmienić później.</div>
+                                </div>
+                            </div>
+                            <!-- Buttons -->
+                            <div class="space-y-2 pt-1">
+                                <div class="w-full py-2.5 rounded-full bg-[#0082C8] text-center text-xs font-bold text-white shadow">Utwórz konto (Pełny dostęp)</div>
+                                <div class="w-full py-2.5 rounded-full border border-smok-teal text-center text-xs font-bold text-smok-teal flex items-center justify-center gap-1.5">
+                                    <i data-lucide="user" class="w-3.5 h-3.5"></i> Zaloguj się jako gość
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <span class="text-xs text-slate-400">Kod źródłowy: <code class="text-smok-teal font-mono">github.com/Anita-Bath/smok-przewodnik</code></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLAJD 2: DIAGNOZA DEMOGRAFICZNA I ODBIORCY
+             ========================================== -->
+        <section class="slide flex-col justify-between p-6 md:p-12 max-w-7xl mx-auto w-full" data-slide="2">
+            <div>
+                <div class="flex items-center gap-2 text-smok-teal text-xs font-bold uppercase tracking-widest mb-2">
+                    <span>01 • Diagnoza Społeczna i Demograficzna</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white">Kraków w liczbach: Dla kogo tworzymy Smoka Przewodnika?</h2>
+                <p class="text-slate-300 mt-2 max-w-4xl text-sm md:text-base">
+                    Dostępność przestrzeni miejskiej w Krakowie to nie problem niszowy. Dane statystyczne jednoznacznie pokazują, że bariery architektoniczne i informacyjne dotykają setek tysięcy mieszkańców oraz turystów odwiedzających stolicę Małopolski.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 my-auto py-6">
+                <!-- Left Column: Hard Data Cards -->
+                <div class="lg:col-span-5 space-y-4">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-blue-300 flex items-center gap-2">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4 text-smok-teal"></i> Twarde dane dla Miasta Krakowa
+                    </h3>
+
+                    <div class="bg-smok-navy p-5 rounded-2xl border-l-4 border-smok-blue border border-white/10">
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-3xl font-black text-white">~51 000 osób</span>
+                            <span class="text-xs font-bold px-2.5 py-1 rounded bg-smok-blue/30 text-blue-200">632,2 / 10 tys. mieszk.</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                            W 2023 roku w Krakowie około <strong>51 tys. osób posiadało formalne orzeczenie o niepełnosprawności</strong> lub stopniu niepełnosprawności.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-smok-navy p-4 rounded-2xl border-l-4 border-smok-teal border border-white/10">
+                            <span class="text-3xl font-black text-smok-teal">35%</span>
+                            <div class="text-xs font-bold text-white mt-1">Dysfunkcje narządu ruchu</div>
+                            <p class="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                                Ponad jedna trzecia wszystkich wydanych orzeczeń dotyczy bezpośrednio problemów z poruszaniem się i pokonywaniem przeszkód.
+                            </p>
+                        </div>
+                        <div class="bg-smok-navy p-4 rounded-2xl border-l-4 border-smok-olive border border-white/10">
+                            <span class="text-3xl font-black text-[#eab308]">51%</span>
+                            <div class="text-xs font-bold text-white mt-1">Osoby powyżej 65. roku życia</div>
+                            <p class="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                                Seniorzy stanowią ponad połowę grupy z orzeczeniami. Starzejące się społeczeństwo potrzebuje prostych i czytelnych narzędzi.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-smok-blue/40 to-smok-teal/20 p-5 rounded-2xl border border-smok-teal/40">
+                        <div class="flex items-center justify-between">
+                            <span class="text-3xl font-black text-white">13,9% populacji</span>
+                            <span class="text-sm font-extrabold px-3 py-1 rounded-full bg-smok-teal text-smok-dark">1 na 7 mieszkańców!</span>
+                        </div>
+                        <p class="text-xs text-slate-200 mt-2 leading-relaxed">
+                            Według Narodowego Spisu Powszechnego (NSP 2021), szersza definicja — obejmująca <strong>niepełnosprawność prawną lub biologiczną</strong> — dotyczy aż 13,9% krakowian.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right Column: 7 User Personas -->
+                <div class="lg:col-span-7 bg-smok-navy/70 p-6 rounded-2xl border border-white/10 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                <i data-lucide="users" class="w-5 h-5 text-smok-teal"></i>
+                                Kto jest użytkownikiem Smoka Przewodnika?
+                            </h3>
+                            <span class="text-xs bg-white/10 px-2.5 py-1 rounded text-slate-300">Szersze spojrzenie na dostępność</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mb-5 leading-relaxed">
+                            Kluczowe założenie naszego projektu: <strong>użytkownikiem Smoka Przewodnika nie musi być wyłącznie osoba poruszająca się na wózku inwalidzkim</strong>. Z naszej nawigacji na co dzień skorzysta aż 7 szerokich grup odbiorców:
+                        </p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="p-3.5 rounded-xl bg-smok-dark/80 border border-white/10 flex gap-3 items-start">
+                                <div class="p-2 rounded-lg bg-smok-blue/30 text-blue-300"><i data-lucide="accessibility" class="w-5 h-5"></i></div>
+                                <div>
+                                    <div class="text-xs font-bold text-white">1. Osoby na wózkach i z ograniczoną mobilnością</div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Wymagają bezwzględnego unikania schodów, wysokich krawężników oraz stromych podjazdów.</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-smok-dark/80 border border-white/10 flex gap-3 items-start">
+                                <div class="p-2 rounded-lg bg-smok-teal/20 text-smok-teal"><i data-lucide="eye-off" class="w-5 h-5"></i></div>
+                                <div>
+                                    <div class="text-xs font-bold text-white">2. Osoby niewidome i słabowidzące</div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Potrzebują wysokiego kontrastu WCAG AAA, komunikatów głosowych, informacji o sygnalizacji dźwiękowej i tyflografice.</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-smok-dark/80 border border-white/10 flex gap-3 items-start">
+                                <div class="p-2 rounded-lg bg-smok-olive/30 text-yellow-300"><i data-lucide="ear-off" class="w-5 h-5"></i></div>
+                                <div>
+                                    <div class="text-xs font-bold text-white">3. Osoby niesłyszące i niedosłyszące</div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Szukają budynków i kas wyposażonych w pętle indukcyjne, powiadomień wizualnych oraz haptycznych (wibracji).</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-smok-dark/80 border border-white/10 flex gap-3 items-start">
+                                <div class="p-2 rounded-lg bg-smok-ochre/30 text-amber-300"><i data-lucide="brain" class="w-5 h-5"></i></div>
+                                <div>
+                                    <div class="text-xs font-bold text-white">4. Osoby z niepełnosprawnością intelektualną / w spektrum</div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Preferują proste komunikaty, piktogramy oraz unikanie wąskich, zatłoczonych i głośnych przejść podziemnych.</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-smok-dark/80 border border-white/10 flex gap-3 items-start">
+                                <div class="p-2 rounded-lg bg-smok-blue/30 text-blue-300"><i data-lucide="heart-handshake" class="w-5 h-5"></i></div>
+                                <div>
+                                    <div class="text-xs font-bold text-white">5. Osoby starsze (Seniorzy 65+)</div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Tryb „Spokojne tempo” — unikanie stromych podejść, informacja o ławkach, toaletach i działających windach.</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-smok-dark/80 border border-white/10 flex gap-3 items-start">
+                                <div class="p-2 rounded-lg bg-smok-teal/20 text-smok-teal"><i data-lucide="crutch" class="w-5 h-5"></i></div>
+                                <div>
+                                    <div class="text-xs font-bold text-white">6. Osoby czasowo ograniczone ruchowo</div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Osoby po operacjach, ze złamaniami, o kulach lub z ciężkim bagażem podróżnym na dworcach.</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-smok-dark/80 border border-smok-teal/40 flex gap-3 items-start sm:col-span-2">
+                                <div class="p-2 rounded-lg bg-smok-teal/30 text-white"><i data-lucide="baby" class="w-5 h-5"></i></div>
+                                <div>
+                                    <div class="text-xs font-bold text-white">7. Rodzice i opiekunowie z wózkami dziecięcymi</div>
+                                    <p class="text-[11px] text-slate-300 mt-0.5">Dla rodzica z wózkiem brak podjazdu, kocie łby czy zepsuta winda na rondzie Mogilskim stanowią dokładnie taką samą barierę jak dla osoby na wózku.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLAJD 3: PARADOKS DOSTĘPNOŚCI I LUKA INFORMACYJNA
+             ========================================== -->
+        <section class="slide flex-col justify-between p-6 md:p-12 max-w-7xl mx-auto w-full" data-slide="3">
+            <div>
+                <div class="flex items-center gap-2 text-smok-teal text-xs font-bold uppercase tracking-widest mb-2">
+                    <span>02 • Istota Problemu</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white">Problem nie polega wyłącznie na braku udogodnień</h2>
+                <p class="text-slate-300 mt-2 max-w-4xl text-sm md:text-base">
+                    Kraków wykonał ogromną pracę inwestycyjną i posiada dziś dziesiątki nowoczesnych rozwiązań dostępnościowych. <strong class="text-white">Prawdziwym problemem jest dziś rozproszenie informacji i brak narzędzia, które połączy te punkty w jedną, bezpieczną trasę od drzwi do drzwi.</strong>
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 my-auto py-6">
+                <!-- Left: What Krakow Already Has -->
+                <div class="lg:col-span-5 bg-smok-navy p-6 rounded-2xl border border-smok-teal/30 flex flex-col justify-between">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-smok-teal/20 text-smok-teal text-xs font-bold mb-4">
+                            <i data-lucide="check-circle-2" class="w-4 h-4"></i> Potencjał infrastrukturalny Krakowa
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4">Co Kraków już posiada?</h3>
+                        
+                        <ul class="space-y-3.5">
+                            <li class="flex items-start gap-3 bg-smok-dark/60 p-3 rounded-xl border border-white/5">
+                                <span class="text-lg font-black text-smok-teal">100%</span>
+                                <div class="text-xs text-slate-200">
+                                    <strong class="text-white block">Autobusów MPK jest niskopodłogowych</strong>
+                                    Pełna dostępność taboru autobusowego w całym mieście.
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3 bg-smok-dark/60 p-3 rounded-xl border border-white/5">
+                                <span class="text-lg font-black text-smok-teal">&gt;90%</span>
+                                <div class="text-xs text-slate-200">
+                                    <strong class="text-white block">Tramwajów niskopodłogowych</strong>
+                                    Nowoczesny tabor wyposażony w platformy najazdowe i dedykowane miejsca dla wózków.
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3 bg-smok-dark/60 p-3 rounded-xl border border-white/5">
+                                <i data-lucide="volume-2" class="w-6 h-6 text-smok-teal flex-shrink-0 mt-0.5"></i>
+                                <div class="text-xs text-slate-200">
+                                    <strong class="text-white block">Systemy informacji głosowej</strong>
+                                    Zapowiedzi przystanków i numerów linii wewnątrz oraz na zewnątrz pojazdów.
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3 bg-smok-dark/60 p-3 rounded-xl border border-white/5">
+                                <i data-lucide="Compass" class="w-6 h-6 text-smok-teal flex-shrink-0 mt-0.5"></i>
+                                <div class="text-xs text-slate-200">
+                                    <strong class="text-white block">Zmodernizowane przystanki i przejścia</strong>
+                                    Płyty z wypustkami (pola uwagi), ścieżki prowadzące oraz sygnalizacja akustyczna dla osób niewidomych.
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-5 p-3.5 rounded-xl bg-smok-olive/20 border border-smok-olive/50 text-xs text-yellow-100">
+                        <strong>Wniosek:</strong> Nawet 100% niskopodłogowych autobusów nie pomoże, jeśli użytkownik nie może dostać się na przystanek przez wysoki krawężnik lub niedziałającą windę w przejściu podziemnym.
+                    </div>
+                </div>
+
+                <!-- Right: Google Maps vs Smok Przewodnik -->
+                <div class="lg:col-span-7 flex flex-col justify-between space-y-6">
+                    <div class="bg-smok-navy p-6 rounded-2xl border border-white/10">
+                        <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i data-lucide="git-compare" class="w-5 h-5 text-smok-teal"></i>
+                            Zasadnicza różnica: Standardowa nawigacja vs. Smok Przewodnik
+                        </h3>
+
+                        <!-- Scenario Comparison -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                            <div class="bg-red-950/30 border border-red-500/30 p-4 rounded-xl">
+                                <div class="text-xs font-bold uppercase text-red-400 mb-1">Zwykła nawigacja (np. Google Maps)</div>
+                                <div class="text-base font-bold text-white mb-2">„Idź 7 minut do przystanku”</div>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    Algorytm liczy wyłącznie najkrótszą geometrię chodnika. Ignoruje schody, strome podejścia, wysokie krawężniki, kocie łby i awarie wind. Binarny znacznik „dostępny” nic nie mówi o progu 8 cm.
+                                </p>
+                            </div>
+
+                            <div class="bg-smok-teal/15 border border-smok-teal/50 p-4 rounded-xl">
+                                <div class="text-xs font-bold uppercase text-smok-teal mb-1">Smok Przewodnik</div>
+                                <div class="text-base font-bold text-white mb-2">„Trasa dopasowana do Twojego profilu”</div>
+                                <p class="text-xs text-slate-200 leading-relaxed">
+                                    Odpowiada na <strong>5 kluczowych pytań</strong>, od których zależy, czy osoba z niepełnosprawnością w ogóle dotrze do celu bez stresu i konieczności zawracania:
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- The 5 Critical Questions -->
+                        <div class="space-y-2.5">
+                            <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">5 pytań, na które odpowiada Smok Przewodnik przed każdym krokiem:</div>
+                            
+                            <div class="flex items-center gap-3 bg-smok-dark/80 p-3 rounded-xl border border-white/10">
+                                <span class="w-6 h-6 rounded-full bg-smok-blue text-white text-xs font-bold flex items-center justify-center flex-shrink-0">1</span>
+                                <span class="text-xs md:text-sm font-semibold text-white">Czy po drodze jest wysoki krawężnik lub bruk (kocie łby)?</span>
+                                <span class="ml-auto text-[11px] text-smok-teal font-medium hidden sm:inline">Dane o nawierzchni i obniżeniach</span>
+                            </div>
+
+                            <div class="flex items-center gap-3 bg-smok-dark/80 p-3 rounded-xl border border-white/10">
+                                <span class="w-6 h-6 rounded-full bg-smok-blue text-white text-xs font-bold flex items-center justify-center flex-shrink-0">2</span>
+                                <span class="text-xs md:text-sm font-semibold text-white">Czy przejście dla pieszych lub kładka posiada łagodny podjazd?</span>
+                                <span class="ml-auto text-[11px] text-smok-teal font-medium hidden sm:inline">Analiza nachylenia terenu</span>
+                            </div>
+
+                            <div class="flex items-center gap-3 bg-smok-dark/80 p-3 rounded-xl border border-white/10">
+                                <span class="w-6 h-6 rounded-full bg-smok-blue text-white text-xs font-bold flex items-center justify-center flex-shrink-0">3</span>
+                                <span class="text-xs md:text-sm font-semibold text-white">Czy winda na przejściu podziemnym / dworcu w tej chwili działa?</span>
+                                <span class="ml-auto text-[11px] text-amber-400 font-medium hidden sm:inline">Zgłoszenia Live w czasie rzeczywistym</span>
+                            </div>
+
+                            <div class="flex items-center gap-3 bg-smok-dark/80 p-3 rounded-xl border border-white/10">
+                                <span class="w-6 h-6 rounded-full bg-smok-blue text-white text-xs font-bold flex items-center justify-center flex-shrink-0">4</span>
+                                <span class="text-xs md:text-sm font-semibold text-white">Czy przystanek obsługuje pojazdy niskopodłogowe i ma odpowiedni peron?</span>
+                                <span class="ml-auto text-[11px] text-smok-teal font-medium hidden sm:inline">Integracja z danymi MPK</span>
+                            </div>
+
+                            <div class="flex items-center gap-3 bg-smok-dark/80 p-3 rounded-xl border border-white/10">
+                                <span class="w-6 h-6 rounded-full bg-smok-blue text-white text-xs font-bold flex items-center justify-center flex-shrink-0">5</span>
+                                <span class="text-xs md:text-sm font-semibold text-white">Czy na samym końcu trasy budynek ma wejście bez schodów?</span>
+                                <span class="ml-auto text-[11px] text-smok-teal font-medium hidden sm:inline">Baza POI z weryfikacją wejść</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLAJD 4: ROZWIĄZANIE - PERSONALIZACJA I LOGIKA TRÓJSTANOWA
+             ========================================== -->
+        <section class="slide flex-col justify-between p-6 md:p-12 max-w-7xl mx-auto w-full" data-slide="4">
+            <div>
+                <div class="flex items-center gap-2 text-smok-teal text-xs font-bold uppercase tracking-widest mb-2">
+                    <span>03 • Rozwiązanie i Personalizacja</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white">Szybkie profile potrzeb i trójstanowe ograniczenia trasy</h2>
+                <p class="text-slate-300 mt-2 max-w-4xl text-sm md:text-base">
+                    Użytkownik nie musi ręcznie konfigurować dziesiątek opcji. Wybiera jeden lub więcej <strong class="text-white">Szybkich profili potrzeb</strong>, a Smok Przewodnik sam dobiera wagi algorytmu trasowania oraz kanały asysty. Każdą regułę można dodatkowo precyzyjnie dostosować za pomocą przełączników trójstanowych.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 my-auto py-6 items-center">
+                <!-- Left Column: Detailed Logic Description -->
+                <div class="lg:col-span-7 space-y-5">
+                    <!-- 5 Profiles -->
+                    <div class="bg-smok-navy p-5 rounded-2xl border border-white/10">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-smok-teal mb-3">1. Wybór zestawu udogodnień (Szybkie profile potrzeb)</h3>
+                        <p class="text-xs text-slate-300 mb-3">Po kliknięciu profilu aplikacja automatycznie rekonfiguruje zarówno silnik wyznaczania trasy (Valhalla), jak i układ samego interfejsu:</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                            <div class="p-3 rounded-xl bg-smok-blue/30 border border-smok-blue flex items-center gap-2.5 font-semibold text-white">
+                                <i data-lucide="accessibility" class="w-4 h-4 text-sky-300"></i> Wózek / Ograniczona mobilność
+                            </div>
+                            <div class="p-3 rounded-xl bg-smok-dark/80 border border-white/10 flex items-center gap-2.5 font-semibold text-slate-200">
+                                <i data-lucide="eye-off" class="w-4 h-4 text-smok-teal"></i> Niewidomy / Słabowidzący
+                            </div>
+                            <div class="p-3 rounded-xl bg-smok-dark/80 border border-white/10 flex items-center gap-2.5 font-semibold text-slate-200">
+                                <i data-lucide="ear-off" class="w-4 h-4 text-yellow-400"></i> Niesłyszący / Niedosłyszący
+                            </div>
+                            <div class="p-3 rounded-xl bg-smok-dark/80 border border-white/10 flex items-center gap-2.5 font-semibold text-slate-200">
+                                <i data-lucide="baby" class="w-4 h-4 text-amber-400"></i> Wózek dziecięcy / Opiekun
+                            </div>
+                            <div class="p-3 rounded-xl bg-smok-dark/80 border border-white/10 flex items-center gap-2.5 font-semibold text-slate-200 sm:col-span-2">
+                                <i data-lucide="heart" class="w-4 h-4 text-rose-400"></i> Senior / Spokojne tempo (Ograniczona sprawność)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tri-State Constraints Explanation -->
+                    <div class="bg-smok-navy p-5 rounded-2xl border border-white/10">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-smok-teal mb-3">2. Ograniczenia trasy (Logika Trójstanowa / Tri-State Constraints)</h3>
+                        <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+                            W przeciwieństwie do zwykłych nawigacji (które znają tylko ustawienie wł./wył.), Smok Przewodnik wprowadza trzy poziomy restrykcji dla każdej bariery architektonicznej:
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40">
+                                <span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 mb-1">
+                                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Dozwolone (Allowed)
+                                </span>
+                                <p class="text-[11px] text-slate-300">Brak kary wagowej w algorytmie. Element (np. wąskie przejście) może być swobodnie użyty do skrócenia trasy.</p>
+                            </div>
+                            <div class="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/40">
+                                <span class="inline-flex items-center gap-1 text-xs font-bold text-amber-400 mb-1">
+                                    <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Unikaj (Prefer Avoid)
+                                </span>
+                                <p class="text-[11px] text-slate-300">Wysoka waga kosztowa. Silnik ominie np. kocie łby czy stromy podjazd, chyba że alternatywa wydłużyłaby trasę kilkukrotnie.</p>
+                            </div>
+                            <div class="p-3.5 rounded-xl bg-red-950/40 border border-red-500/40">
+                                <span class="inline-flex items-center gap-1 text-xs font-bold text-red-400 mb-1">
+                                    <i data-lucide="ban" class="w-3.5 h-3.5"></i> Niedozwolone (Must Avoid)
+                                </span>
+                                <p class="text-[11px] text-slate-300">Twarde wykluczenie z grafu drogowego. Schody lub stacje przesiadkowe bez wind są całkowicie wycięte z trasy.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Channels of Assistance -->
+                    <div class="bg-smok-navy p-4 rounded-2xl border border-white/10 flex flex-wrap items-center justify-between gap-3">
+                        <div class="text-xs font-bold text-white">3. Kanały powiadomień i asysty:</div>
+                        <div class="flex flex-wrap gap-2 text-[11px]">
+                            <span class="px-3 py-1 rounded-full bg-smok-blue/30 text-blue-200 border border-blue-400/30">👁️ Wskazówki wizualne (wysoki kontrast / piktogramy)</span>
+                            <span class="px-3 py-1 rounded-full bg-smok-teal/20 text-smok-teal border border-smok-teal/30">🔊 Wskazówki dźwiękowe i lektor (Audio)</span>
+                            <span class="px-3 py-1 rounded-full bg-smok-olive/30 text-yellow-200 border border-yellow-400/30">📳 Wibracje i haptyka (Haptic)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Exact UI Mockup of Screenshot 3 & 7 -->
+                <div class="lg:col-span-5 flex justify-center">
+                    <div class="w-full max-w-[350px] bg-[#132232] rounded-[34px] p-4 phone-mockup border border-white/10 text-xs">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-white/10">
+                            <span class="font-bold text-sm text-white">Profil i dostępność</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-smok-teal/20 text-smok-teal">Ekran aplikacji</span>
+                        </div>
+
+                        <div class="text-[11px] font-bold text-white mb-1">Ograniczenia trasy (trójstanowe)</div>
+                        <div class="text-[10px] text-slate-400 mb-2.5">Kliknij na status, aby przełączać: Dozwolone → Unikaj → Niedozwolone.</div>
+
+                        <div class="space-y-1.5 bg-[#1B2D42] p-2.5 rounded-2xl border border-white/5">
+                            <div class="flex items-center justify-between py-1.5 px-2 border-b border-white/5">
+                                <span class="text-[11px] font-medium text-slate-200">Schody i strome stopnie</span>
+                                <span class="px-2.5 py-0.5 rounded-full bg-red-900/60 border border-red-500/60 text-red-200 text-[10px] font-semibold">⊘ Niedozwolone</span>
+                            </div>
+                            <div class="flex items-center justify-between py-1.5 px-2 border-b border-white/5">
+                                <span class="text-[11px] font-medium text-slate-200">Wysokie krawężniki i progi</span>
+                                <span class="px-2.5 py-0.5 rounded-full bg-[#4A3508] border border-amber-500/60 text-amber-200 text-[10px] font-semibold">! Unikaj</span>
+                            </div>
+                            <div class="flex items-center justify-between py-1.5 px-2 border-b border-white/5">
+                                <span class="text-[11px] font-medium text-slate-200">Nierówny bruk (np. kocie łby)</span>
+                                <span class="px-2.5 py-0.5 rounded-full bg-[#4A3508] border border-amber-500/60 text-amber-200 text-[10px] font-semibold">! Unikaj</span>
+                            </div>
+                            <div class="flex items-center justify-between py-1.5 px-2 border-b border-white/5">
+                                <span class="text-[11px] font-medium text-slate-200">Strome podjazdy (nachylenie &gt;6%)</span>
+                                <span class="px-2.5 py-0.5 rounded-full bg-[#4A3508] border border-amber-500/60 text-amber-200 text-[10px] font-semibold">! Unikaj</span>
+                            </div>
+                            <div class="flex items-center justify-between py-1.5 px-2 border-b border-white/5">
+                                <span class="text-[11px] font-medium text-slate-200">Stacje przesiadkowe bez wind</span>
+                                <span class="px-2.5 py-0.5 rounded-full bg-red-900/60 border border-red-500/60 text-red-200 text-[10px] font-semibold">⊘ Niedozwolone</span>
+                            </div>
+                            <div class="flex items-center justify-between py-1.5 px-2 border-b border-white/5">
+                                <span class="text-[11px] font-medium text-slate-200">Wąskie, zatłoczone przejścia</span>
+                                <span class="px-2.5 py-0.5 rounded-full bg-emerald-900/60 border border-emerald-500/60 text-emerald-200 text-[10px] font-semibold">✓ Dozwolone</span>
+                            </div>
+                            <div class="flex items-center justify-between py-1.5 px-2">
+                                <span class="text-[11px] font-medium text-slate-200">Przejścia bez sygnalizacji dźwiękowej</span>
+                                <span class="px-2.5 py-0.5 rounded-full bg-emerald-900/60 border border-emerald-500/60 text-emerald-200 text-[10px] font-semibold">✓ Dozwolone</span>
+                            </div>
+                        </div>
+
+                        <div class="text-[11px] font-bold text-white mt-3 mb-1.5">Kanały powiadomień i asysty</div>
+                        <div class="space-y-1.5 bg-[#1B2D42] p-2.5 rounded-2xl border border-white/5 text-[11px]">
+                            <div class="flex items-center justify-between py-1">
+                                <span>Wskazówki wizualne (wysoki kontrast)</span>
+                                <span class="w-7 h-4 bg-sky-500 rounded-full flex items-center justify-end p-0.5"><span class="w-3 h-3 bg-white rounded-full"></span></span>
+                            </div>
+                            <div class="flex items-center justify-between py-1">
+                                <span>Wskazówki dźwiękowe i lektor (Audio)</span>
+                                <span class="w-7 h-4 bg-sky-500 rounded-full flex items-center justify-end p-0.5"><span class="w-3 h-3 bg-white rounded-full"></span></span>
+                            </div>
+                            <div class="flex items-center justify-between py-1">
+                                <span>Wibracje i haptyka (Haptic)</span>
+                                <span class="w-7 h-4 bg-sky-500 rounded-full flex items-center justify-end p-0.5"><span class="w-3 h-3 bg-white rounded-full"></span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLAJD 5: ZASADA DZIAŁANIA - DWA TRYBY UŻYTKOWNIKA
+             ========================================== -->
+        <section class="slide flex-col justify-between p-6 md:p-12 max-w-7xl mx-auto w-full" data-slide="5">
+            <div>
+                <div class="flex items-center gap-2 text-smok-teal text-xs font-bold uppercase tracking-widest mb-2">
+                    <span>04 • Zasada Działania Aplikacji</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white">Dwa tryby pracy: Użytkownik Gość vs. Zarejestrowane Konto</h2>
+                <p class="text-slate-300 mt-2 max-w-4xl text-sm md:text-base">
+                    Zaprojektowaliśmy architekturę dostępu tak, aby <strong class="text-white">nie stawiać bariery wejścia</strong>. Turysta lub mieszkaniec w nagłej potrzebie może skorzystać z nawigacji natychmiast bez logowania, natomiast konto odblokowuje funkcje społecznościowe, synchronizację i współtworzenie mapy Krakowa.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 my-auto py-6">
+                <!-- Mode 1: Guest -->
+                <div class="bg-smok-navy rounded-3xl p-6 border-2 border-smok-blue/60 flex flex-col justify-between relative overflow-hidden">
+                    <div>
+                        <div class="flex items-center justify-between gap-3 mb-4">
+                            <span class="px-2.5 py-1 rounded-full bg-smok-blue/30 text-blue-200 border border-blue-400/30 text-[11px] font-bold uppercase tracking-tight whitespace-nowrap shrink-0">
+                                Tryb 1 • Natychmiastowy start
+                            </span>
+                            <span class="text-[11px] text-slate-400 font-mono tracking-tight whitespace-nowrap shrink-0">
+                                Zero logowania • 100% prywatności
+                            </span>
+                        </div>
+                        <h3 class="text-2xl font-extrabold text-white flex items-center gap-2.5 mb-2">
+                            <i data-lucide="user" class="w-6 h-6 text-sky-400"></i>
+                            Użytkownik niezarejestrowany (Gość)
+                        </h3>
+                        <p class="text-xs text-slate-300 mb-6 leading-relaxed">
+                            Dostęp do wszystkich podstawowych funkcji nawigacyjnych i informacyjnych od pierwszej sekundy po uruchomieniu aplikacji. Ustawienia są przechowywane lokalnie na urządzeniu (na czas sesji).
+                        </p>
+
+                        <div class="space-y-4">
+                            <div class="bg-smok-dark/70 p-4 rounded-2xl border border-white/10 flex gap-3.5">
+                                <div class="w-8 h-8 rounded-lg bg-smok-blue/40 text-sky-300 flex items-center justify-center font-bold flex-shrink-0">1</div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Wybór zestawu udogodnień (na daną sesję)</h4>
+                                    <p class="text-xs text-slate-300 mt-1">Możliwość błyskawicznego wskazania profilu (np. Wózek, Niewidomy, Wózek dziecięcy) oraz przełączenia trybu wysokiego kontrastu WCAG AAA bez zakładania konta.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-smok-dark/70 p-4 rounded-2xl border border-white/10 flex gap-3.5">
+                                <div class="w-8 h-8 rounded-lg bg-smok-blue/40 text-sky-300 flex items-center justify-center font-bold flex-shrink-0">2</div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Sugerowanie tras w oparciu o wybrany zestaw</h4>
+                                    <p class="text-xs text-slate-300 mt-1">Wyznaczanie bezpiecznych tras pieszych i komunikacji miejskiej z ominięciem schodów, wysokich krawężników oraz aktualnie zgłoszonych awarii.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-smok-dark/70 p-4 rounded-2xl border border-white/10 flex gap-3.5">
+                                <div class="w-8 h-8 rounded-lg bg-smok-blue/40 text-sky-300 flex items-center justify-center font-bold flex-shrink-0">3</div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Przeglądanie mapy z widocznymi „pinezkami” z bazy danych</h4>
+                                    <p class="text-xs text-slate-300 mt-1">Pełny podgląd zweryfikowanych punktów POI z bazy PostGIS (.NET API) oraz szybkie filtry na mapie: <strong class="text-sky-300">Bez schodów, Toalety, Pętla indukcyjna, Windy</strong>.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+                        <span>Idealny dla: Turystów, seniorów, osób w nagłej potrzebie</span>
+                        <span class="text-sky-300 font-semibold">Widoczny znacznik: „Tryb gościa”</span>
+                    </div>
+                </div>
+
+                <!-- Mode 2: Registered User -->
+                <div class="bg-smok-navy rounded-3xl p-6 border-2 border-smok-teal flex flex-col justify-between relative overflow-hidden shadow-lg shadow-smok-teal/10">
+                    <div>
+                        <div class="flex items-center justify-between gap-3 mb-4">
+                            <span class="px-2.5 py-1 rounded-full bg-smok-teal/20 text-smok-teal border border-smok-teal/40 text-[11px] font-bold uppercase tracking-tight whitespace-nowrap shrink-0">
+                                Tryb 2 • Pełny ekosystem i społeczność
+                            </span>
+                            <span class="text-[11px] text-smok-teal font-mono tracking-tight whitespace-nowrap shrink-0">
+                                Autoryzacja JWT • Punkty Społeczności
+                            </span>
+                        </div>
+                        <h3 class="text-2xl font-extrabold text-white flex items-center gap-2.5 mb-2">
+                            <i data-lucide="user-check" class="w-6 h-6 text-smok-teal"></i>
+                            Użytkownik zarejestrowany (Konto)
+                        </h3>
+                        <p class="text-xs text-slate-300 mb-6 leading-relaxed">
+                            Pełny dostęp do funkcji aplikacji, trwała personalizacja, paczki offline oraz możliwość aktywnego współtworzenia żywej mapy dostępności Krakowa w czasie rzeczywistym.
+                        </p>
+
+                        <div class="space-y-4">
+                            <div class="bg-smok-dark/80 p-4 rounded-2xl border border-smok-teal/30 flex gap-3.5">
+                                <div class="w-8 h-8 rounded-lg bg-smok-teal/30 text-smok-teal flex items-center justify-center font-bold flex-shrink-0">1</div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Trwały zapis zestawu udogodnień i ulubionych miejsc</h4>
+                                    <p class="text-xs text-slate-300 mt-1">Wszystkie funkcje Gościa + trwały zapis wybranego profilu, możliwość łączenia wielu udogodnień, zapisywanie Ulubionych miejsc (np. Wawel) oraz pobieranie <strong class="text-smok-teal">Paczek Offline (np. Kraków Centrum 24 MB)</strong>.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-smok-dark/80 p-4 rounded-2xl border border-smok-teal/30 flex gap-3.5">
+                                <div class="w-8 h-8 rounded-lg bg-smok-teal/30 text-smok-teal flex items-center justify-center font-bold flex-shrink-0">2</div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Dodawanie zgłoszeń na mapie w czasie rzeczywistym (Live)</h4>
+                                    <p class="text-xs text-slate-300 mt-1">Błyskawiczne raportowanie dynamicznych barier ze zdjęciem: <strong class="text-white">awaria windy, schody bez podjazdu, zastawiony chodnik/koperta, remont nawierzchni/dziury, awaria sygnalizacji dźwiękowej</strong>.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-smok-dark/80 p-4 rounded-2xl border border-smok-teal/30 flex gap-3.5">
+                                <div class="w-8 h-8 rounded-lg bg-smok-teal/30 text-smok-teal flex items-center justify-center font-bold flex-shrink-0">3</div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">Dodawanie i aktualizacja informacji o danym punkcie POI</h4>
+                                    <p class="text-xs text-slate-300 mt-1">Możliwość edycji atrybutów konkretnego lokalu lub budynku (przycisk <em>„Dodaj aktualizację dostępności”</em> — np. zgłoszenie uszkodzenia podjazdu, braku toalety dla OzN czy potwierdzenie pętli indukcyjnej).</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs">
+                        <span class="text-amber-400 font-bold flex items-center gap-1.5">
+                            <i data-lucide="award" class="w-4 h-4"></i> Za każde zgłoszenie: +15 pkt Społeczności (wymienne na zniżki MPK/Kultura)
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLAJD 6: PREZENTACJA EKRANÓW APLIKACJI (SCREENSHOTS WALKTHROUGH)
+             ========================================== -->
+        <section class="slide flex-col justify-between p-6 md:p-12 max-w-7xl mx-auto w-full" data-slide="6">
+            <div>
+                <div class="flex items-center gap-2 text-smok-teal text-xs font-bold uppercase tracking-widest mb-2">
+                    <span>05 • Przegląd Interfejsu Produktu (UI/UX)</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white">Jak działa Smok Przewodnik w praktyce?</h2>
+                <p class="text-slate-300 mt-2 max-w-4xl text-sm md:text-base">
+                    Nasz prototyp został zrealizowany w oparciu o Waszą paletę barw (<code class="text-smok-teal">#004C97</code>, <code class="text-smok-teal">#009692</code>, <code class="text-smok-teal">#162C41</code>) z zachowaniem najwyższego kontrastu i ergonomii obsługi jedną ręką. Poniżej przedstawiamy kluczowe ekrany działającej aplikacji:
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-auto py-6">
+                <!-- Screen 1: Map & Filters (.NET API) -->
+                <div class="bg-smok-navy rounded-3xl p-5 border border-white/10 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold uppercase px-2.5 py-1 rounded bg-smok-blue/30 text-blue-200">Ekran 1 • Eksploracja Mapy</span>
+                            <span class="text-[11px] text-slate-400">Gość & Konto</span>
+                        </div>
+                        <!-- Visual representation of Map Screen -->
+                        <div class="bg-[#132232] rounded-2xl p-3.5 border border-white/10 space-y-3 mb-4">
+                            <div class="bg-[#1E3246] rounded-full px-3 py-2 text-[11px] text-slate-300 flex items-center gap-2">
+                                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400"></i> Szukaj adresu w Krakowie (np. Floriańska...)
+                            </div>
+                            <div class="flex gap-1.5 overflow-x-auto pb-1 text-[10px]">
+                                <span class="px-2.5 py-1 rounded-full bg-[#1E3246] text-white font-semibold border border-white/10">⚙️ Filtry</span>
+                                <span class="px-2.5 py-1 rounded-full bg-[#1E3246] text-white font-semibold border border-white/10">Bez schodów</span>
+                                <span class="px-2.5 py-1 rounded-full bg-[#1E3246] text-white font-semibold border border-white/10">Toalety</span>
+                                <span class="px-2.5 py-1 rounded-full bg-[#1E3246] text-white font-semibold border border-white/10">Pętla</span>
+                                <span class="px-2.5 py-1 rounded-full bg-[#1E3246] text-white font-semibold border border-white/10">Windy</span>
+                            </div>
+                            <!-- Simulated Map Card -->
+                            <div class="h-28 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 relative p-2.5 flex flex-col justify-between overflow-hidden border border-white/10">
+                                <div class="flex justify-between items-center z-10">
+                                    <span class="px-2 py-0.5 rounded-full bg-smok-navy/90 text-smok-teal text-[10px] font-bold border border-smok-teal/40">👤 Marcin / Tryb gościa</span>
+                                    <span class="px-2.5 py-1 rounded-full bg-smok-navy/95 text-sky-300 text-[10px] font-bold border border-sky-400/40">⊕ Lokalizuj mnie</span>
+                                </div>
+                                <div class="mx-auto my-auto z-10 flex flex-col items-center">
+                                    <span class="px-2 py-0.5 rounded bg-smok-navy text-white text-[10px] font-bold shadow">O! Shop / McDonald's</span>
+                                    <div class="w-5 h-5 rounded-full bg-amber-500 border-2 border-white shadow-md mt-0.5"></div>
+                                </div>
+                            </div>
+                            <!-- Bottom Sheet from Screenshot 5 -->
+                            <div class="bg-[#182B3E] p-3 rounded-xl border border-white/10 space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <div class="text-xs font-bold text-white">O! Shop (Łobzów)</div>
+                                        <div class="text-[10px] text-slate-400">5.9 km stąd • Kraków</div>
+                                    </div>
+                                    <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40">Pobrano z bazy (.NET API)</span>
+                                </div>
+                                <div class="text-[10px] text-slate-300">Kategoria: convenience. Dostępność OSM: <code class="text-amber-300">unknown</code></div>
+                                <div class="grid grid-cols-2 gap-2 pt-1">
+                                    <div class="py-1.5 rounded-full bg-[#0082C8] text-white text-center text-[11px] font-bold">➤ Trasa</div>
+                                    <div class="py-1.5 rounded-full border border-sky-400 text-sky-300 text-center text-[11px] font-bold">Szczegóły</div>
+                                </div>
+                                <div class="text-center text-[10px] text-smok-teal font-semibold pt-1">✎ Dodaj aktualizację dostępności</div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        <strong></strong> Integracja na żywo z backendem <code class="text-smok-teal">.NET API</code>, prezentacja statusu weryfikacji danych z OpenStreetMap oraz szybkie filtry dostępności nad mapą.
+                    </p>
+                </div>
+
+                <!-- Screen 2: Obstacle Reporting ("Zgłoś przeszkodę") -->
+                <div class="bg-smok-navy rounded-3xl p-5 border border-white/10 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold uppercase px-2.5 py-1 rounded bg-smok-teal/20 text-smok-teal">Ekran 2 • Zgłoś przeszkodę</span>
+                            <span class="text-[11px] text-amber-400 font-bold">+15 pkt</span>
+                        </div>
+                        <!-- Visual representation of Report Screen (Screenshot 1) -->
+                        <div class="bg-[#132232] rounded-2xl p-3.5 border border-white/10 space-y-2.5 mb-4">
+                            <div class="flex justify-between items-center text-xs font-bold text-white pb-1 border-b border-white/10">
+                                <span>✕</span>
+                                <span>Zgłoś przeszkodę</span>
+                                <span>⚙️</span>
+                            </div>
+                            <div class="text-[11px] font-bold text-white">Czego dotyczy zgłoszenie?</div>
+                            <div class="space-y-1.5 text-[11px]">
+                                <div class="p-2 rounded-xl bg-[#006BA6] border border-sky-400 text-white font-bold flex items-center gap-2">
+                                    <span>🛗</span> Awaria windy
+                                </div>
+                                <div class="p-2 rounded-xl bg-[#1C2E42] border border-white/10 text-slate-200 flex items-center gap-2">
+                                    <span>🪜</span> Schody bez podjazdu
+                                </div>
+                                <div class="p-2 rounded-xl bg-[#1C2E42] border border-white/10 text-slate-200 flex items-center gap-2">
+                                    <span>🚗</span> Zastawiony chodnik / koperta
+                                </div>
+                                <div class="p-2 rounded-xl bg-[#1C2E42] border border-white/10 text-slate-200 flex items-center gap-2">
+                                    <span>⚠️</span> Remont nawierzchni / dziury
+                                </div>
+                                <div class="p-2 rounded-xl bg-[#1C2E42] border border-white/10 text-slate-200 flex items-center gap-2">
+                                    <span>🔇</span> Awaria sygnalizacji dźwiękowej
+                                </div>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-[#1C2E42] border border-white/10 text-[10px] text-slate-400">
+                                <div class="text-slate-300 font-semibold mb-0.5">Dodatkowy opis sytuacji</div>
+                                Np. Winda przy peronie 2 nie reaguje na przycisk...
+                            </div>
+                            <div class="p-2 rounded-xl bg-[#1C2E42] border border-white/10 text-center text-[11px] text-slate-200 font-medium">
+                                📷 Dołącz zdjęcie (opcjonalnie)
+                            </div>
+                            <div class="py-2 rounded-full bg-[#0082C8] text-center text-white font-bold text-xs shadow">
+                                Wyślij zgłoszenie (+15 pkt)
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        <strong></strong> Błyskawiczny formularz crowdsourcingowy zaprojektowany pod kątem dużych przycisków dotykowych i weryfikacji fotograficznej.
+                    </p>
+                </div>
+
+                <!-- Screen 3: Saved Places & Offline Pack ("Zapisane") -->
+                <div class="bg-smok-navy rounded-3xl p-5 border border-white/10 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold uppercase px-2.5 py-1 rounded bg-smok-olive/30 text-yellow-300">Ekran 3 • Tryb Offline i Zapisane</span>
+                            <span class="text-[11px] text-slate-400">Niezawodność</span>
+                        </div>
+                        <!-- Visual representation of Saved Screen (Screenshot 6) -->
+                        <div class="bg-[#132232] rounded-2xl p-3.5 border border-white/10 space-y-3 mb-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-extrabold text-white">Zapisane</span>
+                                <span class="text-xs text-slate-400">⚙️</span>
+                            </div>
+
+                            <!-- Offline Pack Card -->
+                            <div class="bg-[#1B2D42] p-3.5 rounded-2xl border border-sky-500/30 space-y-2">
+                                <div class="flex items-center gap-2 text-sky-400 font-bold text-xs">
+                                    <i data-lucide="cloud-download" class="w-4 h-4"></i>
+                                    <span>Paczka offline: Kraków Centrum</span>
+                                </div>
+                                <p class="text-[11px] text-slate-300 leading-relaxed">
+                                    Pobrano dane dostępności, rozkłady MPK i geometrię 12 tras (24 MB). Nawigacja po zapisanych trasach działa bez połączenia z siecią.
+                                </p>
+                                <div class="text-[10px] text-sky-400 font-semibold">✓ Zaktualizowano dzisiaj</div>
+                            </div>
+
+                            <div class="text-xs font-bold text-white pt-1">Ulubione miejsca (1)</div>
+
+                            <!-- Favorite Card: Wawel -->
+                            <div class="bg-[#1B2D42] p-3.5 rounded-2xl border border-white/10 space-y-3">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <div class="text-sm font-bold text-white">Wawel</div>
+                                        <div class="text-[11px] text-slate-400">4.3 km • Wawel 5, Kraków</div>
+                                    </div>
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-sky-400 fill-sky-400"></i>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="py-2 rounded-full bg-[#0082C8] text-white text-center text-[11px] font-bold">➤ Wyznacz trasę</div>
+                                    <div class="py-2 rounded-full border border-sky-400 text-sky-300 text-center text-[11px] font-bold">Szczegóły</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        <strong></strong> Nawigacja działa nawet w przejściach podziemnych, tunelach czy przy utracie zasięgu GSM dzięki lokalnej bazie <code class="text-smok-teal">SQLite</code> i paczkom offline.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLAJD 7: ARCHITEKTURA TECHNICZNA I TECH STACK
+             ========================================== -->
+        <section class="slide flex-col justify-between p-6 md:p-12 max-w-7xl mx-auto w-full" data-slide="7">
+            <div>
+                <div class="flex items-center gap-2 text-smok-teal text-xs font-bold uppercase tracking-widest mb-2">
+                    <span>06 • Inżynieria Systemowa i Architektura</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white">Architektura Techniczna, Tech Stack i Model Progresywnego Zaufania</h2>
+                <p class="text-slate-300 mt-2 max-w-4xl text-sm md:text-base">
+                    Platforma opiera się na czystym, modularnym podziale odpowiedzialności (<em>Separation of Concerns</em>), co gwarantuje błyskawiczne zapytania geoprzestrzenne, pracę offline oraz pełne bezpieczeństwo danych.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 my-auto py-6">
+                <!-- 4 Tech Stack Pillars -->
+                <div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-smok-navy p-5 rounded-2xl border border-smok-blue/50">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase text-sky-400">1. Mobile & Web Frontend</span>
+                            <i data-lucide="smartphone" class="w-5 h-5 text-sky-400"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Expo (React Native)</h3>
+                        <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+                            <li>Jedna baza kodu dla systemów <strong>iOS, Android oraz Web</strong>.</li>
+                            <li>Natywne wsparcie dla czytników ekranu (<strong>TalkBack / VoiceOver</strong>), dynamicznego kontrastu i haptyki.</li>
+                            <li>Lokalna baza <strong>SQLite</strong> przechowująca paczki offline (geometria tras, rozkłady MPK i dane dostępności).</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-smok-navy p-5 rounded-2xl border border-smok-teal/50">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase text-smok-teal">2. Core API Host</span>
+                            <i data-lucide="cpu" class="w-5 h-5 text-smok-teal"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Modularny Monolit .NET 10 </h3>
+                        <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+                            <li>Wysokowydajne API w <strong>.NET 10 </strong> z wyraźną granicą domenową.</li>
+                            <li>Bezpieczna autoryzacja tokenami <strong>Supabase JWT</strong> (z pełnym wsparciem dla sesji Gościa).</li>
+                            <li>Komunikacja w czasie rzeczywistym przez <strong>SignalR</strong> do natychmiastowej propagacji zgłoszonych awarii wind i przeszkód.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-smok-navy p-5 rounded-2xl border border-smok-olive/50">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase text-yellow-400">3. Baza Przestrzenna & Media</span>
+                            <i data-lucide="database" class="w-5 h-5 text-yellow-400"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Supabase (PostgreSQL + PostGIS)</h3>
+                        <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+                            <li>Zasilenie danymi z <strong>OpenStreetMap (Overpass API)</strong> od pierwszego dnia działania (brak problemu <em>Cold Start</em>).</li>
+                            <li>Geodezyjne indeksy przestrzenne (<code class="text-yellow-300">ST_MakeEnvelope</code>) do błyskawicznego wyszukiwania POI w widoku mapy.</li>
+                            <li>Bezpośredni, bezpieczny upload zdjęć barier do <strong>Supabase Storage</strong>.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-smok-navy p-5 rounded-2xl border border-smok-ochre/50">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase text-amber-400">4. Silnik Trasowania Przestrzennego</span>
+                            <i data-lucide="route" class="w-5 h-5 text-amber-400"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Valhalla Routing Engine</h3>
+                        <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+                            <li>Wyizolowany serwer trasowania open-source obsługujący dynamiczne wagi kosztowe (<em>Dynamic Costing</em>).</li>
+                            <li>Uwzględnia kąt nachylenia terenu, rodzaj nawierzchni (bruk/asfalt) oraz twarde wykluczenia schodów i krawężników.</li>
+                            <li>Łączy odcinki piesze z niskopodłogowym transportem MPK.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Right Column: Progressive Trust & Privacy -->
+                <div class="lg:col-span-4 flex flex-col justify-between space-y-4">
+                    <div class="bg-smok-navy p-5 rounded-2xl border border-white/10 flex-1">
+                        <h3 class="text-base font-bold text-white flex items-center gap-2 mb-3">
+                            <i data-lucide="shield-alert" class="w-5 h-5 text-smok-teal"></i>
+                            Model Progresywnego Zaufania (Progressive Trust)
+                        </h3>
+                        <p class="text-xs text-slate-300 leading-relaxed mb-3">
+                            W nawigacji dla osób z niepełnosprawnościami <strong>brak danych nigdy nie może być traktowany jako gwarancja dostępności</strong>. Wprowadziliśmy ścisłą klasyfikację wiarygodności każdego punktu:
+                        </p>
+                        <div class="space-y-2 text-xs">
+                            <div class="p-2.5 rounded-lg bg-emerald-950/50 border border-emerald-500/40 text-emerald-200">
+                                <strong>Verified (Zweryfikowany):</strong> Potwierdzony oficjalnym audytem lub min. 3 zgodnymi zgłoszeniami ze zdjęciem.
+                            </div>
+                            <div class="p-2.5 rounded-lg bg-slate-800 border border-slate-600 text-slate-200">
+                                <strong>Unverified / Unknown:</strong> Obiekt z OSM bez pełnych tagów (np. brak danych o wysokości progu). Wyświetla ostrzeżenie: <em>„Zweryfikuj na miejscu lub dodaj zdjęcie”</em>.
+                            </div>
+                            <div class="p-2.5 rounded-lg bg-amber-950/50 border border-amber-500/40 text-amber-200">
+                                <strong>Disputed / Live Obstacle:</strong> Zgłoszona awaria (np. zepsuta winda) — natychmiast wyklucza węzeł z trasowania.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-smok-blue/30 to-smok-navy p-4 rounded-2xl border border-smok-blue/50">
+                        <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                            <i data-lucide="lock" class="w-4 h-4 text-smok-teal"></i> Gwarancja RODO (Privacy by Design)
+                        </div>
+                        <p class="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                            System nie przetwarza żadnych danych medycznych ani numerów orzeczeń. Profilowanie opiera się wyłącznie na parametrach geometrycznych i technicznych trasy.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLAJD 8: DOSTĘPNOŚĆ CYFROWA WCAG 2.2 AA/AAA I GRYWALIZACJA
+             ========================================== -->
+        <section class="slide flex-col justify-between p-6 md:p-12 max-w-7xl mx-auto w-full" data-slide="8">
+            <div>
+                <div class="flex items-center gap-2 text-smok-teal text-xs font-bold uppercase tracking-widest mb-2">
+                    <span>07 • Standardy WCAG 2.2 oraz Zaangażowanie Społeczności</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white">Dostępność cyfrowa bez kompromisów i moduł „Audytor Dostępności”</h2>
+                <p class="text-slate-300 mt-2 max-w-4xl text-sm md:text-base">
+                    Aplikacja niwelująca bariery architektoniczne musi sama być wzorem dostępności cyfrowej. Równocześnie, dzięki grywalizacji, angażujemy samych mieszkańców w utrzymanie aktualności danych w całym Krakowie.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 my-auto py-6">
+                <!-- Left: WCAG 2.2 Standards -->
+                <div class="lg:col-span-6 bg-smok-navy p-6 rounded-2xl border border-white/10 flex flex-col justify-between">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded bg-smok-blue/30 text-sky-300 text-xs font-bold mb-3">
+                            Standardy Projektowe WCAG 2.2 AA / AAA
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4">Jak zadbaliśmy o dostępność samej aplikacji?</h3>
+
+                        <div class="space-y-3.5">
+                            <div class="p-3.5 rounded-xl bg-smok-dark/70 border border-white/10">
+                                <div class="text-xs font-bold text-smok-teal">1. Alternatywa tekstowa dla mapy (Dla osób niewidomych)</div>
+                                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                    Dla osoby niewidomej klasyczna mapa wektorowa jest bezużyteczna. Smok Przewodnik oferuje pełnowartościowy, <strong>"widok" listy przeszkód i instrukcji krok-po-kroku</strong> z głosowym odczytem kierunku oraz odległości w metrach (pełna kompatybilność z <strong>TalkBack</strong> i <strong>VoiceOver</strong>).
+                                </p>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-smok-dark/70 border border-white/10">
+                                <div class="text-xs font-bold text-smok-teal">2. Wizualia, Kontrast AAA i Podwójne Kodowanie</div>
+                                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                    Dedykowany przełącznik <strong>Wysokiego Kontrastu (WCAG AAA)</strong> dostępny na każdym kluczowym ekranie. Żadna informacja nie jest przekazywana wyłącznie za pomocą koloru — zawsze stosujemy podwójne kodowanie: <strong>ikona + czytelna etykieta tekstowa</strong> (np. <code>⊘ Niedozwolone</code>, <code>! Unikaj</code>, <code>✓ Dozwolone</code>).
+                                </p>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-smok-dark/70 border border-white/10">
+                                <div class="text-xs font-bold text-smok-teal">3. Dostępność Motoryczna</div>
+                                <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                    Wszystkie elementy interaktywne i przyciski posiadają minimalny obszar dotykowy. Całkowicie wyeliminowaliśmy gesty wymagające złożonej precyzji (np. obracanie dwoma palcami) lub szybkiego czasu reakcji.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Gamification & Community Rewards -->
+                <div class="lg:col-span-6 bg-smok-navy p-6 rounded-2xl border border-smok-olive/50 flex flex-col justify-between">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded bg-smok-olive/30 text-yellow-300 text-xs font-bold mb-3">
+                            Crowdsourcing & Grywalizacja
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Punkty Społeczności i „Audytor Dostępności”</h3>
+                        <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+                            Aby zapewnić stały dopływ świeżych danych z terenu bez konieczności zatrudniania urzędników, wdrożyliśmy system mikro-zadań i nagród widoczny w profilu użytkownika (np. <strong>⭐ Punkty Społeczności: 120 pkt</strong>):
+                        </p>
+
+                        <div class="space-y-3 mb-5">
+                            <div class="flex items-start gap-3 bg-smok-dark/70 p-3 rounded-xl border border-white/10">
+                                <span class="px-2 py-1 rounded bg-amber-500/20 text-amber-300 font-bold text-xs">+15 pkt</span>
+                                <div class="text-xs text-slate-200">
+                                    <strong class="text-white block">Zgłaszanie barier i awarii na żywo</strong>
+                                    Każdy raport o niedziałającej windzie, zastawionej kopercie czy rozkopanym chodniku zasila konto użytkownika.
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 bg-smok-dark/70 p-3 rounded-xl border border-white/10">
+                                <span class="px-2 py-1 rounded bg-smok-teal/20 text-smok-teal font-bold text-xs">Daily Task</span>
+                                <div class="text-xs text-slate-200">
+                                    <strong class="text-white block">Proaktywne mikro-pytania w terenie</strong>
+                                    Gdy użytkownik mija punkt oznaczony w OSM jako <code>unknown</code>, aplikacja zadaje proste pytanie jednym kliknięciem: <em>„Czy ta kawiarnia posiada wejście bez stopnia?”</em>.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-smok-dark/90 p-4 rounded-xl border border-white/10">
+                            <div class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">Na co można wymienić Punkty Społeczności w Krakowie?</div>
+                            <p class="text-xs text-slate-300 mb-3">
+                                Zgodnie z opisem w aplikacji: <em>„Wymieniaj na cyfrowe zniżki MPK oraz bilety partnerów w Krakowie”</em>:
+                            </p>
+                            <div class="flex flex-wrap gap-1.5 text-[11px]">
+                                <span class="px-2.5 py-1 rounded-md bg-smok-blue/40 text-white font-semibold">🚌 Zniżki na bilety okresowe MPK Kraków</span>
+                                <span class="px-2.5 py-1 rounded-md bg-white/10 text-slate-200">🏛️ Muzeum Krakowa</span>
+                                <span class="px-2.5 py-1 rounded-md bg-white/10 text-slate-200">🎨 MOCAK</span>
+                                <span class="px-2.5 py-1 rounded-md bg-white/10 text-slate-200">⚙️ Muzeum Inżynierii i Techniki</span>
+                                <span class="px-2.5 py-1 rounded-md bg-white/10 text-slate-200">🎭 Teatr Bagatela & NCK</span>
+                                <span class="px-2.5 py-1 rounded-md bg-white/10 text-slate-200">☕ Lokalne kawiarnie partnerskie</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLAJD 9: ZERO KOSZTÓW DLA MIASTA & MODEL BIZNESOWY B2B
+             ========================================== -->
+        <section class="slide flex-col justify-between p-6 md:p-12 max-w-7xl mx-auto w-full" data-slide="9">
+            <div>
+                <div class="flex items-center gap-2 text-smok-teal text-xs font-bold uppercase tracking-widest mb-2">
+                    <span>08 • Zgodność z Wymogami Konkursowymi i Finansowanie</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white">Zero obciążenia dla Miasta Krakowa i samofinansujący model B2B</h2>
+                <p class="text-slate-300 mt-2 max-w-4xl text-sm md:text-base">
+                    Architektura Smoka Przewodnika została zaprojektowana z myślą o <strong class="text-white">pełnej autonomii operacyjnej i finansowej</strong>. Rozwiązanie nie wymaga angażowania budżetu Urzędu Miasta Krakowa (UMK) ani pracy Miejskich Jednostek Organizacyjnych (MJO).
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 my-auto py-6">
+                <!-- Left: 4 Pillars of Autonomy for UMK -->
+                <div class="lg:col-span-6 space-y-3.5">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-smok-teal">Dlaczego Miasto nie ponosi żadnych kosztów utrzymania?</h3>
+
+                    <div class="bg-smok-navy p-4 rounded-2xl border border-white/10 flex gap-3.5">
+                        <div class="w-9 h-9 rounded-xl bg-smok-blue/30 text-sky-300 flex items-center justify-center font-black flex-shrink-0">1</div>
+                        <div>
+                            <h4 class="text-sm font-bold text-white">Otwarte Źródła Danych (OpenStreetMap & Otwarte Dane)</h4>
+                            <p class="text-xs text-slate-300 mt-0.5">System automatycznie pobiera punkty POI, przystanki, koperty parkingowe i toalety przez Overpass API. Miasto nie musi budować ani udostępniać wewnętrznych baz danych.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-smok-navy p-4 rounded-2xl border border-white/10 flex gap-3.5">
+                        <div class="w-9 h-9 rounded-xl bg-smok-teal/20 text-smok-teal flex items-center justify-center font-black flex-shrink-0">2</div>
+                        <div>
+                            <h4 class="text-sm font-bold text-white">Automatyzacja ETL & Crowdsourcing Mieszkańców</h4>
+                            <p class="text-xs text-slate-300 mt-0.5">Aktualizacja bazy odbywa się bezudziałowo poprzez zautomatyzowane skrypty oraz zgłoszenia społeczności ze zdjęciami. UMK nie musi zatrudniać audytorów ani moderatorów.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-smok-navy p-4 rounded-2xl border border-white/10 flex gap-3.5">
+                        <div class="w-9 h-9 rounded-xl bg-smok-olive/30 text-yellow-300 flex items-center justify-center font-black flex-shrink-0">3</div>
+                        <div>
+                            <h4 class="text-sm font-bold text-white">Zerowe opłaty licencyjne i niski koszt chmury</h4>
+                            <p class="text-xs text-slate-300 mt-0.5">Wykorzystanie architektury Serverless (Supabase) oraz konteneryzacji silnika Valhalla ogranicza stałe koszty serwerowe, które w 100% pokrywa moduł komercyjny B2B.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-smok-navy p-4 rounded-2xl border border-white/10 flex gap-3.5">
+                        <div class="w-9 h-9 rounded-xl bg-smok-ochre/30 text-amber-300 flex items-center justify-center font-black flex-shrink-0">4</div>
+                        <div>
+                            <h4 class="text-sm font-bold text-white">Synergia promocyjna z MPK Kraków (Bezgotówkowo)</h4>
+                            <p class="text-xs text-slate-300 mt-0.5">Współpraca barterowa polegająca na wyświetlaniu informacji o aplikacji na ekranach w tramwajach i autobusach MPK w ramach realizacji programu <em>Dostępność Plus</em>.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: B2B SaaS Model & Financial Balance -->
+                <div class="lg:col-span-6 flex flex-col justify-between space-y-4">
+                    <div class="bg-smok-navy p-6 rounded-2xl border border-smok-teal/40">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold uppercase px-2.5 py-1 rounded bg-smok-teal/20 text-smok-teal">Model Biznesowy SaaS B2B</span>
+                            <span class="text-xs text-slate-400">Samofinansowanie</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Certyfikat Dostępności „Smok Przewodnik”</h3>
+                        <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                            Krakowskie hotele, restauracje, galerie handlowe, prywatne kliniki i instytucje mogą wnioskować o oficjalny <strong>Certyfikat Dostępności Smoka Przewodnika</strong>:
+                        </p>
+                        <ul class="text-xs text-slate-200 space-y-2 mb-5">
+                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-smok-teal"></i> Niewielka opłata abonamentowa za weryfikację fotograficzną i techniczną lokalu.</li>
+                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-smok-teal"></i> Lokal otrzymuje widżet dostępności na własną stronę WWW oraz wyróżnioną odznakę na mapie Krakowa.</li>
+                            <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-smok-teal"></i> Dotarcie do niezwykle lojalnej grupy klientów (osoby z niepełnosprawnościami, seniorzy, rodziny z dziećmi).</li>
+                        </ul>
+
+                        <!-- Financial Table -->
+                        <div class="overflow-hidden rounded-xl border border-white/10 text-xs">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-smok-dark text-slate-300 border-b border-white/10">
+                                        <th class="p-2.5 font-bold">Strumienie Przychodów</th>
+                                        <th class="p-2.5 font-bold">Koszty Operacyjne</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-white/5 bg-smok-dark/50 text-[11px]">
+                                    <tr>
+                                        <td class="p-2.5 text-emerald-300 font-medium">• Abonamenty B2B za Certyfikat dla hoteli i gastronomii</td>
+                                        <td class="p-2.5 text-slate-300">• Dedykowany serwer trasowania Valhalla ($\sim\$30/\text{msc}$)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5 text-emerald-300 font-medium">• Sponsorowane wyzwania mapowania dla firm (CSR / ESG)</td>
+                                        <td class="p-2.5 text-slate-300">• Chmura Supabase DB & Storage (skalowanie zdjęć)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5 text-emerald-300 font-medium">• Granty celowe (PFRON / Dostępność Plus / UE)</td>
+                                        <td class="p-2.5 text-slate-300">• Druk naklejek QR i materiałów dla lokali partnerskich</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-smok-blue/30 border border-smok-blue p-4 rounded-2xl text-xs text-white">
+                        <strong class="text-sky-300 uppercase tracking-wide block mb-0.5">Wniosek dla Jury HackYeah 2026:</strong>
+                        Kraków otrzymuje gotowe, nowoczesne narzędzie dostępnościowe dla mieszkańców i turystów bez wydawania ani jednej złotówki z budżetu miejskiego.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             SLAJD 10: WIZJA ROZWOJU (ROADMAP) & PODSUMOWANIE
+             ========================================== -->
+        <section class="slide flex-col justify-between p-6 md:p-12 max-w-7xl mx-auto w-full" data-slide="10">
+            <div>
+                <div class="flex items-center gap-2 text-smok-teal text-xs font-bold uppercase tracking-widest mb-2">
+                    <span>09 • Wizja Rozwoju (Future Extensions) i Podsumowanie</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-white">Kierunki rozwoju i gotowość wdrożeniowa w Krakowie</h2>
+                <p class="text-slate-300 mt-2 max-w-4xl text-sm md:text-base">
+                    Smok Przewodnik posiada otwartą architekturę gotową na integrację z kolejnymi warstwami danych miejskich oraz technologiami AI i IoT.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 my-auto py-6">
+                <!-- Left: 4 Future Extensions -->
+                <div class="lg:col-span-7 space-y-4">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-smok-teal">Planowane rozszerzenia technologiczne (Roadmap)</h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-smok-navy p-4 rounded-2xl border border-white/10">
+                            <div class="text-xs font-bold text-sky-400 mb-1 flex items-center gap-1.5">
+                                <i data-lucide="waves" class="w-4 h-4"></i> 1. Nowe Datasety Miejskie i Sensoryczne
+                            </div>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Mapowanie natężenia hałasu (ciche trasy przyjazne sensorycznie dla osób w spektrum autyzmu), integracja z pozycją GPS niskopodłogowych tramwajów MPK na żywo oraz mapa poidełek miejskich i cienia na upalne dni dla seniorów.
+                            </p>
+                        </div>
+
+                        <div class="bg-smok-navy p-4 rounded-2xl border border-white/10">
+                            <div class="text-xs font-bold text-smok-teal mb-1 flex items-center gap-1.5">
+                                <i data-lucide="camera" class="w-4 h-4"></i> 2. Kamera AI (Computer Vision)
+                            </div>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Automatyczna analiza przeszkód bezpośrednio ze zdjęcia robionego przez użytkownika — model AI rozpoznaje wysokość krawężnika, szerokość drzwi oraz stopień uszkodzenia chodnika bez ręcznego wpisywania parametrów.
+                            </p>
+                        </div>
+
+                        <div class="bg-smok-navy p-4 rounded-2xl border border-white/10">
+                            <div class="text-xs font-bold text-yellow-400 mb-1 flex items-center gap-1.5">
+                                <i data-lucide="radio" class="w-4 h-4"></i> 3. Nawigacja Indoor i Nadajniki BLE
+                            </div>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Precyzyjna nawigacja wewnątrz dużych węzłów przesiadkowych (Dworzec Główny, Rondo Mogilskie) oraz budynków UMK z wykorzystaniem beaconów Bluetooth Low Energy (BLE).
+                            </p>
+                        </div>
+
+                        <div class="bg-smok-navy p-4 rounded-2xl border border-white/10">
+                            <div class="text-xs font-bold text-amber-400 mb-1 flex items-center gap-1.5">
+                                <i data-lucide="qr-code" class="w-4 h-4"></i> 4. Kody QR na budynkach i Tryb SOS
+                            </div>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Skanery kodów QR przy wejściach do urzędów uruchamiające natychmiastowego lektora dostępności oraz <strong>Tryb SOS</strong> — szybkie powiadomienie sąsiedzkie z prośbą o pomoc przy pokonaniu nagłej przeszkody.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Prototype Readiness Box -->
+                    <div class="bg-smok-navy p-5 rounded-2xl border-l-4 border-smok-teal border border-white/10">
+                        <div class="text-xs font-bold uppercase tracking-wider text-smok-teal mb-2">Status Prototypu na HackYeah 2026 i Gotowość do Wdrożenia:</div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                            <div>
+                                <strong class="text-white block">✓ Baza PostGIS / Supabase</strong>
+                                <span class="text-slate-300">Zasilona danymi dla Krakowa (POI, przystanki, toalety, koperty).</span>
+                            </div>
+                            <div>
+                                <strong class="text-white block">✓ Aplikacja & .NET API</strong>
+                                <span class="text-slate-300">Działający tryb Gościa i Konta, filtry trasy, zgłaszanie przeszkód i paczki offline.</span>
+                            </div>
+                            <div>
+                                <strong class="text-white block">✓ Pilotaż w 30 dni</strong>
+                                <span class="text-slate-300">Architektura gotowa do uruchomienia miejskiego pilotażu i skalowania na inne miasta.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Final Pitch Summary Card -->
+                <div class="lg:col-span-5 bg-gradient-to-b from-smok-blue/40 via-smok-navy to-smok-navy p-6 rounded-3xl border-2 border-smok-teal flex flex-col justify-between text-center">
+                    <div class="my-auto space-y-5">
+                        <svg class="w-24 h-24 mx-auto drop-shadow-xl"><use href="#smok-logo"></use></svg>
+                        <div>
+                            <h3 class="text-2xl font-black text-white">Dlaczego Smok Przewodnik wygrywa?</h3>
+                            <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+                                Bo nie budujemy kolejnej mapy z pinezkami. Budujemy <strong>inteligentnego asystenta podróży</strong>, który łączy już istniejącą infrastrukturę Krakowa w bezpieczną drogę od drzwi do drzwi — dla każdego z nas.
+                            </p>
+                        </div>
+
+                        <div class="space-y-2 text-left text-xs bg-smok-dark/80 p-4 rounded-2xl border border-white/10">
+                            <div class="flex items-center gap-2 text-white font-semibold">
+                                <span class="text-smok-teal">●</span> Dla 1 na 7 mieszkańców Krakowa i tysięcy turystów
+                            </div>
+                            <div class="flex items-center gap-2 text-white font-semibold">
+                                <span class="text-smok-teal">●</span> Pełna personalizacja (5 profili + reguły trójstanowe)
+                            </div>
+                            <div class="flex items-center gap-2 text-white font-semibold">
+                                <span class="text-smok-teal">●</span> Tryb Gościa (bez barier wejścia) i Tryb Konta (Live Crowdsourcing)
+                            </div>
+                            <div class="flex items-center gap-2 text-white font-semibold">
+                                <span class="text-smok-teal">●</span> 0 zł kosztu dla Miasta Krakowa i zgodność z WCAG 2.2 AA/AAA
+                            </div>
+                        </div>
+
+                        <div class="pt-2">
+                            <div class="text-sm font-extrabold text-smok-teal uppercase tracking-widest">Twórzmy Kraków Bez Barier Razem!</div>
+                            <a href="https://github.com/Anita-Bath/smok-przewodnik" target="_blank" class="mt-3 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-smok-navy font-extrabold text-xs hover:bg-slate-200 transition shadow-lg">
+                                <i data-lucide="github" class="w-4 h-4"></i>
+                                github.com/Anita-Bath/smok-przewodnik
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <footer id="bottom-nav" class="h-[64px] bg-smok-navy/95 backdrop-blur-md border-t border-white/10 px-6 flex items-center justify-between sticky bottom-0 z-50">
+        <div class="flex items-center gap-3">
+            <button onclick="prevSlide()" id="prev-btn" class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-semibold text-white border border-white/10 transition disabled:opacity-40">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i> Poprzedni
+            </button>
+            <button onclick="nextSlide()" id="next-btn" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-smok-teal hover:bg-smok-teal/90 text-xs font-bold text-smok-dark transition">
+                Następny slajd <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Slide Dots / Direct Jump -->
+        <div class="hidden md:flex items-center gap-1.5" id="slide-dots">
+            <!-- Generated by JS -->
+        </div>
+
+        <div class="flex items-center gap-4 text-xs text-slate-400">
+            <span class="hidden sm:inline">Nawigacja: <kbd class="px-1.5 py-0.5 bg-white/10 rounded text-slate-200">←</kbd> <kbd class="px-1.5 py-0.5 bg-white/10 rounded text-slate-200">→</kbd></span>
+            <span id="slide-counter" class="font-bold text-white bg-white/10 px-3 py-1 rounded-full">Slajd 1 z 10</span>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        let currentSlide = 1;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let isPrintMode = false;
+
+        const slideTitles = [
+            "1. Smok Przewodnik – Wstęp",
+            "2. Diagnoza demograficzna Krakowa",
+            "3. Paradoks dostępności i luka informacyjna",
+            "4. Profile potrzeb i logika trójstanowa",
+            "5. Dwa tryby: Gość vs. Zarejestrowane konto",
+            "6. Przegląd ekranów aplikacji (Demo)",
+            "7. Architektura techniczna (.NET 8, PostGIS, Valhalla)",
+            "8. WCAG 2.2 AA/AAA i Grywalizacja",
+            "9. Zero kosztów dla UMK i model B2B",
+            "10. Wizja rozwoju i podsumowanie"
+        ];
+
+        function renderDots() {
+            const container = document.getElementById('slide-dots');
+            container.innerHTML = '';
+            for (let i = 1; i <= totalSlides; i++) {
+                const btn = document.createElement('button');
+                btn.title = slideTitles[i - 1];
+                btn.onclick = () => goToSlide(i);
+                btn.className = `h-2.5 rounded-full transition-all ${
+                    i === currentSlide 
+                        ? 'w-8 bg-smok-teal' 
+                        : 'w-2.5 bg-white/20 hover:bg-white/40'
+                }`;
+                container.appendChild(btn);
+            }
+        }
+
+        function updateSlideView() {
+            slides.forEach((slide, idx) => {
+                if (idx + 1 === currentSlide) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+            document.getElementById('slide-counter').textContent = `Slajd ${currentSlide} z ${totalSlides}`;
+            document.getElementById('prev-btn').disabled = currentSlide === 1;
+            document.getElementById('next-btn').disabled = currentSlide === totalSlides;
+            renderDots();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlideView();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlideView();
+            }
+        }
+
+        function goToSlide(n) {
+            currentSlide = n;
+            updateSlideView();
+        }
+
+        function togglePrintMode() {
+            isPrintMode = !isPrintMode;
+            document.body.classList.toggle('print-mode', isPrintMode);
+            const btnText = document.getElementById('view-mode-text');
+            if (isPrintMode) {
+                btnText.textContent = 'Powrót do pokazu slajdów';
+            } else {
+                btnText.textContent = 'Widok wszystkich (PDF)';
+                updateSlideView();
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (isPrintMode) return;
+            if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                prevSlide();
+            }
+        });
+
+        // Initialize
+        updateSlideView();
+    </script>
+</body>
+</html>
