@@ -10,8 +10,7 @@ using System.Globalization;
 namespace AB.SmokPrzewodnik.Api.Controllers;
 
 [ApiController]
-[AllowAnonymous]
-[Route("spatials")]
+[Route("/spatials")]
 public sealed class SpatialsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -23,7 +22,8 @@ public sealed class SpatialsController : ControllerBase
         _timeProvider = timeProvider;
     }
 
-    [HttpGet("entities")]
+    [HttpGet("/entities")]
+    [AllowAnonymous]
     [ProducesResponseType<CursorPageResponse<SpatialEntityListItemDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CursorPageResponse<SpatialEntityListItemDto>>> FindAsync(
@@ -52,6 +52,7 @@ public sealed class SpatialsController : ControllerBase
     }
 
     [HttpGet("/places/{placeId:guid}")]
+    [AllowAnonymous]
     [ProducesResponseType<PlaceDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PlaceDto>> GetPlaceAsync(
@@ -66,6 +67,7 @@ public sealed class SpatialsController : ControllerBase
     }
 
     [HttpGet("/events/{eventId:guid}")]
+    [AllowAnonymous]
     [ProducesResponseType<EventDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<EventDto>> GetEventAsync(
@@ -80,6 +82,7 @@ public sealed class SpatialsController : ControllerBase
     }
 
     [HttpGet("/events")]
+    [AllowAnonymous]
     [ProducesResponseType<CursorPageResponse<EventDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CursorPageResponse<EventDto>>> FindEventsAsync(
@@ -135,7 +138,8 @@ public sealed class SpatialsController : ControllerBase
         return Ok(response);
     }
 
-    [HttpGet("infrastructure")]
+    [HttpGet("/infrastructure")]
+    [AllowAnonymous]
     [ProducesResponseType<CursorPageResponse<InfrastructureDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CursorPageResponse<InfrastructureDto>>> FindInfrastructureAsync(
@@ -216,4 +220,29 @@ public sealed class SpatialsController : ControllerBase
             return false;
         }
     }
+
+    [HttpPost("/places/{placeId:guid}/accessibility")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AddAccessibilityFact(
+        Guid placeId,
+        [FromBody] AddAccessibilityRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new AB.SmokPrzewodnik.Application.Spatials.Commands.AddAccessibilityFactCommand(
+                placeId, request.AttributeCode, request.Value),
+            cancellationToken);
+
+        if (!result)
+        {
+            return NotFound();
+        }
+
+        return Ok();
+    }
 }
+
+public sealed record AddAccessibilityRequest(string AttributeCode, bool Value);
+

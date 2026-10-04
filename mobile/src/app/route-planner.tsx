@@ -117,6 +117,28 @@ export default function RoutePlannerScreen() {
     }
   }, [activeManeuverIndex, isNavigating, feedbackChannels]);
 
+  // Auto-follow: Automatically advance to the next maneuver when the user approaches its location
+  useEffect(() => {
+    if (!isNavigating || !userLocation || !selectedRoute?.maneuvers) return;
+    
+    const nextIndex = activeManeuverIndex + 1;
+    if (nextIndex >= selectedRoute.maneuvers.length) return;
+
+    const nextManeuver = selectedRoute.maneuvers[nextIndex];
+    if (nextManeuver && nextManeuver.location) {
+      const maneuverCoords = {
+        latitude: nextManeuver.location[0],
+        longitude: nextManeuver.location[1]
+      };
+      const distanceToNext = calculateDistanceMeters(userLocation, maneuverCoords);
+      
+      // If user is within 15 meters of the next maneuver, advance automatically
+      if (distanceToNext <= 15) {
+        setActiveManeuverIndex(nextIndex);
+      }
+    }
+  }, [userLocation, isNavigating, activeManeuverIndex, selectedRoute]);
+
   return (
     <SafeAreaView
       edges={['top']}
